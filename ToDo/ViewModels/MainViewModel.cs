@@ -350,6 +350,8 @@ public partial class MainViewModel : ObservableObject
 
     partial void OnSearchQueryChanged(string value)
     {
+        if (!string.IsNullOrWhiteSpace(value))
+            SelectedTask = null;
         OnPropertyChanged(nameof(IsSearching));
         OnPropertyChanged(nameof(IsCustomList));
         OnPropertyChanged(nameof(IsSystemList));
