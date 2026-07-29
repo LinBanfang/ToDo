@@ -706,7 +706,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void MyDayToggle_Changed(object sender, RoutedEventArgs e)
+    private void MyDayToggle_Click(object sender, RoutedEventArgs e)
     {
         if (ViewModel.SelectedTask != null)
             ViewModel.ToggleMyDayCommand.Execute(ViewModel.SelectedTask);

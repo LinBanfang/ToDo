@@ -624,9 +624,8 @@
                                     <TextBlock Text="My Day" FontSize="13" VerticalAlignment="Center"
                                                Foreground="{StaticResource TextPrimaryBrush}"/>
                                 </StackPanel>
-                                <CheckBox Grid.Column="1" IsChecked="{Binding SelectedTask.IsMyDay}"
-                                          Checked="MyDayToggle_Changed"
-                                          Unchecked="MyDayToggle_Changed"/>
+                                <CheckBox Grid.Column="1" IsChecked="{Binding SelectedTask.IsMyDay, Mode=OneWay}"
+                                          Click="MyDayToggle_Click"/>
                             </Grid>
                         </Border>
 
