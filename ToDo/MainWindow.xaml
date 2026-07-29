@@ -171,7 +171,7 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="16" Margin="0,0,8,0"
                                                    FontFamily="Segoe UI Emoji" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="14"
+                                        <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="14"
                                                    VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                         <TextBlock Grid.Column="2" Text="{Binding TaskCount}" VerticalAlignment="Center"
                                                    Margin="8,0,0,0" FontSize="12"
@@ -224,7 +224,7 @@
                                                 </Style>
                                             </TextBlock.Style>
                                         </TextBlock>
-                                        <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="14"
+                                        <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="14"
                                                    VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                         <TextBlock Grid.Column="2" Text="{Binding TaskCount}" VerticalAlignment="Center"
                                                    Margin="8,0,0,0" FontSize="12"
@@ -300,7 +300,7 @@
                             </Button.Content>
                         </Button>
                         <!-- Editable title (click to rename) -->
-                        <TextBlock x:Name="ListTitleLabel" Text="{Binding ActiveList.Name}" FontSize="28"
+                        <TextBlock x:Name="ListTitleLabel" Text="{Binding ActiveList.DisplayName}" FontSize="28"
                                    FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"
                                    VerticalAlignment="Center" Cursor="Hand"
                                    MouseLeftButtonDown="ListTitle_Click"/>

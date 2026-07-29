@@ -39,4 +39,16 @@ public partial class TaskList : ObservableObject
     /// </summary>
     [ObservableProperty]
     private int _taskCount;
+
+    /// <summary>Localized display name for system lists</summary>
+    public string DisplayName => IsSystem
+        ? Id switch
+        {
+            "list-myday"     => Services.Loc.MyDay,
+            "list-important" => Services.Loc.Important,
+            "list-planned"   => Services.Loc.Planned,
+            "list-tasks"     => Services.Loc.Tasks,
+            _ => Name
+        }
+        : Name;
 }

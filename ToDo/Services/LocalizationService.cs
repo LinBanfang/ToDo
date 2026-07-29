@@ -82,4 +82,10 @@ public static class Loc
     public static string Later => Language == AppLanguage.Chinese ? "稍后" : "Later";
     public static string PickDate => Language == AppLanguage.Chinese ? "选择日期..." : "Pick a date...";
     public static string NoDueDate => Language == AppLanguage.Chinese ? "无截止日期" : "No Due Date";
+
+    // System list display names
+    public static string MyDay => Language == AppLanguage.Chinese ? "我的一天" : "My Day";
+    public static string Important => Language == AppLanguage.Chinese ? "重要" : "Important";
+    public static string Planned => Language == AppLanguage.Chinese ? "计划内" : "Planned";
+    public static string Tasks => Language == AppLanguage.Chinese ? "任务" : "Tasks";
 }
