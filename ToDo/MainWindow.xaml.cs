@@ -64,16 +64,103 @@ public partial class MainWindow : Window
             if (menu == null) return;
             menu.Items.Clear();
             var rename = new MenuItem { Header = Loc.Rename };
-            rename.Click += (s, _) => { /* inline rename */ };
+            rename.Click += (s, _) =>
+            {
+                lgd.EditName = lgd.Group.Name;
+                lgd.IsEditing = true;
+            };
             menu.Items.Add(rename);
-            var delete = new MenuItem { Header = Loc.DeleteGroup };
+            menu.Items.Add(new Separator());
+            var delete = new MenuItem { Header = Loc.DeleteListGroup };
             delete.Click += (s, _) =>
             {
-                if (MessageBox.Show(Loc.ConfirmDeleteGroupMsg(lgd.Group.Name), Loc.DeleteGroup,
+                if (MessageBox.Show(Loc.ConfirmDeleteListGroupMsg(lgd.Group.Name), Loc.DeleteListGroup,
                         MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
                     ViewModel.DeleteListGroupCommand.Execute(lgd.Group);
             };
             menu.Items.Add(delete);
+        }
+    }
+
+    private void ListGroupName_DoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount >= 2 && sender is FrameworkElement fe && fe.DataContext is ListGroupDisplay lgd)
+        {
+            lgd.EditName = lgd.Group.Name;
+            lgd.IsEditing = true;
+            e.Handled = true;
+        }
+    }
+
+    private void ListGroupName_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.DataContext is ListGroupDisplay lgd)
+        {
+            if (e.Key == Key.Enter) { CommitListGroupRename(lgd); e.Handled = true; }
+            else if (e.Key == Key.Escape) { lgd.IsEditing = false; e.Handled = true; }
+        }
+    }
+
+    private void ListGroupName_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.DataContext is ListGroupDisplay lgd)
+            CommitListGroupRename(lgd);
+    }
+
+    private void CommitListGroupRename(ListGroupDisplay lgd)
+    {
+        var newName = lgd.EditName?.Trim();
+        if (!string.IsNullOrEmpty(newName) && newName != lgd.Group.Name)
+        {
+            lgd.Group.Name = newName;
+            ViewModel.RenameListGroupCommand.Execute(lgd.Group);
+        }
+        lgd.IsEditing = false;
+    }
+
+    // Drag list to group
+    private void ListGroupHeader_DragEnter(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(typeof(TaskList)) && sender is Border border)
+        {
+            border.Background = new SolidColorBrush(Color.FromRgb(0xE6, 0xF2, 0xFC));
+            e.Effects = DragDropEffects.Move;
+        }
+        e.Handled = true;
+    }
+
+    private void ListGroupHeader_DragLeave(object sender, DragEventArgs e)
+    {
+        if (sender is Border border) border.Background = Brushes.Transparent;
+        e.Handled = true;
+    }
+
+    private void ListGroupHeader_Drop(object sender, DragEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            border.Background = Brushes.Transparent;
+            if (e.Data.GetDataPresent(typeof(TaskList)) && border.DataContext is ListGroupDisplay lgd)
+            {
+                var list = e.Data.GetData(typeof(TaskList)) as TaskList;
+                if (list != null && list.GroupId != lgd.Group.Id)
+                    ViewModel.MoveListToGroupCommand.Execute((list, lgd.Group));
+            }
+        }
+        e.Handled = true;
+    }
+
+    public void SidebarList_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed) return;
+        if (sender is ListBox lb)
+        {
+            var pos = e.GetPosition(lb);
+            var element = lb.InputHitTest(pos) as DependencyObject;
+            while (element != null && element is not ListBoxItem)
+                element = VisualTreeHelper.GetParent(element);
+            if (element is ListBoxItem lbi && lbi.DataContext is TaskList list)
+                DragDrop.DoDragDrop(lbi, list, DragDropEffects.Move);
         }
     }
 
