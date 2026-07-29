@@ -150,21 +150,29 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
-    public void SidebarListItem_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+    public void SidebarListItem_RightClick(object sender, MouseButtonEventArgs e)
     {
         if (sender is not ListBox lb) return;
-        var pos = Mouse.GetPosition(lb);
-        var element = lb.InputHitTest(pos) as DependencyObject;
-        while (element != null && element is not ListBoxItem)
-            element = VisualTreeHelper.GetParent(element);
-        if (element is not ListBoxItem lbi || lbi.DataContext is not TaskList list) return;
+        var pos = e.GetPosition(lb);
+        var hit = lb.InputHitTest(pos) as DependencyObject;
+        while (hit != null && hit is not ListBoxItem)
+            hit = VisualTreeHelper.GetParent(hit);
+        if (hit is not ListBoxItem lbi || lbi.DataContext is not TaskList list) return;
 
-        // Build context menu for the sidebar list
+        lbi.IsSelected = true;
         var menu = new ContextMenu();
+        BuildSidebarListMenu(menu, list);
+        menu.PlacementTarget = lbi;
+        menu.IsOpen = true;
+        e.Handled = true;
+    }
 
-        // Move to group
+    private void BuildSidebarListMenu(ContextMenu menu, TaskList list)
+    {
+        menu.Items.Clear();
+
+        // Move to group submenu
         var moveMenu = new MenuItem { Header = Loc.MoveToGroup };
-        // Remove from group (if currently in one)
         if (list.GroupId != null)
         {
             var ungroupItem = new MenuItem { Header = Loc.Ungrouped };
@@ -181,11 +189,10 @@ public partial class MainWindow : Window
             moveMenu.Items.Add(gi);
         }
         menu.Items.Add(moveMenu);
-
         menu.Items.Add(new Separator());
 
         var renameItem = new MenuItem { Header = Loc.RenameList };
-        renameItem.Click += (s, _) => { /* trigger inline rename - focus on list title edit */ };
+        renameItem.Click += (s, _) => { /* rename handled by ListTitle_Click */ };
         menu.Items.Add(renameItem);
 
         var deleteItem = new MenuItem { Header = Loc.DeleteList };
@@ -196,10 +203,6 @@ public partial class MainWindow : Window
                 ViewModel.DeleteListCommand.Execute(list);
         };
         menu.Items.Add(deleteItem);
-
-        menu.PlacementTarget = lbi;
-        menu.IsOpen = true;
-        e.Handled = true;
     }
 
     public void SidebarList_PreviewMouseMove(object sender, MouseEventArgs e)
