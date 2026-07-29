@@ -82,47 +82,48 @@ public partial class MainWindow : Window
         if (sender is not ContextMenu menu || menu.PlacementTarget is not Grid grid
             || grid.DataContext is not TaskList list || list.IsSystem) return;
 
-        menu.Items.Clear();
-
-        // Move to group submenu
-        var moveItem = new MenuItem { Header = Loc.MoveToGroup };
-        if (list.GroupId != null)
+        Dispatcher.BeginInvoke(() =>
         {
-            var ungroupItem = new MenuItem { Header = Loc.Ungrouped };
-            ungroupItem.Click += (s, _) => ViewModel.MoveListToGroupCommand.Execute((list, null));
-            moveItem.Items.Add(ungroupItem);
-            moveItem.Items.Add(new Separator());
-        }
-        foreach (var g in ViewModel.ListGroups)
-        {
-            if (g.Id == list.GroupId) continue;
-            var gi = new MenuItem { Header = g.Name };
-            var captured = g;
-            gi.Click += (s, _) => ViewModel.MoveListToGroupCommand.Execute((list, captured));
-            moveItem.Items.Add(gi);
-        }
-        menu.Items.Add(moveItem);
+            menu.Items.Clear();
 
-        var renameItem = new MenuItem { Header = Loc.Rename };
-        renameItem.Click += (s, _) =>
-        {
-            ListTitleLabel.Visibility = Visibility.Collapsed;
-            ListTitleEdit.Text = list.Name;
-            ListTitleEdit.Visibility = Visibility.Visible;
-            ListTitleEdit.Focus();
-        };
-        menu.Items.Add(renameItem);
+            var moveItem = new MenuItem { Header = Loc.MoveToGroup };
+            if (list.GroupId != null)
+            {
+                var ungroupItem = new MenuItem { Header = Loc.Ungrouped };
+                ungroupItem.Click += (s2, _) => ViewModel.MoveListToGroupCommand.Execute((list, null));
+                moveItem.Items.Add(ungroupItem);
+                moveItem.Items.Add(new Separator());
+            }
+            foreach (var g in ViewModel.ListGroups)
+            {
+                if (g.Id == list.GroupId) continue;
+                var gi = new MenuItem { Header = g.Name };
+                var captured2 = g;
+                gi.Click += (s2, _) => ViewModel.MoveListToGroupCommand.Execute((list, captured2));
+                moveItem.Items.Add(gi);
+            }
+            menu.Items.Add(moveItem);
 
-        menu.Items.Add(new Separator());
+            var renameItem = new MenuItem { Header = Loc.Rename };
+            renameItem.Click += (s2, _) =>
+            {
+                ListTitleLabel.Visibility = Visibility.Collapsed;
+                ListTitleEdit.Text = list.Name;
+                ListTitleEdit.Visibility = Visibility.Visible;
+                ListTitleEdit.Focus();
+            };
+            menu.Items.Add(renameItem);
+            menu.Items.Add(new Separator());
 
-        var deleteItem = new MenuItem { Header = Loc.Delete };
-        deleteItem.Click += (s, _) =>
-        {
-            if (MessageBox.Show(Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete,
-                    MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
-                ViewModel.DeleteListCommand.Execute(list);
-        };
-        menu.Items.Add(deleteItem);
+            var deleteItem = new MenuItem { Header = Loc.Delete };
+            deleteItem.Click += (s2, _) =>
+            {
+                if (MessageBox.Show(Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete,
+                        MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                    ViewModel.DeleteListCommand.Execute(list);
+            };
+            menu.Items.Add(deleteItem);
+        });
     }
 
     private void SidebarCtx_Rename(object sender, RoutedEventArgs e)
