@@ -146,10 +146,10 @@
                     <TextBlock Text="{x:Static services:Loc.AppTitle}" FontSize="22" FontWeight="SemiBold"
                                Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,12"/>
                     <!-- Search box -->
-                    <Grid Height="32">
+                    <Grid Height="32" Margin="0,0,0,2">
                         <TextBox x:Name="SearchBox" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource SearchTextBox}" Padding="28,0,28,0"/>
-                        <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                 Style="{StaticResource SearchTextBox}" Padding="26,4,26,4"/>
+                        <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="12"
                                    Foreground="{StaticResource TextDisabledBrush}"
                                    VerticalAlignment="Center" Margin="8,0,0,0" IsHitTestVisible="False"/>
                         <!-- X clear button -->
@@ -298,34 +298,21 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- List emoji / search icon -->
-                        <TextBlock x:Name="EmojiLabel"
-                                   VerticalAlignment="Center" Margin="0,0,8,0">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Text" Value="{Binding ActiveList.Icon}"/>
-                                    <Setter Property="FontSize" Value="26"/>
-                                    <Setter Property="FontFamily" Value="Segoe UI Emoji"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsSearching}" Value="True">
-                                            <Setter Property="Text" Value="&#xE721;"/>
-                                            <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
-                                            <Setter Property="FontSize" Value="22"/>
-                                            <Setter Property="Foreground" Value="{StaticResource TextAccentBrush}"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                        <!-- Emoji picker button for custom lists (hidden when searching) -->
+                        <!-- Header icon: emoji (list) or search icon, clickable for custom lists -->
                         <Button x:Name="EmojiBtn" FontSize="24" Width="40" Height="40" Padding="0"
-                                Cursor="Hand" Click="ListEmoji_Click">
+                                Cursor="Hand" Click="ListEmoji_Click" VerticalAlignment="Center">
                             <Button.Style>
                                 <Style TargetType="Button" BasedOn="{StaticResource FluentSubtleButton}">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsSearching}" Value="True">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                        </DataTrigger>
+                                        <!-- Only show for custom lists and not searching -->
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding IsCustomList}" Value="True"/>
+                                                <Condition Binding="{Binding IsSearching}" Value="False"/>
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </MultiDataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </Button.Style>
@@ -334,6 +321,36 @@
                                            FontFamily="Segoe UI Emoji"/>
                             </Button.Content>
                         </Button>
+                        <!-- Read-only icon: system list or searching -->
+                        <TextBlock VerticalAlignment="Center" Margin="0,0,8,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <!-- Searching → show search icon -->
+                                        <DataTrigger Binding="{Binding IsSearching}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Setter Property="Text" Value="&#xE721;"/>
+                                            <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+                                            <Setter Property="FontSize" Value="22"/>
+                                            <Setter Property="Foreground" Value="{StaticResource TextAccentBrush}"/>
+                                        </DataTrigger>
+                                        <!-- System list, not searching → show emoji -->
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding IsSystemList}" Value="True"/>
+                                                <Condition Binding="{Binding IsSearching}" Value="False"/>
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Setter Property="Text" Value="{Binding ActiveList.Icon}"/>
+                                            <Setter Property="FontFamily" Value="Segoe UI Emoji"/>
+                                            <Setter Property="FontSize" Value="26"/>
+                                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                                        </MultiDataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                         <!-- Editable title (click to rename) -->
                         <TextBlock x:Name="ListTitleLabel" Text="{Binding HeaderTitle}" FontSize="28"
                                    FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"
