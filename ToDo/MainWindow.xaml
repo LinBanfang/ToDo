@@ -271,8 +271,9 @@
                         <!-- Ungrouped -->
                         <ListBox ItemsSource="{Binding UngroupedCustomLists}"
                                  PreviewMouseMove="SidebarList_PreviewMouseMove"
-                                 PreviewMouseRightButtonUp="SidebarList_PreviewRightClick"
                                  SelectedValue="{Binding ActiveListId}"
+                                 ContextMenu="{x:Null}"
+                                 ContextMenuOpening="UngroupedList_ContextMenuOpening"
                                  SelectedValuePath="Id"
                                  BorderThickness="0" Background="Transparent"
                                  ItemContainerStyle="{StaticResource SidebarNavItem}" Margin="0,0,0,4"

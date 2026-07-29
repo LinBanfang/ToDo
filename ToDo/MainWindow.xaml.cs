@@ -150,6 +150,30 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
+    public void UngroupedList_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+    {
+        if (sender is not ListBox lb) return;
+
+        // Find and select the right-clicked item
+        var pos = Mouse.GetPosition(lb);
+        var hit = lb.InputHitTest(pos) as DependencyObject;
+        while (hit != null && hit is not ListBoxItem)
+            hit = VisualTreeHelper.GetParent(hit);
+
+        if (hit is ListBoxItem lbi && lbi.DataContext is TaskList list && !list.IsSystem)
+        {
+            lbi.IsSelected = true;
+            var menu = new ContextMenu();
+            BuildSidebarListMenu(menu, list);
+            lb.ContextMenu = menu;
+        }
+        else
+        {
+            lb.ContextMenu = null;
+            e.Handled = true;
+        }
+    }
+
     public void SidebarList_PreviewRightClick(object sender, MouseButtonEventArgs e)
     {
         if (sender is not ListBox lb) return;
