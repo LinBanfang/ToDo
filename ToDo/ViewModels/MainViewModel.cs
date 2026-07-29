@@ -54,6 +54,7 @@ public partial class MainViewModel : ObservableObject
     public ObservableCollection<GroupedTasks> GroupedTaskList { get; } = new();
     public bool IsCustomList => ActiveList?.Type == ListType.Custom;
     public bool IsSystemList => !IsCustomList;
+    public string CompletedHeader => $"{Loc.CompletedSection} ({CompletedTasks.Count})";
 
     private static bool IsToday(long ts)
     {
@@ -287,6 +288,8 @@ public partial class MainViewModel : ObservableObject
             t.CloseRecord?.ClosedAt ?? 0);
         foreach (var t in sortedCompleted)
             CompletedTasks.Add(t);
+
+        OnPropertyChanged(nameof(CompletedHeader));
 
         // Build grouped view for custom lists
         if (ActiveList.Type == ListType.Custom)

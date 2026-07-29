@@ -56,6 +56,7 @@ public static class Loc
     public static string DeleteTask => Language == AppLanguage.Chinese ? "删除任务" : "Delete task";
     public static string DeleteGroup => Language == AppLanguage.Chinese ? "删除分组" : "Delete group";
     public static string Rename => Language == AppLanguage.Chinese ? "重命名" : "Rename";
+    public static string Group => Language == AppLanguage.Chinese ? "分组" : "Group";
     public static string RenameList => Language == AppLanguage.Chinese ? "重命名列表" : "Rename list";
     public static string DeleteList => Language == AppLanguage.Chinese ? "删除列表" : "Delete list";
     public static string ManageTags => Language == AppLanguage.Chinese ? "管理标签" : "Manage Tags";

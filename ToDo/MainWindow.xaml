@@ -321,8 +321,8 @@
                                 Foreground="{StaticResource TextSecondaryBrush}">
                             <Button.ContextMenu>
                                 <ContextMenu>
-                                    <MenuItem Header="Rename list" Click="ListMenu_Rename"/>
-                                    <MenuItem Header="Delete list" Click="ListMenu_Delete"
+                                    <MenuItem Header="{x:Static services:Loc.RenameList}" Click="ListMenu_Rename"/>
+                                    <MenuItem Header="{x:Static services:Loc.DeleteList}" Click="ListMenu_Delete"
                                               Visibility="{Binding ActiveList.IsSystem, Converter={StaticResource InverseBool}}"/>
                                 </ContextMenu>
                             </Button.ContextMenu>
@@ -443,9 +443,8 @@
                             Margin="16,16,16,0" Padding="0,12,0,0">
                         <StackPanel>
                             <TextBlock FontSize="12" FontWeight="SemiBold" Margin="8,0,0,8"
-                                       Foreground="{StaticResource TextDisabledBrush}">
-                                <Run Text="Completed ("/><Run Text="{Binding CompletedTasks.Count, Mode=OneWay}"/><Run Text=")"/>
-                            </TextBlock>
+                                       Foreground="{StaticResource TextDisabledBrush}"
+                                       Text="{Binding CompletedHeader}"/>
                             <ItemsControl ItemsSource="{Binding CompletedTasks}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="{x:Type models:TaskItem}">
@@ -637,7 +636,8 @@
                                 CornerRadius="6" Padding="12" Margin="0,0,0,16"
                                 Visibility="{Binding DataContext.IsCustomList, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
                             <StackPanel>
-                                <TextBlock Text="GROUP" x:Name="DetailGroupLabel" FontSize="11" FontWeight="SemiBold"
+                                <TextBlock x:Name="DetailGroupLabel" FontSize="11" FontWeight="SemiBold"
+                                           Text="{x:Static services:Loc.Group}"
                                            Foreground="{StaticResource TextDisabledBrush}" Margin="0,0,0,8"/>
                                 <ComboBox x:Name="DetailGroupBox" FontSize="13"
                                           Style="{StaticResource FluentComboBox}"

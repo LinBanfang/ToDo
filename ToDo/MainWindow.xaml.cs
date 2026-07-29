@@ -541,7 +541,7 @@ public partial class MainWindow : Window
                     tagMenu.Items.Add(tagItem);
                 }
                 if (ViewModel.Tags.Count == 0)
-                    tagMenu.Items.Add(new MenuItem { Header = "No tags", IsEnabled = false });
+                    tagMenu.Items.Add(new MenuItem { Header = Loc.NoTags, IsEnabled = false });
                 menu.Items.Add(tagMenu);
             }
             else
