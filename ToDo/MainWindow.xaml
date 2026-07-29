@@ -302,16 +302,37 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- Emoji icon for system lists (non-clickable) -->
+                        <!-- Search icon (visible when searching) -->
+                        <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="22"
+                                   Foreground="{StaticResource TextAccentBrush}"
+                                   VerticalAlignment="Center" Margin="0,0,8,0"
+                                   Visibility="{Binding IsSearching, Converter={StaticResource BoolToVis}}"/>
+                        <!-- Emoji icon for system lists (non-clickable, hidden when searching) -->
                         <TextBlock x:Name="EmojiLabel" Text="{Binding ActiveList.Icon}" FontSize="26"
                                    FontFamily="Segoe UI Emoji"
-                                   VerticalAlignment="Center" Margin="0,0,8,0"
-                                   Visibility="{Binding IsSystemList, Converter={StaticResource BoolToVis}}"/>
-                        <!-- Emoji picker button for custom lists -->
+                                   VerticalAlignment="Center" Margin="0,0,8,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsSearching}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <!-- Emoji picker button for custom lists (hidden when searching) -->
                         <Button x:Name="EmojiBtn" FontSize="24" Width="40" Height="40" Padding="0"
-                                Style="{StaticResource FluentSubtleButton}" Cursor="Hand"
-                                Click="ListEmoji_Click"
-                                Visibility="{Binding IsCustomList, Converter={StaticResource BoolToVis}}">
+                                Cursor="Hand" Click="ListEmoji_Click">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource FluentSubtleButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsSearching}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
                             <Button.Content>
                                 <TextBlock Text="{Binding ActiveList.Icon}" FontSize="26"
                                            FontFamily="Segoe UI Emoji"/>
