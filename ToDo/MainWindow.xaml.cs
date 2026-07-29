@@ -64,17 +64,12 @@ public partial class MainWindow : Window
             if (menu == null) return;
             menu.Items.Clear();
             var rename = new MenuItem { Header = Loc.Rename };
-            rename.Click += (s, _) =>
-            {
-                lgd.EditName = lgd.Group.Name;
-                lgd.IsEditing = true;
-            };
+            rename.Click += (s, _) => { /* inline rename */ };
             menu.Items.Add(rename);
-            menu.Items.Add(new Separator());
-            var delete = new MenuItem { Header = Loc.DeleteListGroup };
+            var delete = new MenuItem { Header = Loc.DeleteGroup };
             delete.Click += (s, _) =>
             {
-                if (MessageBox.Show(Loc.ConfirmDeleteListGroupMsg(lgd.Group.Name), Loc.DeleteListGroup,
+                if (MessageBox.Show(Loc.ConfirmDeleteGroupMsg(lgd.Group.Name), Loc.DeleteGroup,
                         MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
                     ViewModel.DeleteListGroupCommand.Execute(lgd.Group);
             };
@@ -82,149 +77,18 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ListGroupName_DoubleClick(object sender, MouseButtonEventArgs e)
+    private void SidebarCtx_MoveToGroup(object sender, RoutedEventArgs e)
     {
-        if (e.ClickCount >= 2 && sender is FrameworkElement fe && fe.DataContext is ListGroupDisplay lgd)
-        {
-            lgd.EditName = lgd.Group.Name;
-            lgd.IsEditing = true;
-            e.Handled = true;
-        }
-    }
+        if (sender is not MenuItem parentItem || parentItem.DataContext is not TaskList list) return;
 
-    private void ListGroupName_KeyDown(object sender, KeyEventArgs e)
-    {
-        if (sender is FrameworkElement fe && fe.DataContext is ListGroupDisplay lgd)
-        {
-            if (e.Key == Key.Enter) { CommitListGroupRename(lgd); e.Handled = true; }
-            else if (e.Key == Key.Escape) { lgd.IsEditing = false; e.Handled = true; }
-        }
-    }
-
-    private void ListGroupName_LostFocus(object sender, RoutedEventArgs e)
-    {
-        if (sender is FrameworkElement fe && fe.DataContext is ListGroupDisplay lgd)
-            CommitListGroupRename(lgd);
-    }
-
-    private void CommitListGroupRename(ListGroupDisplay lgd)
-    {
-        var newName = lgd.EditName?.Trim();
-        if (!string.IsNullOrEmpty(newName) && newName != lgd.Group.Name)
-        {
-            lgd.Group.Name = newName;
-            ViewModel.RenameListGroupCommand.Execute(lgd.Group);
-        }
-        lgd.IsEditing = false;
-    }
-
-    // Drag list to group
-    private void ListGroupHeader_DragEnter(object sender, DragEventArgs e)
-    {
-        if (e.Data.GetDataPresent(typeof(TaskList)) && sender is Border border)
-        {
-            border.Background = new SolidColorBrush(Color.FromRgb(0xE6, 0xF2, 0xFC));
-            e.Effects = DragDropEffects.Move;
-        }
-        e.Handled = true;
-    }
-
-    private void ListGroupHeader_DragLeave(object sender, DragEventArgs e)
-    {
-        if (sender is Border border) border.Background = Brushes.Transparent;
-        e.Handled = true;
-    }
-
-    private void ListGroupHeader_Drop(object sender, DragEventArgs e)
-    {
-        if (sender is Border border)
-        {
-            border.Background = Brushes.Transparent;
-            if (e.Data.GetDataPresent(typeof(TaskList)) && border.DataContext is ListGroupDisplay lgd)
-            {
-                var list = e.Data.GetData(typeof(TaskList)) as TaskList;
-                if (list != null && list.GroupId != lgd.Group.Id)
-                    ViewModel.MoveListToGroupCommand.Execute((list, lgd.Group));
-            }
-        }
-        e.Handled = true;
-    }
-
-    public void UngroupedList_ContextMenuOpening(object sender, ContextMenuEventArgs e)
-    {
-        if (sender is not ListBox lb || lb.ContextMenu == null) return;
-
-        var pos = Mouse.GetPosition(lb);
-        var hit = lb.InputHitTest(pos) as DependencyObject;
-        while (hit != null && hit is not ListBoxItem)
-            hit = VisualTreeHelper.GetParent(hit);
-
-        if (hit is ListBoxItem lbi && lbi.DataContext is TaskList list && !list.IsSystem)
-        {
-            lbi.IsSelected = true;
-            BuildSidebarListMenu(lb.ContextMenu, list);
-        }
-        else
-        {
-            e.Handled = true; // prevent empty menu from showing
-        }
-    }
-
-    public void SidebarList_PreviewRightClick(object sender, MouseButtonEventArgs e)
-    {
-        if (sender is not ListBox lb) return;
-        var pos = e.GetPosition(lb);
-        var hit = lb.InputHitTest(pos) as DependencyObject;
-        while (hit != null && hit is not ListBoxItem)
-            hit = VisualTreeHelper.GetParent(hit);
-        if (hit is not ListBoxItem lbi || lbi.DataContext is not TaskList list || list.IsSystem) return;
-
-        var menu = new ContextMenu();
-        BuildSidebarListMenu(menu, list);
-        menu.PlacementTarget = lbi;
-        menu.IsOpen = true;
-        e.Handled = true;
-    }
-
-    public void SidebarListGrid_RightClick(object sender, MouseButtonEventArgs e)
-    {
-        if (sender is not Grid grid || grid.DataContext is not TaskList list) return;
-        var menu = new ContextMenu();
-        BuildSidebarListMenu(menu, list);
-        menu.PlacementTarget = grid;
-        menu.IsOpen = true;
-        e.Handled = true;
-    }
-
-    public void SidebarListItem_RightClick(object sender, MouseButtonEventArgs e)
-    {
-        if (sender is not ListBox lb) return;
-        var pos = e.GetPosition(lb);
-        var hit = lb.InputHitTest(pos) as DependencyObject;
-        while (hit != null && hit is not ListBoxItem)
-            hit = VisualTreeHelper.GetParent(hit);
-        if (hit is not ListBoxItem lbi || lbi.DataContext is not TaskList list) return;
-
-        lbi.IsSelected = true;
-        var menu = new ContextMenu();
-        BuildSidebarListMenu(menu, list);
-        menu.PlacementTarget = lbi;
-        menu.IsOpen = true;
-        e.Handled = true;
-    }
-
-    private void BuildSidebarListMenu(ContextMenu menu, TaskList list)
-    {
-        menu.Items.Clear();
-
-        // Move to group submenu
-        var moveMenu = new MenuItem { Header = Loc.MoveToGroup };
+        // Build submenu dynamically
+        parentItem.Items.Clear();
         if (list.GroupId != null)
         {
             var ungroupItem = new MenuItem { Header = Loc.Ungrouped };
             ungroupItem.Click += (s, _) => ViewModel.MoveListToGroupCommand.Execute((list, null));
-            moveMenu.Items.Add(ungroupItem);
-            moveMenu.Items.Add(new Separator());
+            parentItem.Items.Add(ungroupItem);
+            parentItem.Items.Add(new Separator());
         }
         foreach (var g in ViewModel.ListGroups)
         {
@@ -232,36 +96,28 @@ public partial class MainWindow : Window
             var gi = new MenuItem { Header = g.Name };
             var captured = g;
             gi.Click += (s, _) => ViewModel.MoveListToGroupCommand.Execute((list, captured));
-            moveMenu.Items.Add(gi);
+            parentItem.Items.Add(gi);
         }
-        menu.Items.Add(moveMenu);
-        menu.Items.Add(new Separator());
+    }
 
-        var renameItem = new MenuItem { Header = Loc.RenameList };
-        renameItem.Click += (s, _) => { /* rename handled by ListTitle_Click */ };
-        menu.Items.Add(renameItem);
+    private void SidebarCtx_Rename(object sender, RoutedEventArgs e)
+    {
+        if ((sender as MenuItem)?.DataContext is TaskList list)
+        {
+            ListTitleLabel.Visibility = Visibility.Collapsed;
+            ListTitleEdit.Text = list.Name;
+            ListTitleEdit.Visibility = Visibility.Visible;
+            ListTitleEdit.Focus();
+        }
+    }
 
-        var deleteItem = new MenuItem { Header = Loc.DeleteList };
-        deleteItem.Click += (s, _) =>
+    private void SidebarCtx_Delete(object sender, RoutedEventArgs e)
+    {
+        if ((sender as MenuItem)?.DataContext is TaskList list)
         {
             if (MessageBox.Show(Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete,
                     MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
                 ViewModel.DeleteListCommand.Execute(list);
-        };
-        menu.Items.Add(deleteItem);
-    }
-
-    public void SidebarList_PreviewMouseMove(object sender, MouseEventArgs e)
-    {
-        if (e.LeftButton != MouseButtonState.Pressed) return;
-        if (sender is ListBox lb)
-        {
-            var pos = Mouse.GetPosition(lb);
-            var element = lb.InputHitTest(pos) as DependencyObject;
-            while (element != null && element is not ListBoxItem)
-                element = VisualTreeHelper.GetParent(element);
-            if (element is ListBoxItem lbi && lbi.DataContext is TaskList list)
-                DragDrop.DoDragDrop(lbi, list, DragDropEffects.Move);
         }
     }
 

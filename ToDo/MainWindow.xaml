@@ -211,8 +211,7 @@
                                 <DataTemplate DataType="{x:Type vm:ListGroupDisplay}">
                                     <StackPanel>
                                         <Border Margin="4,2" Padding="8,6" CornerRadius="6" Background="Transparent" Cursor="Hand"
-                                                MouseLeftButtonDown="ListGroupHeader_Click" ContextMenuOpening="ListGroup_ContextMenuOpening" AllowDrop="True" DragEnter="ListGroupHeader_DragEnter" DragLeave="ListGroupHeader_DragLeave" Drop="ListGroupHeader_Drop">
-                                            <Border.ContextMenu><ContextMenu/></Border.ContextMenu>
+                                                MouseLeftButtonDown="ListGroupHeader_Click">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto"/>
@@ -232,15 +231,8 @@
                                                     </TextBlock.Style>
                                                 </TextBlock>
                                                 <TextBlock Grid.Column="1" Text="{Binding Group.Name}" FontSize="12" FontWeight="SemiBold"
-                                                           VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"
-                                                           Visibility="{Binding IsEditing, Converter={StaticResource InverseBool}}"
-                                                           MouseLeftButtonDown="ListGroupName_DoubleClick"/>
-                                                <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
-                                                         FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"
-                                                         Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}"
-                                                         Style="{StaticResource SearchTextBox}" Padding="2,0"
-                                                         KeyDown="ListGroupName_KeyDown"
-                                                         LostFocus="ListGroupName_LostFocus"/>
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{StaticResource TextSecondaryBrush}"/>
                                             </Grid>
                                         </Border>
                                         <ListBox ItemsSource="{Binding Lists}"
@@ -268,13 +260,13 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+                        <Button Content="+ &#xE710;" Style="{StaticResource FluentSubtleButton}"
+                                FontSize="11" HorizontalAlignment="Left" Margin="12,2,0,4"
+                                Click="NewListGroup_Click" Foreground="{StaticResource TextDisabledBrush}"/>
                         <!-- Ungrouped -->
                         <ListBox ItemsSource="{Binding UngroupedCustomLists}"
-                                 PreviewMouseMove="SidebarList_PreviewMouseMove"
                                  SelectedValue="{Binding ActiveListId}"
-                                 ContextMenuOpening="UngroupedList_ContextMenuOpening"
-                                 SelectedValuePath="Id">
-                            <ListBox.ContextMenu><ContextMenu/></ListBox.ContextMenu>
+                                 SelectedValuePath="Id"
                                  BorderThickness="0" Background="Transparent"
                                  ItemContainerStyle="{StaticResource SidebarNavItem}" Margin="0,0,0,4"
                                  DragEnter="SidebarList_DragEnter" DragLeave="SidebarList_DragLeave"
@@ -282,6 +274,7 @@
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:TaskList}">
                                     <Grid>
+                                        <Grid.ContextMenu><ContextMenu><MenuItem Header="M" SubmenuOpened="SidebarCtx_MoveToGroup"/><MenuItem Header="R" Click="SidebarCtx_Rename"/><Separator/><MenuItem Header="D" Click="SidebarCtx_Delete"/></ContextMenu></Grid.ContextMenu>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
@@ -314,21 +307,11 @@
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- New list input + new group button -->
+                <!-- New list input (between scroll and footer) -->
                 <Border Grid.Row="2" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0"
-                        Padding="10,6">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBox x:Name="NewListBox" Grid.Column="0" Style="{StaticResource FluentTextBox}"
-                                 FontSize="12" KeyDown="NewListBox_KeyDown"/>
-                        <Button Grid.Column="1" Content="{x:Static services:Loc.NewListGroup}"
-                                Style="{StaticResource FluentSubtleButton}" FontSize="11"
-                                Click="NewListGroup_Click" Foreground="{StaticResource TextDisabledBrush}"
-                                Margin="4,0,0,0" Padding="8,4"/>
-                    </Grid>
+                        Padding="14,8">
+                    <TextBox x:Name="NewListBox" Style="{StaticResource FluentTextBox}"
+                             FontSize="12" KeyDown="NewListBox_KeyDown"/>
                 </Border>
 
                 <!-- Footer -->
