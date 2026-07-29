@@ -272,9 +272,9 @@
                         <ListBox ItemsSource="{Binding UngroupedCustomLists}"
                                  PreviewMouseMove="SidebarList_PreviewMouseMove"
                                  SelectedValue="{Binding ActiveListId}"
-                                 ContextMenu="{x:Null}"
                                  ContextMenuOpening="UngroupedList_ContextMenuOpening"
-                                 SelectedValuePath="Id"
+                                 SelectedValuePath="Id">
+                            <ListBox.ContextMenu><ContextMenu/></ListBox.ContextMenu>
                                  BorderThickness="0" Background="Transparent"
                                  ItemContainerStyle="{StaticResource SidebarNavItem}" Margin="0,0,0,4"
                                  DragEnter="SidebarList_DragEnter" DragLeave="SidebarList_DragLeave"
