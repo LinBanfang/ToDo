@@ -43,6 +43,6 @@
     <SolidColorBrush x:Key="AccentGreenBrush" Color="#107C10"/>
 
     <!-- Font -->
-    <FontFamily x:Key="FluentFont">Segoe UI</FontFamily>
+    <FontFamily x:Key="FluentFont">Microsoft YaHei UI</FontFamily>
 
 </ResourceDictionary>
