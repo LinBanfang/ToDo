@@ -264,33 +264,37 @@ public partial class MainViewModel : ObservableObject
         }
 
         // Sort based on list type
-        var sortedActive = ActiveList.Type switch
-        {
-            ListType.MyDay => active
-                .Where(t => t.IsMyDay || (t.DueDate != null && IsToday(t.DueDate.Value)))
-                .OrderBy(t => t.MyDayOrder),
-            ListType.Important => active.Where(t => t.IsImportant).OrderByDescending(t => t.ModifiedAt),
-            ListType.Planned => active
-                .Where(t => t.DueDate != null || t.Reminder != null)
-                .OrderBy(t => t.DueDate ?? long.MaxValue),
-            ListType.Tasks => active
-                .Where(t => t.ListId == "list-tasks")
-                .OrderByDescending(t => t.ModifiedAt),
-            _ => active.OrderBy(t => t.Order)
-        };
+        var sortedActive = isSearching
+            ? active.OrderByDescending(t => t.ModifiedAt)
+            : ActiveList.Type switch
+            {
+                ListType.MyDay => active
+                    .Where(t => t.IsMyDay || (t.DueDate != null && IsToday(t.DueDate.Value)))
+                    .OrderBy(t => t.MyDayOrder),
+                ListType.Important => active.Where(t => t.IsImportant).OrderByDescending(t => t.ModifiedAt),
+                ListType.Planned => active
+                    .Where(t => t.DueDate != null || t.Reminder != null)
+                    .OrderBy(t => t.DueDate ?? long.MaxValue),
+                ListType.Tasks => active
+                    .Where(t => t.ListId == "list-tasks")
+                    .OrderByDescending(t => t.ModifiedAt),
+                _ => active.OrderBy(t => t.Order)
+            };
 
         foreach (var t in sortedActive)
             ActiveTasks.Add(t);
 
-        // Filter completed by the same view logic
-        var filteredCompleted = ActiveList.Type switch
-        {
-            ListType.MyDay => completed.Where(t => t.IsMyDay),
-            ListType.Important => completed.Where(t => t.IsImportant),
-            ListType.Planned => completed.Where(t => t.DueDate != null || t.Reminder != null),
-            ListType.Tasks => completed.Where(t => t.ListId == "list-tasks"),
-            _ => completed.Where(t => t.ListId == ActiveList.Id)
-        };
+        // Filter completed by the same view logic (skip during search)
+        var filteredCompleted = isSearching
+            ? completed
+            : ActiveList.Type switch
+            {
+                ListType.MyDay => completed.Where(t => t.IsMyDay),
+                ListType.Important => completed.Where(t => t.IsImportant),
+                ListType.Planned => completed.Where(t => t.DueDate != null || t.Reminder != null),
+                ListType.Tasks => completed.Where(t => t.ListId == "list-tasks"),
+                _ => completed.Where(t => t.ListId == ActiveList.Id)
+            };
 
         var sortedCompleted = filteredCompleted.OrderByDescending(t =>
             t.CloseRecord?.ClosedAt ?? 0);
