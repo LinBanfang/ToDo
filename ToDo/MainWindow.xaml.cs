@@ -24,6 +24,12 @@ public partial class MainWindow : Window
             if (e.PropertyName == nameof(MainViewModel.SelectedTask))
                 RefreshDetailPickers();
         };
+
+        SearchBox.TextChanged += (s, e) =>
+        {
+            SearchPlaceholder.Visibility = string.IsNullOrEmpty(SearchBox.Text)
+                ? Visibility.Visible : Visibility.Collapsed;
+        };
     }
 
     // ─── Sidebar ──────────────────────────────────────────

@@ -145,8 +145,18 @@
                 <StackPanel Grid.Row="0" Margin="14,14,14,0">
                     <TextBlock Text="{x:Static services:Loc.AppTitle}" FontSize="22" FontWeight="SemiBold"
                                Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,12"/>
-                    <TextBox Style="{StaticResource FluentTextBox}"
-                             Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"/>
+                    <!-- Search box with icon and placeholder -->
+                    <Grid Height="32">
+                        <TextBox x:Name="SearchBox" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource SearchTextBox}" Padding="32,0,10,0"/>
+                        <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                   Foreground="{StaticResource TextDisabledBrush}"
+                                   VerticalAlignment="Center" Margin="10,0,0,0" IsHitTestVisible="False"/>
+                        <TextBlock x:Name="SearchPlaceholder"
+                                   Text="{x:Static services:Loc.Search}" FontSize="13"
+                                   Foreground="{StaticResource TextDisabledBrush}"
+                                   VerticalAlignment="Center" Margin="32,0,0,0" IsHitTestVisible="False"/>
+                    </Grid>
                     <Border Height="1" Background="{StaticResource DividerBrush}" Margin="0,10,0,4"/>
                 </StackPanel>
 

@@ -316,6 +316,7 @@ public partial class MainViewModel : ObservableObject
     {
         ActiveListId = value?.Id;
         SelectedTask = null;
+        SearchQuery = string.Empty;
         OnPropertyChanged(nameof(IsCustomList));
         OnPropertyChanged(nameof(IsSystemList));
         RefreshActiveTasks();
