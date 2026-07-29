@@ -90,20 +90,23 @@
                     <TextBlock Text="&#xE706;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="4,0"
                                Foreground="{StaticResource TextAccentBrush}"
                                Visibility="{Binding IsMyDay, Converter={StaticResource BoolToVis}}"/>
-                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="4,0">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Text" Value="&#xE734;"/>
-                                <Setter Property="Foreground" Value="{StaticResource TextDisabledBrush}"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsImportant}" Value="True">
-                                        <Setter Property="Text" Value="&#xE735;"/>
-                                        <Setter Property="Foreground" Value="#FFD335"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
+                    <Border Background="Transparent" Cursor="Hand" MouseLeftButtonDown="Star_Click" Width="24" Height="24">
+                        <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="&#xE734;"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextDisabledBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsImportant}" Value="True">
+                                            <Setter Property="Text" Value="&#xE735;"/>
+                                            <Setter Property="Foreground" Value="#FFD335"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Border>
                 </StackPanel>
             </Grid>
         </DataTemplate>

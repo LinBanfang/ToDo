@@ -816,6 +816,19 @@ public partial class MainWindow : Window
         }
     }
 
+    private void Star_Click(object sender, MouseButtonEventArgs e)
+    {
+        // Walk up to find the task from the TaskRowReorder border
+        DependencyObject? current = sender as DependencyObject;
+        while (current != null && (current as FrameworkElement)?.DataContext is not TaskItem)
+            current = VisualTreeHelper.GetParent(current);
+        if (current is FrameworkElement fe && fe.DataContext is TaskItem task)
+        {
+            ViewModel.ToggleImportantCommand.Execute(task);
+        }
+        e.Handled = true;
+    }
+
     // ─── Keyboard Shortcuts ───────────────────────────────
     protected override void OnKeyDown(KeyEventArgs e)
     {
