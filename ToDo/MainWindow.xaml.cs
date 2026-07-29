@@ -121,6 +121,60 @@ public partial class MainWindow : Window
         }
     }
 
+    // ─── List group rename handlers ───────────────────────
+    private void ListGroupName_DoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount >= 2 && sender is FrameworkElement fe && fe.DataContext is ListGroupDisplay lgd)
+        { lgd.EditName = lgd.Group.Name; lgd.IsEditing = true; e.Handled = true; }
+    }
+    private void ListGroupName_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.DataContext is ListGroupDisplay lgd)
+        { if (e.Key == Key.Enter) { CommitListGroupRename(lgd); e.Handled = true; } else if (e.Key == Key.Escape) { lgd.IsEditing = false; e.Handled = true; } }
+    }
+    private void ListGroupName_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.DataContext is ListGroupDisplay lgd) CommitListGroupRename(lgd);
+    }
+    private void CommitListGroupRename(ListGroupDisplay lgd)
+    {
+        var n = lgd.EditName?.Trim();
+        if (!string.IsNullOrEmpty(n) && n != lgd.Group.Name) { lgd.Group.Name = n; ViewModel.RenameListGroupCommand.Execute(lgd.Group); }
+        lgd.IsEditing = false;
+    }
+
+    // ─── Drag list to group handlers ──────────────────────
+    private void ListGroupHeader_DragEnter(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(typeof(TaskList)) && sender is Border b)
+        { b.Background = new SolidColorBrush(Color.FromRgb(0xE6, 0xF2, 0xFC)); e.Effects = DragDropEffects.Move; }
+        e.Handled = true;
+    }
+    private void ListGroupHeader_DragLeave(object sender, DragEventArgs e)
+    {
+        if (sender is Border b) b.Background = Brushes.Transparent;
+        e.Handled = true;
+    }
+    private void ListGroupHeader_Drop(object sender, DragEventArgs e)
+    {
+        if (sender is Border b) { b.Background = Brushes.Transparent;
+            if (e.Data.GetDataPresent(typeof(TaskList)) && b.DataContext is ListGroupDisplay lgd
+                && e.Data.GetData(typeof(TaskList)) is TaskList list && list.GroupId != lgd.Group.Id)
+                ViewModel.MoveListToGroupCommand.Execute((list, lgd.Group)); }
+        e.Handled = true;
+    }
+
+    // ─── Drag sidebar list items ──────────────────────────
+    public void SidebarList_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed || sender is not ListBox lb) return;
+        var pos = e.GetPosition(lb);
+        var el = lb.InputHitTest(pos) as DependencyObject;
+        while (el != null && el is not ListBoxItem) el = VisualTreeHelper.GetParent(el);
+        if (el is ListBoxItem lbi && lbi.DataContext is TaskList list)
+            DragDrop.DoDragDrop(lbi, list, DragDropEffects.Move);
+    }
+
     private void NewListBox_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Enter && sender is TextBox tb && !string.IsNullOrWhiteSpace(tb.Text))
