@@ -143,12 +143,10 @@
 
                 <!-- Header -->
                 <StackPanel Grid.Row="0" Margin="14,14,14,0">
-                    <TextBlock Text="{x:Static services:Loc.AppTitle}" FontSize="22" FontWeight="SemiBold"
-                               Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,12"/>
                     <!-- Search box -->
                     <Grid Height="32" Margin="0,0,0,2">
                         <TextBox x:Name="SearchBox" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource SearchTextBox}" Padding="24,0,28,0"
+                                 Style="{StaticResource SearchTextBox}" Padding="12,0,28,0"
                                  VerticalContentAlignment="Center"/>
                         <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="12"
                                    Foreground="{StaticResource TextDisabledBrush}"
@@ -204,16 +202,7 @@
                         <!-- Divider -->
                         <Border Height="1" Background="{StaticResource DividerBrush}" Margin="14,4"/>
 
-                        <!-- Custom Lists Section -->
-                        <StackPanel Orientation="Horizontal" Margin="14,6,14,4">
-                            <TextBlock Text="{x:Static services:Loc.Lists}" Style="{StaticResource SectionHeaderStyle}"
-                                       Margin="0" VerticalAlignment="Center"/>
-                            <Button Content="&#xE710;" FontFamily="Segoe MDL2 Assets"
-                                    Style="{StaticResource FluentSubtleButton}" FontSize="14"
-                                    Width="28" Height="24" Padding="0"
-                                    Foreground="{StaticResource TextSecondaryBrush}"
-                                    Click="AddList_Click"/>
-                        </StackPanel>
+                        <!-- Custom Lists -->
                         <ListBox ItemsSource="{Binding CustomLists}"
                                  SelectedValue="{Binding ActiveListId}"
                                  SelectedValuePath="Id"
