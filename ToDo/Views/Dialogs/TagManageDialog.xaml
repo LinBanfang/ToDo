@@ -1,0 +1,75 @@
+<Window x:Class="ToDo.Views.Dialogs.TagManageDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="clr-namespace:ToDo.Models"
+        Title="Manage Tags" Height="450" Width="400"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        Background="{StaticResource CardBackgroundBrush}"
+        FontFamily="{StaticResource FluentFont}">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Manage Tags" FontSize="18" FontWeight="SemiBold"
+                   Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,16"/>
+
+        <!-- Existing tags list -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="TagListControl">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type models:Tag}">
+                        <Border Background="{StaticResource AppBackgroundBrush}"
+                                CornerRadius="6" Padding="10" Margin="0,0,0,8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Color swatch popup -->
+                                <Button Grid.Column="0" Width="28" Height="28" Margin="0,0,10,0"
+                                        Background="{Binding Color, Converter={StaticResource StringToBrush}}"
+                                        BorderThickness="0" Cursor="Hand"
+                                        Click="ColorSwatch_Click" Tag="{Binding}"/>
+                                <!-- Name -->
+                                <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=LostFocus}"
+                                         Style="{StaticResource FluentTextBox}" FontSize="13"
+                                         VerticalAlignment="Center"/>
+                                <!-- Delete -->
+                                <Button Grid.Column="2" Content="&#xE10A;" FontFamily="Segoe MDL2 Assets"
+                                        Style="{StaticResource FluentSubtleButton}" FontSize="14"
+                                        Foreground="{StaticResource AccentRed}"
+                                        Click="DeleteTag_Click" Tag="{Binding}"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- New tag row -->
+        <Border Grid.Row="2" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0"
+                Padding="0,12,0,0" Margin="0,12,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Button x:Name="NewTagColorBtn" Grid.Column="0" Width="28" Height="28" Margin="0,0,10,0"
+                        Background="#0078D4" BorderThickness="0" Cursor="Hand"
+                        Click="NewColorSwatch_Click"/>
+                <TextBox x:Name="NewTagNameBox" Grid.Column="1"
+                         Style="{StaticResource FluentTextBox}" FontSize="13"
+                         VerticalAlignment="Center"/>
+                <Button Grid.Column="2" Content="Add" Style="{StaticResource FluentAccentButton}"
+                        FontSize="13" Padding="16,6" Margin="10,0,0,0"
+                        Click="AddTag_Click"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
