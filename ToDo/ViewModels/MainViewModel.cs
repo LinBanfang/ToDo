@@ -52,8 +52,9 @@ public partial class MainViewModel : ObservableObject
 
     // ─── Grouped tasks for current list ──────────────────
     public ObservableCollection<GroupedTasks> GroupedTaskList { get; } = new();
-    public bool IsCustomList => ActiveList?.Type == ListType.Custom;
+    public bool IsCustomList => ActiveList?.Type == ListType.Custom && !IsSearching;
     public bool IsSystemList => !IsCustomList;
+    public bool IsSearching => !string.IsNullOrWhiteSpace(SearchQuery);
     public string CompletedHeader => $"{Loc.CompletedSection} ({CompletedTasks.Count})";
     public string HeaderTitle => !string.IsNullOrWhiteSpace(SearchQuery)
         ? Loc.SearchResults
@@ -298,8 +299,8 @@ public partial class MainViewModel : ObservableObject
 
         OnPropertyChanged(nameof(CompletedHeader));
 
-        // Build grouped view for custom lists
-        if (ActiveList.Type == ListType.Custom)
+        // Build grouped view for custom lists (skip when searching)
+        if (ActiveList.Type == ListType.Custom && !isSearching)
         {
             // Ungrouped section (always shown as drop target)
             var ungrouped = ActiveTasks.Where(t => t.GroupId == null).ToList();
@@ -345,6 +346,9 @@ public partial class MainViewModel : ObservableObject
 
     partial void OnSearchQueryChanged(string value)
     {
+        OnPropertyChanged(nameof(IsSearching));
+        OnPropertyChanged(nameof(IsCustomList));
+        OnPropertyChanged(nameof(IsSystemList));
         OnPropertyChanged(nameof(HeaderTitle));
         RefreshActiveTasks();
     }
