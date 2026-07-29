@@ -17,7 +17,9 @@ public class DatabaseService : IDisposable
 
     public DatabaseService(string? dbPath = null)
     {
-        _dbPath = dbPath ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "todo.db");
+        // Store DB in project root (not bin/), survives clean builds
+var projectDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
+_dbPath = dbPath ?? Path.Combine(projectDir, "todo.db");
         _db = new LiteDatabase($"Filename={_dbPath};Connection=direct");
 
         Lists = _db.GetCollection<TaskList>("lists");
