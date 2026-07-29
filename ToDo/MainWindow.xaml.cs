@@ -77,9 +77,9 @@ public partial class MainWindow : Window
         }
     }
 
-    public void SidebarGrid_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+    public void SidebarGrid_MenuOpened(object sender, RoutedEventArgs e)
     {
-        if (sender is not Grid grid || grid.ContextMenu is not ContextMenu menu
+        if (sender is not ContextMenu menu || menu.PlacementTarget is not Grid grid
             || grid.DataContext is not TaskList list || list.IsSystem) return;
 
         menu.Items.Clear();
