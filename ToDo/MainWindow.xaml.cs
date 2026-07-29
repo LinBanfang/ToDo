@@ -27,12 +27,19 @@ public partial class MainWindow : Window
 
         SearchBox.TextChanged += (s, e) =>
         {
-            SearchPlaceholder.Visibility = string.IsNullOrEmpty(SearchBox.Text)
-                ? Visibility.Visible : Visibility.Collapsed;
+            var hasText = !string.IsNullOrEmpty(SearchBox.Text);
+            SearchPlaceholder.Visibility = hasText ? Visibility.Collapsed : Visibility.Visible;
+            SearchClearBtn.Visibility = hasText ? Visibility.Visible : Visibility.Collapsed;
         };
     }
 
     // ─── Sidebar ──────────────────────────────────────────
+    private void SearchClear_Click(object sender, RoutedEventArgs e)
+    {
+        SearchBox.Text = "";
+        ViewModel.SearchQuery = "";
+    }
+
     private void AddList_Click(object sender, RoutedEventArgs e)
     {
         NewListBox.Focus();

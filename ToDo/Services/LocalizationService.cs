@@ -27,6 +27,7 @@ public static class Loc
     // ─── String properties ────────────────────────────────
     public static string AppTitle => Language == AppLanguage.Chinese ? "待办事项" : "To Do";
     public static string Search => Language == AppLanguage.Chinese ? "搜索" : "Search";
+    public static string SearchResults => Language == AppLanguage.Chinese ? "搜索结果" : "Search Results";
     public static string System => Language == AppLanguage.Chinese ? "系统" : "SYSTEM";
     public static string Lists => Language == AppLanguage.Chinese ? "列表" : "LISTS";
     public static string Tags => Language == AppLanguage.Chinese ? "标签" : "TAGS";

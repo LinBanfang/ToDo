@@ -55,6 +55,9 @@ public partial class MainViewModel : ObservableObject
     public bool IsCustomList => ActiveList?.Type == ListType.Custom;
     public bool IsSystemList => !IsCustomList;
     public string CompletedHeader => $"{Loc.CompletedSection} ({CompletedTasks.Count})";
+    public string HeaderTitle => !string.IsNullOrWhiteSpace(SearchQuery)
+        ? Loc.SearchResults
+        : ActiveList?.DisplayName ?? "";
 
     private static bool IsToday(long ts)
     {
@@ -236,17 +239,21 @@ public partial class MainViewModel : ObservableObject
             };
         }
 
-        // System lists aggregate across all custom lists; custom lists filter by ListId
-        var allListTasks = ActiveList.Type == ListType.Custom
-            ? Tasks.Where(t => t.ListId == ActiveList.Id).ToList()
-            : Tasks.ToList();
+        var isSearching = !string.IsNullOrWhiteSpace(SearchQuery);
+
+        // Searching → across ALL lists; otherwise → filter by current list
+        var allListTasks = isSearching
+            ? Tasks.ToList()
+            : ActiveList.Type == ListType.Custom
+                ? Tasks.Where(t => t.ListId == ActiveList.Id).ToList()
+                : Tasks.ToList();
 
         // Active (unclosed) tasks
         var active = allListTasks.Where(t => t.CloseRecord == null);
         var completed = allListTasks.Where(t => t.CloseRecord != null);
 
-        // Apply search
-        if (!string.IsNullOrWhiteSpace(SearchQuery))
+        // Apply search filter
+        if (isSearching)
         {
             var q = SearchQuery.ToLower();
             active = active.Where(t =>
@@ -319,6 +326,7 @@ public partial class MainViewModel : ObservableObject
         SearchQuery = string.Empty;
         OnPropertyChanged(nameof(IsCustomList));
         OnPropertyChanged(nameof(IsSystemList));
+        OnPropertyChanged(nameof(HeaderTitle));
         RefreshActiveTasks();
     }
 
@@ -335,7 +343,11 @@ public partial class MainViewModel : ObservableObject
         // Detail pane pickers are refreshed by the view
     }
 
-    partial void OnSearchQueryChanged(string value) => RefreshActiveTasks();
+    partial void OnSearchQueryChanged(string value)
+    {
+        OnPropertyChanged(nameof(HeaderTitle));
+        RefreshActiveTasks();
+    }
 
     // ─── List Commands ────────────────────────────────────
     [RelayCommand]

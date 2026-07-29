@@ -148,7 +148,7 @@
                     <!-- Search box with icon and placeholder -->
                     <Grid Height="32">
                         <TextBox x:Name="SearchBox" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource SearchTextBox}" Padding="32,0,10,0"/>
+                                 Style="{StaticResource SearchTextBox}" Padding="32,0,28,0"/>
                         <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="14"
                                    Foreground="{StaticResource TextDisabledBrush}"
                                    VerticalAlignment="Center" Margin="10,0,0,0" IsHitTestVisible="False"/>
@@ -156,6 +156,14 @@
                                    Text="{x:Static services:Loc.Search}" FontSize="13"
                                    Foreground="{StaticResource TextDisabledBrush}"
                                    VerticalAlignment="Center" Margin="32,0,0,0" IsHitTestVisible="False"/>
+                        <!-- X clear button -->
+                        <Button Content="&#xE10A;" FontFamily="Segoe MDL2 Assets"
+                                Style="{StaticResource FluentSubtleButton}" FontSize="10"
+                                Width="22" Height="22" Padding="0"
+                                Foreground="{StaticResource TextDisabledBrush}"
+                                HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,4,0"
+                                Click="SearchClear_Click"
+                                Visibility="Collapsed" x:Name="SearchClearBtn"/>
                     </Grid>
                     <Border Height="1" Background="{StaticResource DividerBrush}" Margin="0,10,0,4"/>
                 </StackPanel>
@@ -310,7 +318,7 @@
                             </Button.Content>
                         </Button>
                         <!-- Editable title (click to rename) -->
-                        <TextBlock x:Name="ListTitleLabel" Text="{Binding ActiveList.DisplayName}" FontSize="28"
+                        <TextBlock x:Name="ListTitleLabel" Text="{Binding HeaderTitle}" FontSize="28"
                                    FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"
                                    VerticalAlignment="Center" Cursor="Hand"
                                    MouseLeftButtonDown="ListTitle_Click"/>
