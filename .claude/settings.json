@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command \"Get-Process -Name ToDo -ErrorAction SilentlyContinue | Stop-Process -Force\")"
+    ]
+  }
+}

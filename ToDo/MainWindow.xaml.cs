@@ -150,12 +150,64 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
+    public void SidebarListItem_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+    {
+        if (sender is not ListBox lb) return;
+        var pos = Mouse.GetPosition(lb);
+        var element = lb.InputHitTest(pos) as DependencyObject;
+        while (element != null && element is not ListBoxItem)
+            element = VisualTreeHelper.GetParent(element);
+        if (element is not ListBoxItem lbi || lbi.DataContext is not TaskList list) return;
+
+        // Build context menu for the sidebar list
+        var menu = new ContextMenu();
+
+        // Move to group
+        var moveMenu = new MenuItem { Header = Loc.MoveToGroup };
+        // Remove from group (if currently in one)
+        if (list.GroupId != null)
+        {
+            var ungroupItem = new MenuItem { Header = Loc.Ungrouped };
+            ungroupItem.Click += (s, _) => ViewModel.MoveListToGroupCommand.Execute((list, null));
+            moveMenu.Items.Add(ungroupItem);
+            moveMenu.Items.Add(new Separator());
+        }
+        foreach (var g in ViewModel.ListGroups)
+        {
+            if (g.Id == list.GroupId) continue;
+            var gi = new MenuItem { Header = g.Name };
+            var captured = g;
+            gi.Click += (s, _) => ViewModel.MoveListToGroupCommand.Execute((list, captured));
+            moveMenu.Items.Add(gi);
+        }
+        menu.Items.Add(moveMenu);
+
+        menu.Items.Add(new Separator());
+
+        var renameItem = new MenuItem { Header = Loc.RenameList };
+        renameItem.Click += (s, _) => { /* trigger inline rename - focus on list title edit */ };
+        menu.Items.Add(renameItem);
+
+        var deleteItem = new MenuItem { Header = Loc.DeleteList };
+        deleteItem.Click += (s, _) =>
+        {
+            if (MessageBox.Show(Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete,
+                    MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                ViewModel.DeleteListCommand.Execute(list);
+        };
+        menu.Items.Add(deleteItem);
+
+        menu.PlacementTarget = lbi;
+        menu.IsOpen = true;
+        e.Handled = true;
+    }
+
     public void SidebarList_PreviewMouseMove(object sender, MouseEventArgs e)
     {
         if (e.LeftButton != MouseButtonState.Pressed) return;
         if (sender is ListBox lb)
         {
-            var pos = e.GetPosition(lb);
+            var pos = Mouse.GetPosition(lb);
             var element = lb.InputHitTest(pos) as DependencyObject;
             while (element != null && element is not ListBoxItem)
                 element = VisualTreeHelper.GetParent(element);
