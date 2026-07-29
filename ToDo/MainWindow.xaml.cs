@@ -152,24 +152,27 @@ public partial class MainWindow : Window
 
     public void UngroupedList_ContextMenuOpening(object sender, ContextMenuEventArgs e)
     {
-        if (sender is not ListBox lb) return;
-
-        // Find and select the right-clicked item
-        var pos = Mouse.GetPosition(lb);
-        var hit = lb.InputHitTest(pos) as DependencyObject;
-        while (hit != null && hit is not ListBoxItem)
-            hit = VisualTreeHelper.GetParent(hit);
-
-        if (hit is ListBoxItem lbi && lbi.DataContext is TaskList list && !list.IsSystem)
+        try
         {
+            if (sender is not ListBox lb) { MessageBox.Show("NOT A LISTBOX"); return; }
+            var pos = Mouse.GetPosition(lb);
+            var hit = lb.InputHitTest(pos) as DependencyObject;
+            while (hit != null && hit is not ListBoxItem)
+                hit = VisualTreeHelper.GetParent(hit);
+
+            if (hit == null) { MessageBox.Show("HIT IS NULL"); e.Handled = true; return; }
+            if (hit is not ListBoxItem lbi) { MessageBox.Show("HIT IS NOT LISTBOXITEM: " + hit.GetType().Name); e.Handled = true; return; }
+            if (lbi.DataContext is not TaskList list) { MessageBox.Show("DATACONTEXT IS NOT TASKLIST: " + (lbi.DataContext?.GetType().Name ?? "null")); e.Handled = true; return; }
+            if (list.IsSystem) { e.Handled = true; return; }
+
             lbi.IsSelected = true;
             var menu = new ContextMenu();
             BuildSidebarListMenu(menu, list);
             lb.ContextMenu = menu;
         }
-        else
+        catch (Exception ex)
         {
-            lb.ContextMenu = null;
+            MessageBox.Show("ERROR: " + ex.Message);
             e.Handled = true;
         }
     }
