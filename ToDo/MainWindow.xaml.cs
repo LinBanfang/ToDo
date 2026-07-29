@@ -45,6 +45,38 @@ public partial class MainWindow : Window
         NewListBox.Focus();
     }
 
+    private void NewListGroup_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.CreateListGroupCommand.Execute("New group");
+    }
+
+    private void ListGroupHeader_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.DataContext is ListGroupDisplay lgd)
+            ViewModel.ToggleListGroupCollapseCommand.Execute(lgd.Group);
+    }
+
+    private void ListGroup_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+    {
+        if (sender is Border border && border.DataContext is ListGroupDisplay lgd)
+        {
+            var menu = border.ContextMenu;
+            if (menu == null) return;
+            menu.Items.Clear();
+            var rename = new MenuItem { Header = Loc.Rename };
+            rename.Click += (s, _) => { /* inline rename */ };
+            menu.Items.Add(rename);
+            var delete = new MenuItem { Header = Loc.DeleteGroup };
+            delete.Click += (s, _) =>
+            {
+                if (MessageBox.Show(Loc.ConfirmDeleteGroupMsg(lgd.Group.Name), Loc.DeleteGroup,
+                        MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                    ViewModel.DeleteListGroupCommand.Execute(lgd.Group);
+            };
+            menu.Items.Add(delete);
+        }
+    }
+
     private void NewListBox_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Enter && sender is TextBox tb && !string.IsNullOrWhiteSpace(tb.Text))

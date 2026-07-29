@@ -13,6 +13,7 @@ public class DatabaseService : IDisposable
     public ILiteCollection<TaskGroup> Groups { get; }
     public ILiteCollection<TaskItem> Tasks { get; }
     public ILiteCollection<Tag> Tags { get; }
+    public ILiteCollection<ListGroup> ListGroups { get; }
 
     public DatabaseService(string? dbPath = null)
     {
@@ -23,6 +24,7 @@ public class DatabaseService : IDisposable
         Groups = _db.GetCollection<TaskGroup>("groups");
         Tasks = _db.GetCollection<TaskItem>("tasks");
         Tags = _db.GetCollection<Tag>("tags");
+        ListGroups = _db.GetCollection<ListGroup>("listgroups");
 
         // Ensure indexes
         Lists.EnsureIndex(x => x.Type);
@@ -33,6 +35,7 @@ public class DatabaseService : IDisposable
         Tasks.EnsureIndex(x => x.IsMyDay);
         Tasks.EnsureIndex(x => x.IsImportant);
         Tasks.EnsureIndex(x => x.DueDate);
+        ListGroups.EnsureIndex(x => x.Order);
         Tags.EnsureIndex(x => x.Name, unique: true);
 
         SeedDefaultData();

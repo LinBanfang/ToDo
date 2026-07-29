@@ -14,6 +14,9 @@ public partial class MainViewModel : ObservableObject
     public ObservableCollection<TaskList> Lists { get; } = new();
     public ObservableCollection<TaskList> SystemLists { get; } = new();
     public ObservableCollection<TaskList> CustomLists { get; } = new();
+    public ObservableCollection<ListGroup> ListGroups { get; } = new();
+    public ObservableCollection<TaskList> UngroupedCustomLists { get; } = new();
+    public ObservableCollection<ListGroupDisplay> GroupedCustomLists { get; } = new();
     public ObservableCollection<TaskGroup> Groups { get; } = new();
     public ObservableCollection<TaskItem> Tasks { get; } = new();
     public ObservableCollection<Tag> Tags { get; } = new();
@@ -110,6 +113,7 @@ public partial class MainViewModel : ObservableObject
     // ─── Data Loading ─────────────────────────────────────
     public void LoadAll()
     {
+        LoadListGroups();
         LoadLists();
         LoadGroups();
         LoadTasks();
@@ -129,6 +133,32 @@ public partial class MainViewModel : ObservableObject
         LoadGroups();
         LoadLists(); // LoadLists now re-points ActiveList internally
         RefreshActiveTasks();
+    }
+
+    private void LoadListGroups()
+    {
+        var all = _db.ListGroups.Query().OrderBy(x => x.Order).ToArray();
+        ListGroups.Clear();
+        foreach (var g in all) ListGroups.Add(g);
+    }
+
+    private void RebuildSidebarGroups()
+    {
+        UngroupedCustomLists.Clear();
+        GroupedCustomLists.Clear();
+
+        var ungrouped = CustomLists.Where(l => l.GroupId == null).ToList();
+        foreach (var l in ungrouped) UngroupedCustomLists.Add(l);
+
+        foreach (var g in ListGroups.OrderBy(g => g.Order))
+        {
+            var lists = CustomLists.Where(l => l.GroupId == g.Id).OrderBy(l => l.Order).ToList();
+            GroupedCustomLists.Add(new ListGroupDisplay
+            {
+                Group = g,
+                Lists = new ObservableCollection<TaskList>(lists)
+            });
+        }
     }
 
     private void LoadLists()
@@ -192,6 +222,8 @@ public partial class MainViewModel : ObservableObject
                 ActiveListId = fresh.Id;
             }
         }
+
+        RebuildSidebarGroups();
     }
 
     private void LoadGroups()
@@ -360,6 +392,58 @@ public partial class MainViewModel : ObservableObject
     }
 
     // ─── List Commands ────────────────────────────────────
+    [RelayCommand]
+    private void CreateListGroup(string name)
+    {
+        var g = new ListGroup { Name = name, Order = ListGroups.Count };
+        _db.ListGroups.Insert(g);
+        LoadListGroups();
+        RebuildSidebarGroups();
+        // Delete old DB so the new collection schema takes effect
+    }
+
+    [RelayCommand]
+    private void RenameListGroup(ListGroup g)
+    {
+        _db.ListGroups.Update(g);
+        LoadListGroups();
+        RebuildSidebarGroups();
+    }
+
+    [RelayCommand]
+    private void DeleteListGroup(ListGroup g)
+    {
+        // Move lists in this group to ungrouped
+        var listsInGroup = CustomLists.Where(l => l.GroupId == g.Id).ToList();
+        foreach (var l in listsInGroup)
+        {
+            l.GroupId = null;
+            _db.Lists.Update(l);
+        }
+        _db.ListGroups.Delete(g.Id);
+        LoadListGroups();
+        LoadLists();
+        RebuildSidebarGroups();
+    }
+
+    [RelayCommand]
+    private void ToggleListGroupCollapse(ListGroup g)
+    {
+        g.Collapsed = !g.Collapsed;
+        _db.ListGroups.Update(g);
+        LoadListGroups();
+        RebuildSidebarGroups();
+    }
+
+    [RelayCommand]
+    private void MoveListToGroup((TaskList list, ListGroup? group) param)
+    {
+        param.list.GroupId = param.group?.Id;
+        _db.Lists.Update(param.list);
+        LoadLists();
+        RebuildSidebarGroups();
+    }
+
     [RelayCommand]
     private void CreateList(string name)
     {
@@ -689,6 +773,17 @@ public partial class MainViewModel : ObservableObject
 /// <summary>
 /// Helper for grouping tasks by group in the UI
 /// </summary>
+/// <summary>Display wrapper for list groups in sidebar</summary>
+public partial class ListGroupDisplay : ObservableObject
+{
+    [ObservableProperty] private ListGroup _group = null!;
+    [ObservableProperty] private ObservableCollection<TaskList> _lists = new();
+    [ObservableProperty] private bool _isEditing;
+    [ObservableProperty] private string _editName = string.Empty;
+    public bool HasGroup => Group != null;
+    public bool TaskListVisible => !Group.Collapsed;
+}
+
 public partial class GroupedTasks : ObservableObject
 {
     [ObservableProperty]

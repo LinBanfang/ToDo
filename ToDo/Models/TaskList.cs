@@ -29,6 +29,9 @@ public partial class TaskList : ObservableObject
     private int _order;
 
     [ObservableProperty]
+    private string? _groupId;
+
+    [ObservableProperty]
     private bool _isSystem;
 
     [ObservableProperty]

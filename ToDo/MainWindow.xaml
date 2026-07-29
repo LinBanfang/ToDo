@@ -205,8 +205,66 @@
                         <!-- Divider -->
                         <Border Height="1" Background="{StaticResource DividerBrush}" Margin="14,4"/>
 
-                        <!-- Custom Lists -->
-                        <ListBox ItemsSource="{Binding CustomLists}"
+                        <!-- Custom List Groups -->
+                        <ItemsControl ItemsSource="{Binding GroupedCustomLists}" Margin="0,4,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:ListGroupDisplay}">
+                                    <StackPanel>
+                                        <Border Margin="4,2" Padding="8,6" CornerRadius="6" Background="Transparent" Cursor="Hand"
+                                                MouseLeftButtonDown="ListGroupHeader_Click">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0"
+                                                           Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value="&#xE970;"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Group.Collapsed}" Value="True">
+                                                                    <Setter Property="Text" Value="&#xE76C;"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <TextBlock Grid.Column="1" Text="{Binding Group.Name}" FontSize="12" FontWeight="SemiBold"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{StaticResource TextSecondaryBrush}"/>
+                                            </Grid>
+                                        </Border>
+                                        <ListBox ItemsSource="{Binding Lists}"
+                                                 SelectedValue="{Binding DataContext.ActiveListId, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                 SelectedValuePath="Id" BorderThickness="0" Background="Transparent"
+                                                 ItemContainerStyle="{StaticResource SidebarNavItem}"
+                                                 Visibility="{Binding TaskListVisible, Converter={StaticResource BoolToVis}}"
+                                                 Margin="8,0,0,0">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type models:TaskList}">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="14" FontFamily="Segoe UI Emoji" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                        <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="13" VerticalAlignment="Center"/>
+                                                        <TextBlock Grid.Column="2" Text="{Binding TaskCount}" FontSize="11" Foreground="{StaticResource TextDisabledBrush}" Margin="4,0,0,0"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Content="+ &#xE710;" Style="{StaticResource FluentSubtleButton}"
+                                FontSize="11" HorizontalAlignment="Left" Margin="12,2,0,4"
+                                Click="NewListGroup_Click" Foreground="{StaticResource TextDisabledBrush}"/>
+                        <!-- Ungrouped -->
+                        <ListBox ItemsSource="{Binding UngroupedCustomLists}"
                                  SelectedValue="{Binding ActiveListId}"
                                  SelectedValuePath="Id"
                                  BorderThickness="0" Background="Transparent"
