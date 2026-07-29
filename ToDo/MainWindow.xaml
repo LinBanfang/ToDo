@@ -251,8 +251,7 @@
                                                  Margin="8,0,0,0">
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate DataType="{x:Type models:TaskList}">
-                                                    <Grid>
-                                        <Grid.ContextMenu><ContextMenu><MenuItem Header="{x:Static services:Loc.MoveToGroup}" SubmenuOpened="SidebarCtx_MoveToGroup"><MenuItem Header="."/></MenuItem><MenuItem Header="{x:Static services:Loc.Rename}" Click="SidebarCtx_Rename"/><Separator/><MenuItem Header="{x:Static services:Loc.Delete}" Click="SidebarCtx_Delete"/></ContextMenu></Grid.ContextMenu>
+                                                    <Grid ContextMenuOpening="SidebarGrid_ContextMenuOpening">
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="Auto"/>
                                                             <ColumnDefinition Width="*"/>
@@ -280,8 +279,7 @@
                                  Drop="SidebarList_Drop">
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:TaskList}">
-                                    <Grid>
-                                        <Grid.ContextMenu><ContextMenu><MenuItem Header="{x:Static services:Loc.MoveToGroup}" SubmenuOpened="SidebarCtx_MoveToGroup"><MenuItem Header="."/></MenuItem><MenuItem Header="{x:Static services:Loc.Rename}" Click="SidebarCtx_Rename"/><Separator/><MenuItem Header="{x:Static services:Loc.Delete}" Click="SidebarCtx_Delete"/></ContextMenu></Grid.ContextMenu>
+                                    <Grid ContextMenuOpening="SidebarGrid_ContextMenuOpening">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>

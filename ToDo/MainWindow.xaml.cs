@@ -77,22 +77,20 @@ public partial class MainWindow : Window
         }
     }
 
-    private void SidebarCtx_MoveToGroup(object sender, RoutedEventArgs e)
+    public void SidebarGrid_ContextMenuOpening(object sender, ContextMenuEventArgs e)
     {
-        if (sender is not MenuItem parentItem || parentItem.DataContext is not TaskList list) return;
+        if (sender is not Grid grid || grid.DataContext is not TaskList list || list.IsSystem) return;
 
-        // Remove dummy item, add real entries
-        if (parentItem.Items.Count > 0 && parentItem.Items[0] is MenuItem dummy && (string)dummy.Header == ".")
-            parentItem.Items.RemoveAt(0);
+        var menu = new ContextMenu();
 
-        if (parentItem.Items.Count > 1) return; // already populated
-
+        // Move to group submenu
+        var moveItem = new MenuItem { Header = Loc.MoveToGroup };
         if (list.GroupId != null)
         {
             var ungroupItem = new MenuItem { Header = Loc.Ungrouped };
             ungroupItem.Click += (s, _) => ViewModel.MoveListToGroupCommand.Execute((list, null));
-            parentItem.Items.Add(ungroupItem);
-            parentItem.Items.Add(new Separator());
+            moveItem.Items.Add(ungroupItem);
+            moveItem.Items.Add(new Separator());
         }
         foreach (var g in ViewModel.ListGroups)
         {
@@ -100,8 +98,34 @@ public partial class MainWindow : Window
             var gi = new MenuItem { Header = g.Name };
             var captured = g;
             gi.Click += (s, _) => ViewModel.MoveListToGroupCommand.Execute((list, captured));
-            parentItem.Items.Add(gi);
+            moveItem.Items.Add(gi);
         }
+        menu.Items.Add(moveItem);
+
+        // Rename
+        var renameItem = new MenuItem { Header = Loc.Rename };
+        renameItem.Click += (s, _) =>
+        {
+            ListTitleLabel.Visibility = Visibility.Collapsed;
+            ListTitleEdit.Text = list.Name;
+            ListTitleEdit.Visibility = Visibility.Visible;
+            ListTitleEdit.Focus();
+        };
+        menu.Items.Add(renameItem);
+
+        menu.Items.Add(new Separator());
+
+        // Delete
+        var deleteItem = new MenuItem { Header = Loc.Delete };
+        deleteItem.Click += (s, _) =>
+        {
+            if (MessageBox.Show(Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete,
+                    MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                ViewModel.DeleteListCommand.Execute(list);
+        };
+        menu.Items.Add(deleteItem);
+
+        grid.ContextMenu = menu;
     }
 
     private void SidebarCtx_Rename(object sender, RoutedEventArgs e)
