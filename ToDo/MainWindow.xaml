@@ -158,7 +158,9 @@
                                  SelectedValue="{Binding ActiveListId}"
                                  SelectedValuePath="Id"
                                  BorderThickness="0" Background="Transparent"
-                                 ItemContainerStyle="{StaticResource SidebarNavItem}" Margin="0,4,0,4">
+                                 ItemContainerStyle="{StaticResource SidebarNavItem}" Margin="0,4,0,4"
+                                 DragEnter="SidebarList_DragEnter" DragLeave="SidebarList_DragLeave"
+                                 Drop="SidebarList_Drop">
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:TaskList}">
                                     <Grid>
@@ -197,7 +199,9 @@
                                  SelectedValue="{Binding ActiveListId}"
                                  SelectedValuePath="Id"
                                  BorderThickness="0" Background="Transparent"
-                                 ItemContainerStyle="{StaticResource SidebarNavItem}" Margin="0,0,0,4">
+                                 ItemContainerStyle="{StaticResource SidebarNavItem}" Margin="0,0,0,4"
+                                 DragEnter="SidebarList_DragEnter" DragLeave="SidebarList_DragLeave"
+                                 Drop="SidebarList_Drop">
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:TaskList}">
                                     <Grid>

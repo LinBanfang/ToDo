@@ -236,6 +236,35 @@ public partial class MainWindow : Window
         gt.IsEditing = false;
     }
 
+    // ─── Sidebar List Drop (move task to another list) ───
+    private void SidebarList_DragEnter(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(typeof(TaskItem)))
+            e.Effects = DragDropEffects.Move;
+        e.Handled = true;
+    }
+
+    private void SidebarList_DragLeave(object sender, DragEventArgs e) => e.Handled = true;
+
+    private void SidebarList_Drop(object sender, DragEventArgs e)
+    {
+        if (sender is not ListBox listBox || !e.Data.GetDataPresent(typeof(TaskItem))) return;
+        var task = e.Data.GetData(typeof(TaskItem)) as TaskItem;
+        if (task == null) return;
+
+        var pos = e.GetPosition(listBox);
+        var element = listBox.InputHitTest(pos) as DependencyObject;
+        while (element != null && element is not ListBoxItem)
+            element = VisualTreeHelper.GetParent(element);
+
+        if (element is ListBoxItem lbi && lbi.DataContext is TaskList targetList
+            && targetList.Id != task.ListId)
+        {
+            ViewModel.MoveTaskToListCommand.Execute((task, targetList));
+        }
+        e.Handled = true;
+    }
+
     // ─── Drag & Drop ──────────────────────────────────────
     private void TaskRow_MouseMove(object sender, MouseEventArgs e)
     {
