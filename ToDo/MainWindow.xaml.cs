@@ -150,6 +150,14 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
+    public void SidebarListGrid_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+    {
+        if (sender is not Grid grid || grid.DataContext is not TaskList list) return;
+        var menu = grid.ContextMenu;
+        if (menu == null) return;
+        BuildSidebarListMenu(menu, list);
+    }
+
     public void SidebarListItem_RightClick(object sender, MouseButtonEventArgs e)
     {
         if (sender is not ListBox lb) return;

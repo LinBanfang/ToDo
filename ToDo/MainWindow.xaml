@@ -271,7 +271,6 @@
                         <!-- Ungrouped -->
                         <ListBox ItemsSource="{Binding UngroupedCustomLists}"
                                  PreviewMouseMove="SidebarList_PreviewMouseMove"
-                                 PreviewMouseRightButtonDown="SidebarListItem_RightClick"
                                  SelectedValue="{Binding ActiveListId}"
                                  SelectedValuePath="Id"
                                  BorderThickness="0" Background="Transparent"
@@ -280,7 +279,7 @@
                                  Drop="SidebarList_Drop">
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:TaskList}">
-                                    <Grid>
+                                    <Grid ContextMenuOpening="SidebarListGrid_ContextMenuOpening"><Grid.ContextMenu><ContextMenu/></Grid.ContextMenu>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
