@@ -150,12 +150,14 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
-    public void SidebarListGrid_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+    public void SidebarListGrid_RightClick(object sender, MouseButtonEventArgs e)
     {
         if (sender is not Grid grid || grid.DataContext is not TaskList list) return;
-        var menu = grid.ContextMenu;
-        if (menu == null) return;
+        var menu = new ContextMenu();
         BuildSidebarListMenu(menu, list);
+        menu.PlacementTarget = grid;
+        menu.IsOpen = true;
+        e.Handled = true;
     }
 
     public void SidebarListItem_RightClick(object sender, MouseButtonEventArgs e)

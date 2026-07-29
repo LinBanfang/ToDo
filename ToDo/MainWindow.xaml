@@ -279,7 +279,7 @@
                                  Drop="SidebarList_Drop">
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:TaskList}">
-                                    <Grid ContextMenuOpening="SidebarListGrid_ContextMenuOpening"><Grid.ContextMenu><ContextMenu/></Grid.ContextMenu>
+                                    <Grid MouseRightButtonUp="SidebarListGrid_RightClick">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
