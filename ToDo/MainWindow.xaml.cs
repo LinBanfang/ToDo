@@ -150,6 +150,22 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
+    public void SidebarList_PreviewRightClick(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not ListBox lb) return;
+        var pos = e.GetPosition(lb);
+        var hit = lb.InputHitTest(pos) as DependencyObject;
+        while (hit != null && hit is not ListBoxItem)
+            hit = VisualTreeHelper.GetParent(hit);
+        if (hit is not ListBoxItem lbi || lbi.DataContext is not TaskList list || list.IsSystem) return;
+
+        var menu = new ContextMenu();
+        BuildSidebarListMenu(menu, list);
+        menu.PlacementTarget = lbi;
+        menu.IsOpen = true;
+        e.Handled = true;
+    }
+
     public void SidebarListGrid_RightClick(object sender, MouseButtonEventArgs e)
     {
         if (sender is not Grid grid || grid.DataContext is not TaskList list) return;
