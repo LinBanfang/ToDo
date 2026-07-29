@@ -79,9 +79,10 @@ public partial class MainWindow : Window
 
     public void SidebarGrid_ContextMenuOpening(object sender, ContextMenuEventArgs e)
     {
-        if (sender is not Grid grid || grid.DataContext is not TaskList list || list.IsSystem) return;
+        if (sender is not Grid grid || grid.ContextMenu is not ContextMenu menu
+            || grid.DataContext is not TaskList list || list.IsSystem) return;
 
-        var menu = new ContextMenu();
+        menu.Items.Clear();
 
         // Move to group submenu
         var moveItem = new MenuItem { Header = Loc.MoveToGroup };
@@ -102,7 +103,6 @@ public partial class MainWindow : Window
         }
         menu.Items.Add(moveItem);
 
-        // Rename
         var renameItem = new MenuItem { Header = Loc.Rename };
         renameItem.Click += (s, _) =>
         {
@@ -115,7 +115,6 @@ public partial class MainWindow : Window
 
         menu.Items.Add(new Separator());
 
-        // Delete
         var deleteItem = new MenuItem { Header = Loc.Delete };
         deleteItem.Click += (s, _) =>
         {
@@ -124,8 +123,6 @@ public partial class MainWindow : Window
                 ViewModel.DeleteListCommand.Execute(list);
         };
         menu.Items.Add(deleteItem);
-
-        grid.ContextMenu = menu;
     }
 
     private void SidebarCtx_Rename(object sender, RoutedEventArgs e)
