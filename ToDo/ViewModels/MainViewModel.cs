@@ -315,6 +315,7 @@ public partial class MainViewModel : ObservableObject
     partial void OnActiveListChanged(TaskList? value)
     {
         ActiveListId = value?.Id;
+        SelectedTask = null;
         OnPropertyChanged(nameof(IsCustomList));
         OnPropertyChanged(nameof(IsSystemList));
         RefreshActiveTasks();
