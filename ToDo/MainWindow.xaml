@@ -281,6 +281,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- List header -->
@@ -358,9 +359,18 @@
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
                         <Button x:Name="NewGroupBtn" Content="{x:Static services:Loc.NewGroup}"
-                                Style="{StaticResource FluentSubtleButton}" FontSize="13"
-                                Click="NewGroup_Click"
-                                Visibility="{Binding IsSearching, Converter={StaticResource InverseBool}}"/>
+                                FontSize="13" Click="NewGroup_Click">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource FluentSubtleButton}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsSearching}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
                         <Button Content="&#xE712;" FontFamily="Segoe MDL2 Assets"
                                 Style="{StaticResource FluentSubtleButton}" FontSize="16"
                                 Foreground="{StaticResource TextSecondaryBrush}">
@@ -466,23 +476,6 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <!-- Add Task Input (hidden when searching) -->
-                    <Border Padding="24,12,24,8"
-                            Visibility="{Binding IsSearching, Converter={StaticResource InverseBool}}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="+" FontSize="18" FontWeight="Light"
-                                       Foreground="{StaticResource TextAccentBrush}"
-                                       VerticalAlignment="Center" Margin="0,0,10,0"/>
-                            <TextBox x:Name="AddTaskBox" Grid.Column="1"
-                                     Style="{StaticResource FluentTextBox}"
-                                     KeyDown="AddTaskBox_KeyDown"/>
-                        </Grid>
-                    </Border>
-
                     <!-- Completed tasks -->
                     <Border Visibility="{Binding CompletedTasks.Count, Converter={StaticResource CountToVis}}"
                             BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0"
@@ -521,6 +514,33 @@
                     </Border>
                 </StackPanel>
             </ScrollViewer>
+
+            <!-- Fixed Add Task Input at bottom -->
+            <Border Grid.Row="2" Padding="24,8,24,12"
+                    BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0"
+                    Background="{StaticResource AppBackgroundBrush}">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsSearching}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="+" FontSize="18" FontWeight="Light"
+                               Foreground="{StaticResource TextAccentBrush}"
+                               VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBox x:Name="AddTaskBox" Grid.Column="1"
+                             Style="{StaticResource FluentTextBox}"
+                             KeyDown="AddTaskBox_KeyDown"/>
+                </Grid>
+            </Border>
         </Grid>
 
         <!-- ═══════════════ TASK DETAIL PANE (Column 2) ═══════════════ -->
