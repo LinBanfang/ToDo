@@ -81,8 +81,12 @@ public partial class MainWindow : Window
     {
         if (sender is not MenuItem parentItem || parentItem.DataContext is not TaskList list) return;
 
-        // Build submenu dynamically
-        parentItem.Items.Clear();
+        // Remove dummy item, add real entries
+        if (parentItem.Items.Count > 0 && parentItem.Items[0] is MenuItem dummy && (string)dummy.Header == ".")
+            parentItem.Items.RemoveAt(0);
+
+        if (parentItem.Items.Count > 1) return; // already populated
+
         if (list.GroupId != null)
         {
             var ungroupItem = new MenuItem { Header = Loc.Ungrouped };
