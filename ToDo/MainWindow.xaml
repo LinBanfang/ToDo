@@ -145,17 +145,13 @@
                 <StackPanel Grid.Row="0" Margin="14,14,14,0">
                     <TextBlock Text="{x:Static services:Loc.AppTitle}" FontSize="22" FontWeight="SemiBold"
                                Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,12"/>
-                    <!-- Search box with icon and placeholder -->
+                    <!-- Search box -->
                     <Grid Height="32">
                         <TextBox x:Name="SearchBox" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource SearchTextBox}" Padding="32,0,28,0"/>
+                                 Style="{StaticResource SearchTextBox}" Padding="28,0,28,0"/>
                         <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="14"
                                    Foreground="{StaticResource TextDisabledBrush}"
-                                   VerticalAlignment="Center" Margin="10,0,0,0" IsHitTestVisible="False"/>
-                        <TextBlock x:Name="SearchPlaceholder"
-                                   Text="{x:Static services:Loc.Search}" FontSize="13"
-                                   Foreground="{StaticResource TextDisabledBrush}"
-                                   VerticalAlignment="Center" Margin="32,0,0,0" IsHitTestVisible="False"/>
+                                   VerticalAlignment="Center" Margin="8,0,0,0" IsHitTestVisible="False"/>
                         <!-- X clear button -->
                         <Button Content="&#xE10A;" FontFamily="Segoe MDL2 Assets"
                                 Style="{StaticResource FluentSubtleButton}" FontSize="10"
@@ -302,20 +298,20 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- Search icon (visible when searching) -->
-                        <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="22"
-                                   Foreground="{StaticResource TextAccentBrush}"
-                                   VerticalAlignment="Center" Margin="0,0,8,0"
-                                   Visibility="{Binding IsSearching, Converter={StaticResource BoolToVis}}"/>
-                        <!-- Emoji icon for system lists (non-clickable, hidden when searching) -->
-                        <TextBlock x:Name="EmojiLabel" Text="{Binding ActiveList.Icon}" FontSize="26"
-                                   FontFamily="Segoe UI Emoji"
+                        <!-- List emoji / search icon -->
+                        <TextBlock x:Name="EmojiLabel"
                                    VerticalAlignment="Center" Margin="0,0,8,0">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="{Binding ActiveList.Icon}"/>
+                                    <Setter Property="FontSize" Value="26"/>
+                                    <Setter Property="FontFamily" Value="Segoe UI Emoji"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsSearching}" Value="True">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Setter Property="Text" Value="&#xE721;"/>
+                                            <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+                                            <Setter Property="FontSize" Value="22"/>
+                                            <Setter Property="Foreground" Value="{StaticResource TextAccentBrush}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>

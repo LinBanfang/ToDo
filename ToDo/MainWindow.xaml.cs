@@ -28,7 +28,6 @@ public partial class MainWindow : Window
         SearchBox.TextChanged += (s, e) =>
         {
             var hasText = !string.IsNullOrEmpty(SearchBox.Text);
-            SearchPlaceholder.Visibility = hasText ? Visibility.Collapsed : Visibility.Visible;
             SearchClearBtn.Visibility = hasText ? Visibility.Visible : Visibility.Collapsed;
         };
     }
