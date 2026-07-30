@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using LiteDB;
 
 namespace ToDo.Models;
 
@@ -44,9 +45,11 @@ public partial class TaskList : ObservableObject
     private int _taskCount;
 
     [ObservableProperty]
+    [BsonIgnore]
     private bool _isRenaming;
 
     [ObservableProperty]
+    [BsonIgnore]
     private string _editName = string.Empty;
 
     /// <summary>Localized display name for system lists</summary>
