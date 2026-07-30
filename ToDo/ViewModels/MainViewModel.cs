@@ -197,7 +197,7 @@ public partial class MainViewModel : ObservableObject
 
         foreach (var l in all)
         {
-            // Update existing or add new
+            l.IsRenaming = false;
             var existing = Lists.FirstOrDefault(x => x.Id == l.Id);
             if (existing != null)
             {
@@ -205,6 +205,7 @@ public partial class MainViewModel : ObservableObject
                 existing.Icon = l.Icon;
                 existing.Order = l.Order;
                 existing.TaskCount = l.TaskCount;
+                existing.IsRenaming = false;
             }
             else
             {
