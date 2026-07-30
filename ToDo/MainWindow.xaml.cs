@@ -14,7 +14,6 @@ public partial class MainWindow : Window
     private MainViewModel ViewModel => (MainViewModel)DataContext;
     private bool _suppressDetailEvents;
     private DateTime _lastDropTime = DateTime.MinValue;
-    private DateTime _lastContextMenuTime = DateTime.MinValue;
 
     public MainWindow()
     {
@@ -90,7 +89,6 @@ public partial class MainWindow : Window
 
     public void SidebarGrid_ContextMenuOpening(object sender, ContextMenuEventArgs e)
     {
-        _lastContextMenuTime = DateTime.Now;
         if (sender is not Grid grid) return;
         var menu = grid.ContextMenu;
         if (menu == null) return;
@@ -254,11 +252,15 @@ public partial class MainWindow : Window
     // ─── Drag sidebar list items ──────────────────────────
     public void SidebarList_PreviewMouseMove(object sender, MouseEventArgs e)
     {
-        if ((DateTime.Now - _lastContextMenuTime).TotalMilliseconds < 500) return;
         if (e.LeftButton != MouseButtonState.Pressed || sender is not ListBox lb) return;
         var pos = e.GetPosition(lb);
         var el = lb.InputHitTest(pos) as DependencyObject;
-        while (el != null && el is not ListBoxItem) el = VisualTreeHelper.GetParent(el);
+        while (el != null)
+        {
+            if (el is TextBox) return; // don't drag while editing
+            if (el is ListBoxItem) break;
+            el = VisualTreeHelper.GetParent(el);
+        }
         if (el is ListBoxItem lbi && lbi.DataContext is TaskList list)
             DragDrop.DoDragDrop(lbi, list, DragDropEffects.Move);
     }
