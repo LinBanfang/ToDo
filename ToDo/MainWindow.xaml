@@ -119,7 +119,7 @@
                     ContextMenuOpening="TaskRow_ContextMenuOpening"
                     AllowDrop="True" DragEnter="TaskRow_DragEnter"
                     DragLeave="TaskRow_DragLeave" Drop="TaskRow_Drop">
-                <Border.ContextMenu><ContextMenu Opened="SidebarGrid_MenuOpened"/></Border.ContextMenu>
+                <Border.ContextMenu><ContextMenu /></Border.ContextMenu>
                 <ContentControl Content="{Binding}" ContentTemplate="{StaticResource TaskRowContent}"/>
             </Border>
         </DataTemplate>
@@ -212,7 +212,7 @@
                                     <StackPanel>
                                         <Border Margin="4,2" Padding="8,6" CornerRadius="6" Background="Transparent" Cursor="Hand"
                                                 MouseLeftButtonDown="ListGroupHeader_Click" ContextMenuOpening="ListGroup_ContextMenuOpening" AllowDrop="True" DragEnter="ListGroupHeader_DragEnter" DragLeave="ListGroupHeader_DragLeave" Drop="ListGroupHeader_Drop">
-                                            <Border.ContextMenu><ContextMenu Opened="SidebarGrid_MenuOpened"/></Border.ContextMenu>
+                                            <Border.ContextMenu><ContextMenu /></Border.ContextMenu>
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto"/>
@@ -251,7 +251,7 @@
                                                  Margin="8,0,0,0">
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate DataType="{x:Type models:TaskList}">
-                                                    <Grid ><Grid.ContextMenu><ContextMenu Opened="SidebarGrid_MenuOpened"/></Grid.ContextMenu>
+                                                    <Grid DataContextChanged="SidebarGrid_DataContextChanged"><Grid.ContextMenu><ContextMenu/></Grid.ContextMenu>
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="Auto"/>
                                                             <ColumnDefinition Width="*"/>
@@ -279,7 +279,7 @@
                                  Drop="SidebarList_Drop">
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:TaskList}">
-                                    <Grid ><Grid.ContextMenu><ContextMenu Opened="SidebarGrid_MenuOpened"/></Grid.ContextMenu>
+                                    <Grid DataContextChanged="SidebarGrid_DataContextChanged"><Grid.ContextMenu><ContextMenu/></Grid.ContextMenu>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
@@ -485,7 +485,7 @@
                                             ContextMenuOpening="GroupHeader_ContextMenuOpening"
                                             AllowDrop="True" DragEnter="GroupHeader_DragEnter"
                                             DragLeave="GroupHeader_DragLeave" Drop="GroupHeader_Drop">
-                                        <Border.ContextMenu><ContextMenu Opened="SidebarGrid_MenuOpened"/></Border.ContextMenu>
+                                        <Border.ContextMenu><ContextMenu /></Border.ContextMenu>
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
@@ -546,7 +546,7 @@
                                 <Border Style="{StaticResource TaskRowStyle}"
                                         MouseLeftButtonDown="TaskRow_Click"
                                         ContextMenuOpening="TaskRow_ContextMenuOpening">
-                                    <Border.ContextMenu><ContextMenu Opened="SidebarGrid_MenuOpened"/></Border.ContextMenu>
+                                    <Border.ContextMenu><ContextMenu /></Border.ContextMenu>
                                     <ContentControl Content="{Binding}" ContentTemplate="{StaticResource TaskRowContent}"/>
                                 </Border>
                             </DataTemplate>
@@ -567,7 +567,7 @@
                                         <Border Style="{StaticResource TaskRowStyle}" Opacity="0.7"
                                                 MouseLeftButtonDown="TaskRow_Click"
                                                 ContextMenuOpening="TaskRow_ContextMenuOpening">
-                                            <Border.ContextMenu><ContextMenu Opened="SidebarGrid_MenuOpened"/></Border.ContextMenu>
+                                            <Border.ContextMenu><ContextMenu /></Border.ContextMenu>
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto"/>

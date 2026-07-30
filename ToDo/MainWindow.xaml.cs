@@ -77,53 +77,44 @@ public partial class MainWindow : Window
         }
     }
 
-    public void SidebarGrid_MenuOpened(object sender, RoutedEventArgs e)
+    public void SidebarGrid_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
-        if (sender is not ContextMenu menu || menu.PlacementTarget is not Grid grid
-            || grid.DataContext is not TaskList list || list.IsSystem) return;
+        if (sender is not Grid grid || grid.ContextMenu is not ContextMenu menu) return;
+        if (e.NewValue is not TaskList list || list.IsSystem) return;
 
-        Dispatcher.BeginInvoke(() =>
+        menu.Items.Clear();
+
+        var moveItem = new MenuItem { Header = Loc.MoveToGroup };
+        if (list.GroupId != null)
         {
-            menu.Items.Clear();
+            var u = new MenuItem { Header = Loc.Ungrouped };
+            u.Click += (_, _) => ViewModel.MoveListToGroupCommand.Execute((list, null));
+            moveItem.Items.Add(u);
+            moveItem.Items.Add(new Separator());
+        }
+        foreach (var g in ViewModel.ListGroups)
+        {
+            if (g.Id == list.GroupId) continue;
+            var gi = new MenuItem { Header = g.Name };
+            var cg = g;
+            gi.Click += (_, _) => ViewModel.MoveListToGroupCommand.Execute((list, cg));
+            moveItem.Items.Add(gi);
+        }
+        menu.Items.Add(moveItem);
 
-            var moveItem = new MenuItem { Header = Loc.MoveToGroup };
-            if (list.GroupId != null)
-            {
-                var ungroupItem = new MenuItem { Header = Loc.Ungrouped };
-                ungroupItem.Click += (s2, _) => ViewModel.MoveListToGroupCommand.Execute((list, null));
-                moveItem.Items.Add(ungroupItem);
-                moveItem.Items.Add(new Separator());
-            }
-            foreach (var g in ViewModel.ListGroups)
-            {
-                if (g.Id == list.GroupId) continue;
-                var gi = new MenuItem { Header = g.Name };
-                var captured2 = g;
-                gi.Click += (s2, _) => ViewModel.MoveListToGroupCommand.Execute((list, captured2));
-                moveItem.Items.Add(gi);
-            }
-            menu.Items.Add(moveItem);
+        var r = new MenuItem { Header = Loc.Rename };
+        r.Click += (_, _) => { ListTitleLabel.Visibility = Visibility.Collapsed; ListTitleEdit.Text = list.Name; ListTitleEdit.Visibility = Visibility.Visible; ListTitleEdit.Focus(); };
+        menu.Items.Add(r);
+        menu.Items.Add(new Separator());
+        var d = new MenuItem { Header = Loc.Delete };
+        d.Click += (_, _) => { if (MessageBox.Show(Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes) ViewModel.DeleteListCommand.Execute(list); };
+        menu.Items.Add(d);
+    }
 
-            var renameItem = new MenuItem { Header = Loc.Rename };
-            renameItem.Click += (s2, _) =>
-            {
-                ListTitleLabel.Visibility = Visibility.Collapsed;
-                ListTitleEdit.Text = list.Name;
-                ListTitleEdit.Visibility = Visibility.Visible;
-                ListTitleEdit.Focus();
-            };
-            menu.Items.Add(renameItem);
-            menu.Items.Add(new Separator());
-
-            var deleteItem = new MenuItem { Header = Loc.Delete };
-            deleteItem.Click += (s2, _) =>
-            {
-                if (MessageBox.Show(Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete,
-                        MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
-                    ViewModel.DeleteListCommand.Execute(list);
-            };
-            menu.Items.Add(deleteItem);
-        });
+    private static void Log(string msg)
+    {
+        var path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "todo_debug.log");
+        System.IO.File.AppendAllText(path, $"{DateTime.Now:HH:mm:ss.fff} {msg}\n");
     }
 
     private void SidebarCtx_Rename(object sender, RoutedEventArgs e)
