@@ -243,7 +243,7 @@
                                                          LostFocus="ListGroupName_LostFocus"/>
                                             </Grid>
                                         </Border>
-                                        <ListBox ItemsSource="{Binding Lists}"
+                                        <ListBox ItemsSource="{Binding Lists}" PreviewMouseMove="SidebarList_PreviewMouseMove"
                                                  SelectedValue="{Binding DataContext.ActiveListId, RelativeSource={RelativeSource AncestorType=Window}}"
                                                  SelectedValuePath="Id" BorderThickness="0" Background="Transparent"
                                                  ItemContainerStyle="{StaticResource SidebarNavItem}"
