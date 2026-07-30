@@ -17,6 +17,12 @@ public partial class App : Application
         ViewModel = new MainViewModel(Database);
 
         var mainWindow = new MainWindow { DataContext = ViewModel };
+        try
+        {
+            mainWindow.Icon = new System.Windows.Media.Imaging.BitmapImage(
+                new Uri("pack://application:,,,/Resources/app.ico"));
+        }
+        catch { /* use default icon */ }
         mainWindow.Show();
     }
 
