@@ -43,6 +43,12 @@ public partial class TaskList : ObservableObject
     [ObservableProperty]
     private int _taskCount;
 
+    [ObservableProperty]
+    private bool _isRenaming;
+
+    [ObservableProperty]
+    private string _editName = string.Empty;
+
     /// <summary>Localized display name for system lists</summary>
     public string DisplayName => IsSystem
         ? Id switch

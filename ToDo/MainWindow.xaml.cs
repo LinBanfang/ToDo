@@ -137,13 +137,37 @@ public partial class MainWindow : Window
 
     private void SidebarCtx_Rename(object sender, RoutedEventArgs e)
     {
-        if ((sender as MenuItem)?.DataContext is TaskList list)
+        if ((sender as MenuItem)?.DataContext is TaskList list && !list.IsSystem)
         {
-            ListTitleLabel.Visibility = Visibility.Collapsed;
-            ListTitleEdit.Text = list.Name;
-            ListTitleEdit.Visibility = Visibility.Visible;
-            ListTitleEdit.Focus();
+            list.EditName = list.Name;
+            list.IsRenaming = true;
         }
+    }
+
+    private void SidebarRename_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.DataContext is TaskList list)
+        {
+            if (e.Key == Key.Enter) { CommitSidebarRename(list); e.Handled = true; }
+            else if (e.Key == Key.Escape) { list.IsRenaming = false; e.Handled = true; }
+        }
+    }
+
+    private void SidebarRename_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.DataContext is TaskList list)
+            CommitSidebarRename(list);
+    }
+
+    private void CommitSidebarRename(TaskList list)
+    {
+        var n = list.EditName?.Trim();
+        if (!string.IsNullOrEmpty(n) && n != list.Name)
+        {
+            list.Name = n;
+            ViewModel.RenameListCommand.Execute(list);
+        }
+        list.IsRenaming = false;
     }
 
     private void SidebarCtx_Delete(object sender, RoutedEventArgs e)
