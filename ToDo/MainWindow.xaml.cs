@@ -87,6 +87,17 @@ public partial class MainWindow : Window
         BuildMenu(menu, list);
     }
 
+    public void SidebarGrid_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+    {
+        if (sender is not Grid grid) return;
+        var menu = grid.ContextMenu;
+        if (menu == null) return;
+        if (grid.DataContext is not TaskList list || list.IsSystem) return;
+
+        menu.Items.Clear();
+        BuildMenu(menu, list);
+    }
+
     public void SidebarGrid_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
         Log($"DataContextChanged FIRED: {e.NewValue?.GetType().Name} -> {e.OldValue?.GetType().Name}");
@@ -122,7 +133,14 @@ public partial class MainWindow : Window
         menu.Items.Add(moveItem);
 
         var r = new MenuItem { Header = Loc.Rename, Tag = list };
-        r.Click += (_, _) => { list.EditName = list.Name; list.IsRenaming = true; };
+        r.Click += (_, _) =>
+        {
+            Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, () =>
+            {
+                list.EditName = list.Name;
+                list.IsRenaming = true;
+            });
+        };
         menu.Items.Add(r);
         menu.Items.Add(new Separator());
         var d = new MenuItem { Header = Loc.Delete, Tag = list };
