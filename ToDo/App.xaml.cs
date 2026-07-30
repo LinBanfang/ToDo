@@ -19,8 +19,18 @@ public partial class App : Application
         var mainWindow = new MainWindow { DataContext = ViewModel };
         try
         {
-            mainWindow.Icon = new System.Windows.Media.Imaging.BitmapImage(
-                new Uri("pack://application:,,,/Resources/app.ico"));
+            // Support both PNG and ICO — place file in Resources folder
+            string[] candidates = { "app.png", "app.ico", "app.svg" };
+            foreach (var name in candidates)
+            {
+                try
+                {
+                    mainWindow.Icon = new System.Windows.Media.Imaging.BitmapImage(
+                        new Uri($"pack://application:,,,/Resources/{name}"));
+                    break;
+                }
+                catch { }
+            }
         }
         catch { /* use default icon */ }
         mainWindow.Show();
