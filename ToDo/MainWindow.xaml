@@ -336,15 +336,21 @@
                 <!-- New list input (between scroll and footer) -->
                 <Border Grid.Row="2" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0"
                         Padding="10,6">
-                    <StackPanel Orientation="Horizontal">
-                        <Button Content="{x:Static services:Loc.NewList}" Style="{StaticResource FluentSubtleButton}"
-                                FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"
-                                Click="NewList_Click" Padding="8,4"/>
-                        <Button Content="{x:Static services:Loc.NewListGroup}"
-                                Style="{StaticResource FluentSubtleButton}" FontSize="11"
-                                Click="NewListGroup_Click" Foreground="{StaticResource TextDisabledBrush}"
-                                Margin="4,0,0,0" Padding="8,4"/>
-                    </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="{x:Static services:Loc.NewList}"
+                                Style="{StaticResource FluentButton}" FontSize="13"
+                                Foreground="{StaticResource TextSecondaryBrush}"
+                                Click="NewList_Click" Padding="10,6" Margin="0,0,4,0"/>
+                        <Button Grid.Column="1" Content="&#xE710;" FontFamily="Segoe MDL2 Assets"
+                                Style="{StaticResource FluentSubtleButton}" FontSize="14"
+                                Width="32" Height="32" Padding="0"
+                                Click="NewListGroup_Click" Foreground="{StaticResource TextSecondaryBrush}"
+                                ToolTip="{x:Static services:Loc.NewListGroup}"/>
+                    </Grid>
                 </Border>
 
                 <!-- Footer -->

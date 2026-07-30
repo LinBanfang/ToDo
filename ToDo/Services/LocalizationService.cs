@@ -32,9 +32,9 @@ public static class Loc
     public static string Lists => Language == AppLanguage.Chinese ? "列表" : "LISTS";
     public static string Tags => Language == AppLanguage.Chinese ? "标签" : "TAGS";
     public static string AddTask => Language == AppLanguage.Chinese ? "添加任务" : "Add a task";
-    public static string NewList => Language == AppLanguage.Chinese ? "新建列表..." : "New list...";
+    public static string NewList => Language == AppLanguage.Chinese ? "+ 新建列表" : "+ New list";
     public static string NewGroup => Language == AppLanguage.Chinese ? "新建分组" : "New group";
-    public static string NewListGroup => Language == AppLanguage.Chinese ? "+ 新建分组" : "+ New group";
+    public static string NewListGroup => Language == AppLanguage.Chinese ? "新建列表分组" : "New list group";
     public static string DeleteListGroup => Language == AppLanguage.Chinese ? "删除列表分组" : "Delete list group";
     public static string ConfirmDeleteListGroupMsg(string name) =>
         Language == AppLanguage.Chinese ? $"确定删除分组 \"{name}\" 吗？组内列表将变为未分组。" : $"Delete group \"{name}\"? Lists will become ungrouped.";
