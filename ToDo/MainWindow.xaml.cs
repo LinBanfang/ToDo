@@ -136,14 +136,8 @@ public partial class MainWindow : Window
         var r = new MenuItem { Header = Loc.Rename, Tag = list };
         r.Click += (_, _) =>
         {
-            Log($"RENAME CLICK: list={list.Name}, hash={list.GetHashCode()}");
-            Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, () =>
-            {
-                Log($"RENAME DEFERRED: IsRenaming before={list.IsRenaming}");
-                list.EditName = list.Name;
-                list.IsRenaming = true;
-                Log($"RENAME DEFERRED: IsRenaming after={list.IsRenaming}");
-            });
+            list.EditName = list.Name;
+            list.IsRenaming = true;
         };
         menu.Items.Add(r);
         menu.Items.Add(new Separator());
@@ -156,18 +150,6 @@ public partial class MainWindow : Window
     {
         var path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "todo_debug.log");
         System.IO.File.AppendAllText(path, $"{DateTime.Now:HH:mm:ss.fff} {msg}\n");
-    }
-
-    private void SidebarCtx_Rename(object sender, RoutedEventArgs e)
-    {
-        var item = sender as MenuItem;
-        if (item == null) return;
-        var list = (item.DataContext ?? item.Tag) as TaskList;
-        if (list == null || list.IsSystem) return;
-        Log($"RENAME: list={list.Name}, Tag match={item.Tag == list}, DataContext match={item.DataContext == list}");
-        list.EditName = list.Name;
-        list.IsRenaming = true;
-        Log($"IsRenaming set to true, EditName={list.EditName}");
     }
 
     private void SidebarRename_KeyDown(object sender, KeyEventArgs e)
