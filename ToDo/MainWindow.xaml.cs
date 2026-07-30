@@ -89,12 +89,13 @@ public partial class MainWindow : Window
 
     public void SidebarGrid_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
-        if (sender is not Grid grid) return;
+        Log($"DataContextChanged FIRED: {e.NewValue?.GetType().Name} -> {e.OldValue?.GetType().Name}");
+        if (sender is not Grid grid) { Log("  NOT GRID"); return; }
         var menu = grid.ContextMenu;
-        if (menu == null) return;
-        if (e.NewValue is not TaskList list || list.IsSystem) return;
+        if (menu == null) { Log("  MENU IS NULL"); return; }
+        if (e.NewValue is not TaskList list || list.IsSystem) { Log($"  SKIP: {e.NewValue?.GetType().Name}"); return; }
 
-        Log($"DataContextChanged: list={list.Name}");
+        Log($"DataContextChanged: list={list.Name}, menu={menu.GetHashCode()}");
         menu.Items.Clear();
         BuildMenu(menu, list);
         Log($"DataContextChanged DONE: menu.Items={menu.Items.Count}");
@@ -121,7 +122,7 @@ public partial class MainWindow : Window
         menu.Items.Add(moveItem);
 
         var r = new MenuItem { Header = Loc.Rename, Tag = list };
-        r.Click += (_, _) => { ListTitleLabel.Visibility = Visibility.Collapsed; ListTitleEdit.Text = list.Name; ListTitleEdit.Visibility = Visibility.Visible; ListTitleEdit.Focus(); };
+        r.Click += (_, _) => { list.EditName = list.Name; list.IsRenaming = true; };
         menu.Items.Add(r);
         menu.Items.Add(new Separator());
         var d = new MenuItem { Header = Loc.Delete, Tag = list };
@@ -141,8 +142,10 @@ public partial class MainWindow : Window
         if (item == null) return;
         var list = (item.DataContext ?? item.Tag) as TaskList;
         if (list == null || list.IsSystem) return;
+        Log($"RENAME: list={list.Name}, Tag match={item.Tag == list}, DataContext match={item.DataContext == list}");
         list.EditName = list.Name;
         list.IsRenaming = true;
+        Log($"IsRenaming set to true, EditName={list.EditName}");
     }
 
     private void SidebarRename_KeyDown(object sender, KeyEventArgs e)
