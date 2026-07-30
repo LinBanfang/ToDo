@@ -103,28 +103,21 @@ public partial class MainWindow : Window
     private void BuildMenu(ContextMenu menu, TaskList list)
     {
         var moveItem = new MenuItem { Header = Loc.MoveToGroup };
-        moveItem.Click += (_, _) =>
+        if (list.GroupId != null)
         {
-            // Manual submenu popup
-            var sub = new ContextMenu();
-            if (list.GroupId != null)
-            {
-                var u = new MenuItem { Header = Loc.Ungrouped };
-                u.Click += (__, _) => ViewModel.MoveListToGroupCommand.Execute((list, null));
-                sub.Items.Add(u);
-                sub.Items.Add(new Separator());
-            }
-            foreach (var g in ViewModel.ListGroups)
-            {
-                if (g.Id == list.GroupId) continue;
-                var gi = new MenuItem { Header = g.Name };
-                var cg = g;
-                gi.Click += (__, _) => ViewModel.MoveListToGroupCommand.Execute((list, cg));
-                sub.Items.Add(gi);
-            }
-            sub.PlacementTarget = menu;
-            sub.IsOpen = true;
-        };
+            var u = new MenuItem { Header = Loc.Ungrouped };
+            u.Click += (_, _) => ViewModel.MoveListToGroupCommand.Execute((list, null));
+            moveItem.Items.Add(u);
+            moveItem.Items.Add(new Separator());
+        }
+        foreach (var g in ViewModel.ListGroups)
+        {
+            if (g.Id == list.GroupId) continue;
+            var gi = new MenuItem { Header = g.Name };
+            var cg = g;
+            gi.Click += (_, _) => ViewModel.MoveListToGroupCommand.Execute((list, cg));
+            moveItem.Items.Add(gi);
+        }
         menu.Items.Add(moveItem);
 
         var r = new MenuItem { Header = Loc.Rename };

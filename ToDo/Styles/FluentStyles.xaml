@@ -274,7 +274,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="MenuItem">
-                    <Border Background="{TemplateBinding Background}"
+                    <Grid>
+                    <Border x:Name="Border" Background="{TemplateBinding Background}"
                             CornerRadius="4" Padding="{TemplateBinding Padding}">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -283,21 +284,55 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <ContentPresenter Grid.Column="0" Content="{TemplateBinding Icon}"
-                                              Width="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <ContentPresenter Grid.Column="1" Content="{TemplateBinding Header}"
-                                              VerticalAlignment="Center"/>
+                                              Width="16" Margin="0,0,8,0" VerticalAlignment="Center"
+                                              Visibility="Collapsed"
+                                              x:Name="IconPresenter"/>
+                            <ContentPresenter Grid.Column="1" ContentSource="Header"
+                                              VerticalAlignment="Center" RecognizesAccessKey="True"/>
                             <TextBlock Grid.Column="2" Text="&#xE76C;" FontFamily="Segoe MDL2 Assets"
                                        FontSize="10" Foreground="{StaticResource TextDisabledBrush}"
                                        VerticalAlignment="Center" Margin="16,0,0,0"
-                                       Visibility="Collapsed"/>
+                                       x:Name="SubmenuArrow"/>
                         </Grid>
                     </Border>
+                    <!-- Submenu Popup -->
+                    <Popup x:Name="PART_Popup" Placement="Right"
+                           HorizontalOffset="-2" VerticalOffset="-3"
+                           AllowsTransparency="True" Focusable="False"
+                           IsOpen="{Binding Path=IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}">
+                        <Border Background="{StaticResource CardBackgroundBrush}"
+                                BorderBrush="{StaticResource NeutralGray50}"
+                                BorderThickness="1" CornerRadius="6" Padding="4">
+                            <ScrollViewer MaxHeight="300">
+                                <ItemsPresenter/>
+                            </ScrollViewer>
+                        </Border>
+                    </Popup>
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="{StaticResource CardHoverBrush}"/>
+                            <Setter TargetName="Border" Property="Background" Value="{StaticResource CardHoverBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Foreground" Value="{StaticResource TextDisabledBrush}"/>
+                        </Trigger>
+                        <!-- Top-level item: no submenu arrow -->
+                        <Trigger Property="Role" Value="TopLevelItem">
+                            <Setter TargetName="SubmenuArrow" Property="Visibility" Value="Collapsed"/>
+                        </Trigger>
+                        <Trigger Property="Role" Value="TopLevelHeader">
+                            <Setter TargetName="SubmenuArrow" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <!-- Submenu items -->
+                        <Trigger Property="Role" Value="SubmenuItem">
+                            <Setter TargetName="SubmenuArrow" Property="Visibility" Value="Collapsed"/>
+                        </Trigger>
+                        <Trigger Property="Role" Value="SubmenuHeader">
+                            <Setter TargetName="SubmenuArrow" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <!-- Icon visibility triggers -->
+                        <Trigger Property="Icon" Value="{x:Null}">
+                            <Setter TargetName="IconPresenter" Property="Visibility" Value="Collapsed"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
