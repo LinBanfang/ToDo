@@ -120,11 +120,11 @@ public partial class MainWindow : Window
         }
         menu.Items.Add(moveItem);
 
-        var r = new MenuItem { Header = Loc.Rename };
+        var r = new MenuItem { Header = Loc.Rename, Tag = list };
         r.Click += (_, _) => { ListTitleLabel.Visibility = Visibility.Collapsed; ListTitleEdit.Text = list.Name; ListTitleEdit.Visibility = Visibility.Visible; ListTitleEdit.Focus(); };
         menu.Items.Add(r);
         menu.Items.Add(new Separator());
-        var d = new MenuItem { Header = Loc.Delete };
+        var d = new MenuItem { Header = Loc.Delete, Tag = list };
         d.Click += (_, _) => { if (MessageBox.Show(Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes) ViewModel.DeleteListCommand.Execute(list); };
         menu.Items.Add(d);
     }
@@ -137,11 +137,12 @@ public partial class MainWindow : Window
 
     private void SidebarCtx_Rename(object sender, RoutedEventArgs e)
     {
-        if ((sender as MenuItem)?.DataContext is TaskList list && !list.IsSystem)
-        {
-            list.EditName = list.Name;
-            list.IsRenaming = true;
-        }
+        var item = sender as MenuItem;
+        if (item == null) return;
+        var list = (item.DataContext ?? item.Tag) as TaskList;
+        if (list == null || list.IsSystem) return;
+        list.EditName = list.Name;
+        list.IsRenaming = true;
     }
 
     private void SidebarRename_KeyDown(object sender, KeyEventArgs e)
