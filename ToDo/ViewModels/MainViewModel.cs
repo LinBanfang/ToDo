@@ -127,6 +127,8 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>Public refresh for external callers (drag-drop, etc.)</summary>
+    public void NotifyHeaderTitleChanged() => OnPropertyChanged(nameof(HeaderTitle));
+
     public void Refresh()
     {
         LoadTasks();

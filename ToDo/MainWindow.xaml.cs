@@ -169,6 +169,7 @@ public partial class MainWindow : Window
         {
             list.Name = n;
             ViewModel.RenameListCommand.Execute(list);
+            ViewModel.NotifyHeaderTitleChanged();
         }
         list.IsRenaming = false;
     }
@@ -330,6 +331,7 @@ public partial class MainWindow : Window
         {
             ViewModel.ActiveList.Name = newName;
             ViewModel.RenameListCommand.Execute(ViewModel.ActiveList);
+            ViewModel.NotifyHeaderTitleChanged();
         }
         CancelListTitle();
     }
