@@ -336,18 +336,15 @@
                 <!-- New list input (between scroll and footer) -->
                 <Border Grid.Row="2" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0"
                         Padding="10,6">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                    <TextBox x:Name="NewListBox" Grid.Column="0" Style="{StaticResource FluentTextBox}"
-                                 FontSize="12" KeyDown="NewListBox_KeyDown"/>
-                        <Button Grid.Column="1" Content="{x:Static services:Loc.NewListGroup}"
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="{x:Static services:Loc.NewList}" Style="{StaticResource FluentSubtleButton}"
+                                FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"
+                                Click="NewList_Click" Padding="8,4"/>
+                        <Button Content="{x:Static services:Loc.NewListGroup}"
                                 Style="{StaticResource FluentSubtleButton}" FontSize="11"
                                 Click="NewListGroup_Click" Foreground="{StaticResource TextDisabledBrush}"
                                 Margin="4,0,0,0" Padding="8,4"/>
-                    </Grid>
+                    </StackPanel>
                 </Border>
 
                 <!-- Footer -->

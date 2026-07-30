@@ -40,11 +40,6 @@ public partial class MainWindow : Window
         ViewModel.SearchQuery = "";
     }
 
-    private void AddList_Click(object sender, RoutedEventArgs e)
-    {
-        NewListBox.Focus();
-    }
-
     private void NewListGroup_Click(object sender, RoutedEventArgs e)
     {
         ViewModel.CreateListGroupCommand.Execute("New group");
@@ -247,13 +242,17 @@ public partial class MainWindow : Window
             DragDrop.DoDragDrop(lbi, list, DragDropEffects.Move);
     }
 
-    private void NewListBox_KeyDown(object sender, KeyEventArgs e)
+    private void NewList_Click(object sender, RoutedEventArgs e)
     {
-        if (e.Key == Key.Enter && sender is TextBox tb && !string.IsNullOrWhiteSpace(tb.Text))
+        var name = Loc.NewListGroup.Contains("+") ? "新列表" : "New list";
+        ViewModel.CreateListCommand.Execute(name);
+        // Find the newly created list and put it in rename mode
+        var newList = ViewModel.CustomLists.LastOrDefault();
+        if (newList != null)
         {
-            ViewModel.CreateListCommand.Execute(tb.Text.Trim());
-            tb.Text = "";
-            e.Handled = true;
+            ViewModel.ActiveListId = newList.Id;
+            newList.EditName = name;
+            newList.IsRenaming = true;
         }
     }
 
