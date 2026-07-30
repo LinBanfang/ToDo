@@ -251,7 +251,7 @@
                                                  Margin="8,0,0,0">
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate DataType="{x:Type models:TaskList}">
-                                                    <Grid DataContextChanged="SidebarGrid_DataContextChanged"><Grid.ContextMenu><ContextMenu/></Grid.ContextMenu>
+                                                    <Grid DataContextChanged="SidebarGrid_DataContextChanged"><Grid.ContextMenu><ContextMenu Loaded="SidebarGrid_MenuLoaded"/></Grid.ContextMenu>
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="Auto"/>
                                                             <ColumnDefinition Width="*"/>
@@ -279,7 +279,7 @@
                                  Drop="SidebarList_Drop">
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:TaskList}">
-                                    <Grid DataContextChanged="SidebarGrid_DataContextChanged"><Grid.ContextMenu><ContextMenu/></Grid.ContextMenu>
+                                    <Grid DataContextChanged="SidebarGrid_DataContextChanged"><Grid.ContextMenu><ContextMenu Loaded="SidebarGrid_MenuLoaded"/></Grid.ContextMenu>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>

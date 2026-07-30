@@ -77,29 +77,54 @@ public partial class MainWindow : Window
         }
     }
 
+    public void SidebarGrid_MenuLoaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is not ContextMenu menu || menu.PlacementTarget is not Grid grid
+            || grid.DataContext is not TaskList list || list.IsSystem) return;
+
+        Log($"MenuLoaded: list={list.Name}");
+        menu.Items.Clear();
+        BuildMenu(menu, list);
+    }
+
     public void SidebarGrid_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
-        if (sender is not Grid grid || grid.ContextMenu is not ContextMenu menu) return;
+        if (sender is not Grid grid) return;
+        var menu = grid.ContextMenu;
+        if (menu == null) return;
         if (e.NewValue is not TaskList list || list.IsSystem) return;
 
+        Log($"DataContextChanged: list={list.Name}");
         menu.Items.Clear();
+        BuildMenu(menu, list);
+        Log($"DataContextChanged DONE: menu.Items={menu.Items.Count}");
+    }
 
+    private void BuildMenu(ContextMenu menu, TaskList list)
+    {
         var moveItem = new MenuItem { Header = Loc.MoveToGroup };
-        if (list.GroupId != null)
+        moveItem.Click += (_, _) =>
         {
-            var u = new MenuItem { Header = Loc.Ungrouped };
-            u.Click += (_, _) => ViewModel.MoveListToGroupCommand.Execute((list, null));
-            moveItem.Items.Add(u);
-            moveItem.Items.Add(new Separator());
-        }
-        foreach (var g in ViewModel.ListGroups)
-        {
-            if (g.Id == list.GroupId) continue;
-            var gi = new MenuItem { Header = g.Name };
-            var cg = g;
-            gi.Click += (_, _) => ViewModel.MoveListToGroupCommand.Execute((list, cg));
-            moveItem.Items.Add(gi);
-        }
+            // Manual submenu popup
+            var sub = new ContextMenu();
+            if (list.GroupId != null)
+            {
+                var u = new MenuItem { Header = Loc.Ungrouped };
+                u.Click += (__, _) => ViewModel.MoveListToGroupCommand.Execute((list, null));
+                sub.Items.Add(u);
+                sub.Items.Add(new Separator());
+            }
+            foreach (var g in ViewModel.ListGroups)
+            {
+                if (g.Id == list.GroupId) continue;
+                var gi = new MenuItem { Header = g.Name };
+                var cg = g;
+                gi.Click += (__, _) => ViewModel.MoveListToGroupCommand.Execute((list, cg));
+                sub.Items.Add(gi);
+            }
+            sub.PlacementTarget = menu;
+            sub.IsOpen = true;
+        };
         menu.Items.Add(moveItem);
 
         var r = new MenuItem { Header = Loc.Rename };
