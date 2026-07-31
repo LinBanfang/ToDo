@@ -1004,7 +1004,7 @@ public partial class MainWindow : Window
             ViewModel.UpdateTaskCommand.Execute(ViewModel.SelectedTask);
     }
 
-    private void StepTitle_Click(object sender, MouseButtonEventArgs e)
+    private void StepTitle_Click(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement fe && fe.DataContext is TaskStep step)
         {
