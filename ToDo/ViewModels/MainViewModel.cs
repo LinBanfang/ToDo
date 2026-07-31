@@ -62,6 +62,7 @@ public partial class MainViewModel : ObservableObject
     public string HeaderTitle => !string.IsNullOrWhiteSpace(SearchQuery)
         ? Loc.SearchResults
         : ActiveList?.DisplayName ?? "";
+        public string DbPath => _db.StoragePath;
 
     private static bool IsToday(long ts)
     {

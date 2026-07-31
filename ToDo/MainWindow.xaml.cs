@@ -40,6 +40,24 @@ public partial class MainWindow : Window
         ViewModel.SearchQuery = "";
     }
 
+    private void DbPath_Click(object sender, RoutedEventArgs e)
+    {
+        var currentPath = App.Database!.StoragePath;
+        var dialog = new Views.Dialogs.DbPathDialog(currentPath) { Owner = this };
+        if (dialog.ShowDialog() == true && dialog.ResultPath != currentPath)
+        {
+            try
+            {
+                SettingsService.SetDbPath(dialog.ResultPath);
+                MessageBox.Show(Loc.DbPathChanged, "To Do", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
+
     private void NewListGroup_Click(object sender, RoutedEventArgs e)
     {
         ViewModel.CreateListGroupCommand.Execute("New group");

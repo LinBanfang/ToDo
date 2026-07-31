@@ -93,4 +93,7 @@ public static class Loc
     public static string Important => Language == AppLanguage.Chinese ? "重要" : "Important";
     public static string Planned => Language == AppLanguage.Chinese ? "计划内" : "Planned";
     public static string Tasks => Language == AppLanguage.Chinese ? "任务" : "Tasks";
+    public static string DbPathTitle => Language == AppLanguage.Chinese ? "数据库路径" : "Database Path";
+    public static string DbPathPrompt => Language == AppLanguage.Chinese ? "请输入数据库文件的完整路径。修改后当前数据将自动迁移到新位置。" : "Enter the full path for the database file. Existing data will be migrated to the new location.";
+    public static string DbPathChanged => Language == AppLanguage.Chinese ? "路径已更改。请重启应用以使用新数据库位置。" : "Path changed. Please restart the app to use the new database location.";
 }

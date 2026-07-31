@@ -15,10 +15,11 @@ public class DatabaseService : IDisposable
     public ILiteCollection<Tag> Tags { get; }
     public ILiteCollection<ListGroup> ListGroups { get; }
 
+    public string StoragePath => _dbPath;
+
     public DatabaseService(string? dbPath = null)
     {
-        // Store DB in project root (not bin/), survives clean builds
-_dbPath = dbPath ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "todo.db");
+        _dbPath = dbPath ?? ResolveDbPath();
         _db = new LiteDatabase($"Filename={_dbPath};Connection=direct");
 
         Lists = _db.GetCollection<TaskList>("lists");
@@ -75,6 +76,23 @@ _dbPath = dbPath ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "todo.db
                 }
             }
         }
+    }
+
+    private static string ResolveDbPath()
+    {
+        SettingsService.Load();
+        var configured = SettingsService.Current.DbPath;
+        var defaultPath = SettingsService.DefaultDbPath;
+
+        // Check for old DB at exe location and migrate
+        var legacyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "todo.db");
+        if (File.Exists(legacyPath) && !File.Exists(configured))
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(configured)!);
+            File.Copy(legacyPath, configured);
+        }
+
+        return configured;
     }
 
     public void Dispose()

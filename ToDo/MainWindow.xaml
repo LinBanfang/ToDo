@@ -372,6 +372,12 @@
                                 Click="LanguageToggle_Click"
                                 Foreground="{StaticResource TextSecondaryBrush}"
                                 ToolTip="中/EN"/>
+                        <Button Content="&#xE753;" FontFamily="Segoe MDL2 Assets"
+                                Style="{StaticResource FluentSubtleButton}" FontSize="14"
+                                Width="28" Height="24" Padding="0"
+                                Click="DbPath_Click"
+                                Foreground="{StaticResource TextSecondaryBrush}"
+                                ToolTip="{Binding DbPath}"/>
                     </StackPanel>
                 </Border>
             </Grid>
