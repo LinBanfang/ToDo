@@ -747,7 +747,7 @@
                         <Border Background="{StaticResource AppBackgroundBrush}"
                                 CornerRadius="6" Padding="12" Margin="0,0,0,16">
                             <StackPanel>
-                                <TextBlock Text="&#xE91C;" FontFamily="Segoe MDL2 Assets" FontSize="11" FontWeight="SemiBold"
+                                <TextBlock Text="REMINDER" FontSize="11" FontWeight="SemiBold"
                                            Foreground="{StaticResource TextDisabledBrush}" Margin="0,0,0,8"/>
                                 <Grid>
                                     <Button x:Name="ReminderBtn"
@@ -795,7 +795,8 @@
                                                 <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="13"
                                                            VerticalAlignment="Center"
                                                            Foreground="{StaticResource TextPrimaryBrush}"
-                                                           MouseLeftButtonDown="StepTitle_DoubleClick">
+                                                           Cursor="Hand"
+                                                           MouseDown="StepTitle_Click">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
                                                             <Style.Triggers>

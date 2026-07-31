@@ -1004,9 +1004,9 @@ public partial class MainWindow : Window
             ViewModel.UpdateTaskCommand.Execute(ViewModel.SelectedTask);
     }
 
-    private void StepTitle_DoubleClick(object sender, MouseButtonEventArgs e)
+    private void StepTitle_Click(object sender, MouseButtonEventArgs e)
     {
-        if (e.ClickCount < 2 || sender is not TextBlock tb) return;
+        if (sender is not TextBlock tb) return;
         // Find sibling TextBox
         var parent = VisualTreeHelper.GetParent(tb);
         while (parent != null && parent is not Grid)
