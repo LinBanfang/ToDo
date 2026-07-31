@@ -42,7 +42,7 @@ public partial class TaskItem : ObservableObject
     private List<string> _tagIds = new();
 
     [ObservableProperty]
-    private List<TaskStep> _steps = new();
+    private System.Collections.ObjectModel.ObservableCollection<TaskStep> _steps = new();
 
     [ObservableProperty]
     private bool _completed;

@@ -22,6 +22,21 @@ public class DatabaseService : IDisposable
         _dbPath = dbPath ?? ResolveDbPath();
         _db = new LiteDatabase($"Filename={_dbPath};Connection=direct");
 
+        // Map ObservableCollection types to List for serialization
+        var mapper = _db.Mapper;
+        mapper.RegisterType<System.Collections.ObjectModel.ObservableCollection<TaskStep>>(
+            serialize: (oc) =>
+            {
+                var list = new List<TaskStep>(oc);
+                return mapper.Serialize(list);
+            },
+            deserialize: (bson) =>
+            {
+                var list = mapper.Deserialize<List<TaskStep>>(bson);
+                return new System.Collections.ObjectModel.ObservableCollection<TaskStep>(list);
+            }
+        );
+
         Lists = _db.GetCollection<TaskList>("lists");
         Groups = _db.GetCollection<TaskGroup>("groups");
         Tasks = _db.GetCollection<TaskItem>("tasks");
