@@ -831,8 +831,15 @@
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
-                                <Grid Margin="0,6,0,0" Height="28">
-                                    <TextBox x:Name="AddStepBox"
+                                <Grid Margin="0,6,0,0" Height="30">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="+" FontSize="16" FontWeight="Light"
+                                               Foreground="{StaticResource TextAccentBrush}"
+                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBox x:Name="AddStepBox" Grid.Column="1"
                                              Style="{StaticResource FluentTextBox}" FontSize="12"
                                              KeyDown="AddStepBox_KeyDown"/>
                                 </Grid>
