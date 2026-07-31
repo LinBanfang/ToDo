@@ -784,7 +784,6 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate DataType="{x:Type models:TaskStep}">
                                             <Grid Margin="0,2" AllowDrop="True"
-                                                  MouseMove="StepRow_MouseMove"
                                                   DragEnter="StepRow_DragEnter"
                                                   DragLeave="StepRow_DragLeave"
                                                   Drop="StepRow_Drop">
@@ -826,11 +825,12 @@
                                                          Style="{StaticResource SearchTextBox}" Padding="2,0"
                                                          KeyDown="StepEdit_KeyDown"
                                                          LostFocus="StepEdit_LostFocus"/>
-                                                <Button Grid.Column="2" Content="&#xE10A;" FontFamily="Segoe MDL2 Assets"
-                                                        Style="{StaticResource FluentSubtleButton}" FontSize="11"
-                                                        Width="22" Height="22" Padding="0"
+                                                <Button Grid.Column="2" Content="&#xE712;" FontFamily="Segoe MDL2 Assets"
+                                                        Style="{StaticResource FluentSubtleButton}" FontSize="14"
+                                                        Width="24" Height="24" Padding="0" Cursor="SizeAll"
                                                         Foreground="{StaticResource TextDisabledBrush}"
-                                                        Click="StepDelete_Click"/>
+                                                        MouseMove="StepHandle_MouseMove"
+                                                        Click="StepHandle_Click"/>
                                             </Grid>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
