@@ -141,6 +141,7 @@ public partial class MainViewModel : ObservableObject
         
         LoadGroups();
         LoadLists(); // LoadLists now re-points ActiveList internally
+        LoadTasks();
         RefreshActiveTasks();
     }
 
@@ -374,6 +375,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsCustomList));
         OnPropertyChanged(nameof(IsSystemList));
         OnPropertyChanged(nameof(HeaderTitle));
+        LoadTasks();
         RefreshActiveTasks();
     }
 
@@ -398,6 +400,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsCustomList));
         OnPropertyChanged(nameof(IsSystemList));
         OnPropertyChanged(nameof(HeaderTitle));
+        LoadTasks();
         RefreshActiveTasks();
     }
 
@@ -507,6 +510,7 @@ public partial class MainViewModel : ObservableObject
         };
         _db.Groups.Insert(group);
         LoadGroups();
+        LoadTasks();
         RefreshActiveTasks();
     }
 
@@ -530,6 +534,7 @@ public partial class MainViewModel : ObservableObject
         _db.Groups.Delete(group.Id);
         LoadGroups();
         
+        LoadTasks();
         RefreshActiveTasks();
     }
 
@@ -539,6 +544,7 @@ public partial class MainViewModel : ObservableObject
         group.Collapsed = !group.Collapsed;
         _db.Groups.Update(group);
         LoadGroups();
+        LoadTasks();
         RefreshActiveTasks();
     }
 
@@ -561,7 +567,6 @@ public partial class MainViewModel : ObservableObject
             Order = Tasks.Count(t => t.ListId == listId),
         };
         _db.Tasks.Insert(task);
-        
         RefreshActiveTasks();
     }
 
@@ -572,6 +577,7 @@ public partial class MainViewModel : ObservableObject
         _db.Tasks.Update(task);
         
         
+        LoadTasks();
         RefreshActiveTasks();
     }
 
@@ -582,6 +588,7 @@ public partial class MainViewModel : ObservableObject
         if (SelectedTask?.Id == task.Id)
             SelectedTask = null;
         
+        LoadTasks();
         RefreshActiveTasks();
     }
 
@@ -594,6 +601,7 @@ public partial class MainViewModel : ObservableObject
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(param.task);
         
+        LoadTasks();
         RefreshActiveTasks();
     }
 
@@ -604,6 +612,7 @@ public partial class MainViewModel : ObservableObject
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(param.task);
         
+        LoadTasks();
         RefreshActiveTasks();
     }
 
@@ -620,6 +629,7 @@ public partial class MainViewModel : ObservableObject
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(param.task);
         
+        LoadTasks();
         RefreshActiveTasks();
     }
 
@@ -631,6 +641,7 @@ public partial class MainViewModel : ObservableObject
         task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(task);
         
+        LoadTasks();
         RefreshActiveTasks();
     }
 
@@ -642,6 +653,7 @@ public partial class MainViewModel : ObservableObject
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(param.task);
         
+        LoadTasks();
         RefreshActiveTasks();
     }
 
@@ -662,6 +674,7 @@ public partial class MainViewModel : ObservableObject
         task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(task);
         
+        LoadTasks();
         RefreshActiveTasks();
     }
 
@@ -673,6 +686,7 @@ public partial class MainViewModel : ObservableObject
         task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(task);
         
+        LoadTasks();
         RefreshActiveTasks();
     }
 
@@ -756,6 +770,7 @@ public partial class MainViewModel : ObservableObject
         _db.Tags.Delete(tag.Id);
         LoadTags();
         
+        LoadTasks();
         RefreshActiveTasks();
     }
 
@@ -768,7 +783,8 @@ public partial class MainViewModel : ObservableObject
             param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             _db.Tasks.Update(param.task);
             
-            RefreshActiveTasks();
+            LoadTasks();
+        RefreshActiveTasks();
         }
     }
 
@@ -779,6 +795,7 @@ public partial class MainViewModel : ObservableObject
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(param.task);
         
+        LoadTasks();
         RefreshActiveTasks();
     }
 
