@@ -185,6 +185,19 @@ public class CountToVisibilityConverter : IValueConverter
         => throw new NotImplementedException();
 }
 
+/// <summary>Resolve ListId to list name during search: MultiBinding({ ListId }, { AllLists }) → string</summary>
+public class ListIdToNameConverter : IMultiValueConverter
+{
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (values.Length < 2) return "";
+        var listId = values[0] as string ?? "";
+        var allLists = (values[1] as IList)?.Cast<TaskList>() ?? Enumerable.Empty<TaskList>();
+        return allLists.FirstOrDefault(l => l.Id == listId)?.DisplayName ?? "";
+    }
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) => throw new NotImplementedException();
+}
+
 /// <summary>Resolve tag IDs to Tag objects: MultiBinding({ TagIds }, { AllTags }) → List<Tag></summary>
 public class TagIdsToTagsConverter : IMultiValueConverter
 {

@@ -908,6 +908,71 @@ public partial class MainWindow : Window
         RefreshDetailPickers();
     }
 
+    private void ReminderBtn_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.SelectedTask == null || sender is not Button btn) return;
+
+        var menu = new ContextMenu { PlacementTarget = btn };
+        var now = DateTime.Now;
+
+        foreach (var (label, offset) in new[] {
+            ("1 " + (Loc.Language == AppLanguage.Chinese ? "小时后" : "hour later"), 1.0),
+            ("3 " + (Loc.Language == AppLanguage.Chinese ? "小时后" : "hours later"), 3.0),
+            (Loc.Tomorrow + " 9:00", (now.Date.AddDays(1).AddHours(9) - now).TotalHours),
+            (Loc.ThisWeek + " 9:00", (GetNextMonday().AddHours(9) - now).TotalHours),
+        })
+        {
+            var item = new MenuItem { Header = label };
+            var ts = DateTimeOffset.UtcNow.AddHours(offset).ToUnixTimeMilliseconds();
+            item.Click += (_, _) => SetReminder(ts);
+            menu.Items.Add(item);
+        }
+        menu.Items.Add(new Separator());
+
+        var pickItem = new MenuItem { Header = Loc.PickDate };
+        pickItem.Click += (_, _) =>
+        {
+            var dlg = new Views.Dialogs.DateTimeDialog(ViewModel.SelectedTask!.Reminder ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds())
+            { Owner = this, Title = "Reminder" };
+            if (dlg.ShowDialog() == true && dlg.Saved)
+                SetReminder(dlg.ResultTimestamp);
+        };
+        menu.Items.Add(pickItem);
+
+        if (ViewModel.SelectedTask.Reminder != null)
+        {
+            menu.Items.Add(new Separator());
+            var removeItem = new MenuItem { Header = $"✕  {Loc.Delete}" };
+            removeItem.Click += (_, _) => ReminderClear_Click(sender, e);
+            menu.Items.Add(removeItem);
+        }
+        menu.IsOpen = true;
+    }
+
+    private static DateTime GetNextMonday()
+    {
+        var today = DateTime.Today;
+        var daysUntil = ((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7;
+        if (daysUntil == 0) daysUntil = 7;
+        return today.AddDays(daysUntil);
+    }
+
+    private void SetReminder(long ts)
+    {
+        if (ViewModel.SelectedTask == null) return;
+        ViewModel.SelectedTask.Reminder = ts;
+        ViewModel.UpdateTaskCommand.Execute(ViewModel.SelectedTask);
+        RefreshDetailPickers();
+    }
+
+    private void ReminderClear_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.SelectedTask == null) return;
+        ViewModel.SelectedTask.Reminder = null;
+        ViewModel.UpdateTaskCommand.Execute(ViewModel.SelectedTask);
+        RefreshDetailPickers();
+    }
+
     private void DetailDueDate_Clear(object sender, RoutedEventArgs e)
     {
         if (ViewModel.SelectedTask == null) return;
@@ -939,6 +1004,86 @@ public partial class MainWindow : Window
             ViewModel.UpdateTaskCommand.Execute(ViewModel.SelectedTask);
     }
 
+    private void StepTitle_DoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount < 2 || sender is not TextBlock tb) return;
+        // Find sibling TextBox
+        var parent = VisualTreeHelper.GetParent(tb);
+        while (parent != null && parent is not Grid)
+            parent = VisualTreeHelper.GetParent(parent);
+        if (parent is Grid grid)
+        {
+            TextBox? editBox = null;
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(grid); i++)
+            {
+                if (VisualTreeHelper.GetChild(grid, i) is TextBox box && Grid.GetColumn(box) == 1)
+                { editBox = box; break; }
+            }
+            if (editBox != null)
+            {
+                tb.Visibility = Visibility.Collapsed;
+                editBox.Text = tb.Text;
+                editBox.Visibility = Visibility.Visible;
+                editBox.Focus();
+                editBox.SelectAll();
+            }
+        }
+    }
+
+    private void StepEdit_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (sender is TextBox box)
+        {
+            if (e.Key == Key.Enter) { CommitStepEdit(box); e.Handled = true; }
+            else if (e.Key == Key.Escape) { CancelStepEdit(box); e.Handled = true; }
+        }
+    }
+
+    private void StepEdit_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is TextBox box) CommitStepEdit(box);
+    }
+
+    private void CommitStepEdit(TextBox box)
+    {
+        var parent = VisualTreeHelper.GetParent(box);
+        while (parent != null && parent is not Grid)
+            parent = VisualTreeHelper.GetParent(parent);
+        if (parent is Grid grid)
+        {
+            TextBlock? tb = null;
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(grid); i++)
+            {
+                if (VisualTreeHelper.GetChild(grid, i) is TextBlock t && Grid.GetColumn(t) == 1)
+                { tb = t; break; }
+            }
+            if (tb != null && box.DataContext is TaskStep step && !string.IsNullOrWhiteSpace(box.Text))
+            {
+                step.Title = box.Text.Trim();
+                if (ViewModel.SelectedTask != null)
+                    ViewModel.UpdateTaskCommand.Execute(ViewModel.SelectedTask);
+            }
+            if (tb != null) tb.Visibility = Visibility.Visible;
+        }
+        box.Visibility = Visibility.Collapsed;
+    }
+
+    private void CancelStepEdit(TextBox box)
+    {
+        var parent = VisualTreeHelper.GetParent(box);
+        while (parent != null && parent is not Grid)
+            parent = VisualTreeHelper.GetParent(parent);
+        if (parent is Grid grid)
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(grid); i++)
+            {
+                if (VisualTreeHelper.GetChild(grid, i) is TextBlock tb && Grid.GetColumn(tb) == 1)
+                    tb.Visibility = Visibility.Visible;
+            }
+        }
+        box.Visibility = Visibility.Collapsed;
+    }
+
     private void StepDelete_Click(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement fe && fe.DataContext is TaskStep step
@@ -955,6 +1100,17 @@ public partial class MainWindow : Window
         if (task == null) return;
 
         _suppressDetailEvents = true;
+
+        // Reminder label
+        if (task.Reminder != null)
+        {
+            var rdt = DateTimeOffset.FromUnixTimeMilliseconds(task.Reminder.Value).LocalDateTime;
+            ReminderLabel.Text = rdt.ToString("MMM d, HH:mm");
+        }
+        else
+        {
+            ReminderLabel.Text = "";
+        }
 
         // Due date label
         if (task.DueDate != null)

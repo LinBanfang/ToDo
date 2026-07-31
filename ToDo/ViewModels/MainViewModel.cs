@@ -444,6 +444,13 @@ public partial class MainViewModel : ObservableObject
     {
         param.list.GroupId = param.group?.Id;
         _db.Lists.Update(param.list);
+        // Auto-expand target group
+        if (param.group != null && param.group.Collapsed)
+        {
+            param.group.Collapsed = false;
+            _db.ListGroups.Update(param.group);
+        }
+        LoadListGroups();
         LoadLists();
         RebuildSidebarGroups();
     }

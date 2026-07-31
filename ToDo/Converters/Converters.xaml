@@ -14,6 +14,7 @@
     <conv:DueDateToStringConverter x:Key="DueDateToString"/>
     <conv:DueDateToBrushConverter x:Key="DueDateToBrush"/>
     <conv:EqualityConverter x:Key="Equality"/>
+    <conv:ListIdToNameConverter x:Key="ListIdToName"/>
     <conv:TagIdsToTagsConverter x:Key="TagIdsToTags"/>
     <conv:ComboDisplayConverter x:Key="ComboDisplay"/>
     <conv:CountToVisibilityConverter x:Key="CountToVis"/>
