@@ -795,7 +795,7 @@
                                                 <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="13"
                                                            VerticalAlignment="Center"
                                                            Foreground="{StaticResource TextPrimaryBrush}"
-                                                           Cursor="Hand"
+                                                           Visibility="{Binding IsEditing, Converter={StaticResource InverseBool}}"
                                                            MouseDown="StepTitle_Click">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
@@ -808,9 +808,10 @@
                                                         </Style>
                                                     </TextBlock.Style>
                                                 </TextBlock>
-                                                <TextBox Grid.Column="1" Text="{Binding Title, Mode=OneWay}"
+                                                <TextBox Grid.Column="1"
+                                                         Text="{Binding EditTitle, UpdateSourceTrigger=PropertyChanged}"
                                                          FontSize="13" VerticalAlignment="Center"
-                                                         Visibility="Collapsed"
+                                                         Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}"
                                                          Style="{StaticResource SearchTextBox}" Padding="2,0"
                                                          KeyDown="StepEdit_KeyDown"
                                                          LostFocus="StepEdit_LostFocus"/>

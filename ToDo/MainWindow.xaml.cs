@@ -1006,82 +1006,38 @@ public partial class MainWindow : Window
 
     private void StepTitle_Click(object sender, MouseButtonEventArgs e)
     {
-        if (sender is not TextBlock tb) return;
-        // Find sibling TextBox
-        var parent = VisualTreeHelper.GetParent(tb);
-        while (parent != null && parent is not Grid)
-            parent = VisualTreeHelper.GetParent(parent);
-        if (parent is Grid grid)
+        if (sender is FrameworkElement fe && fe.DataContext is TaskStep step)
         {
-            TextBox? editBox = null;
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(grid); i++)
-            {
-                if (VisualTreeHelper.GetChild(grid, i) is TextBox box && Grid.GetColumn(box) == 1)
-                { editBox = box; break; }
-            }
-            if (editBox != null)
-            {
-                tb.Visibility = Visibility.Collapsed;
-                editBox.Text = tb.Text;
-                editBox.Visibility = Visibility.Visible;
-                editBox.Focus();
-                editBox.SelectAll();
-            }
+            step.EditTitle = step.Title;
+            step.IsEditing = true;
         }
     }
 
     private void StepEdit_KeyDown(object sender, KeyEventArgs e)
     {
-        if (sender is TextBox box)
+        if (sender is FrameworkElement fe && fe.DataContext is TaskStep step)
         {
-            if (e.Key == Key.Enter) { CommitStepEdit(box); e.Handled = true; }
-            else if (e.Key == Key.Escape) { CancelStepEdit(box); e.Handled = true; }
+            if (e.Key == Key.Enter) { CommitStepEdit(step); e.Handled = true; }
+            else if (e.Key == Key.Escape) { step.IsEditing = false; e.Handled = true; }
         }
     }
 
     private void StepEdit_LostFocus(object sender, RoutedEventArgs e)
     {
-        if (sender is TextBox box) CommitStepEdit(box);
+        if (sender is FrameworkElement fe && fe.DataContext is TaskStep step)
+            CommitStepEdit(step);
     }
 
-    private void CommitStepEdit(TextBox box)
+    private void CommitStepEdit(TaskStep step)
     {
-        var parent = VisualTreeHelper.GetParent(box);
-        while (parent != null && parent is not Grid)
-            parent = VisualTreeHelper.GetParent(parent);
-        if (parent is Grid grid)
+        var n = step.EditTitle?.Trim();
+        if (!string.IsNullOrEmpty(n) && n != step.Title)
         {
-            TextBlock? tb = null;
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(grid); i++)
-            {
-                if (VisualTreeHelper.GetChild(grid, i) is TextBlock t && Grid.GetColumn(t) == 1)
-                { tb = t; break; }
-            }
-            if (tb != null && box.DataContext is TaskStep step && !string.IsNullOrWhiteSpace(box.Text))
-            {
-                step.Title = box.Text.Trim();
-                if (ViewModel.SelectedTask != null)
-                    ViewModel.UpdateTaskCommand.Execute(ViewModel.SelectedTask);
-            }
-            if (tb != null) tb.Visibility = Visibility.Visible;
+            step.Title = n;
+            if (ViewModel.SelectedTask != null)
+                ViewModel.UpdateTaskCommand.Execute(ViewModel.SelectedTask);
         }
-        box.Visibility = Visibility.Collapsed;
-    }
-
-    private void CancelStepEdit(TextBox box)
-    {
-        var parent = VisualTreeHelper.GetParent(box);
-        while (parent != null && parent is not Grid)
-            parent = VisualTreeHelper.GetParent(parent);
-        if (parent is Grid grid)
-        {
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(grid); i++)
-            {
-                if (VisualTreeHelper.GetChild(grid, i) is TextBlock tb && Grid.GetColumn(tb) == 1)
-                    tb.Visibility = Visibility.Visible;
-            }
-        }
-        box.Visibility = Visibility.Collapsed;
+        step.IsEditing = false;
     }
 
     private void StepDelete_Click(object sender, RoutedEventArgs e)
