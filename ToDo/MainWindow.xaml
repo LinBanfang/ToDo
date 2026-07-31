@@ -783,7 +783,11 @@
                                 <ItemsControl ItemsSource="{Binding SelectedTask.Steps}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate DataType="{x:Type models:TaskStep}">
-                                            <Grid Margin="0,2">
+                                            <Grid Margin="0,2" AllowDrop="True"
+                                                  MouseMove="StepRow_MouseMove"
+                                                  DragEnter="StepRow_DragEnter"
+                                                  DragLeave="StepRow_DragLeave"
+                                                  Drop="StepRow_Drop">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto"/>
                                                     <ColumnDefinition Width="*"/>

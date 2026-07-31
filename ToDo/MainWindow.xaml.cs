@@ -1051,6 +1051,53 @@ public partial class MainWindow : Window
         step.IsEditing = false;
     }
 
+    // ─── Step drag-reorder ──────────────────────────────
+    private void StepRow_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement fe
+            && fe.DataContext is TaskStep step)
+            DragDrop.DoDragDrop(fe, step, DragDropEffects.Move);
+    }
+
+    private void StepRow_DragEnter(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(typeof(TaskStep)) && sender is Grid grid)
+        {
+            grid.Background = new SolidColorBrush(Color.FromRgb(0xE6, 0xF2, 0xFC));
+            e.Effects = DragDropEffects.Move;
+        }
+        e.Handled = true;
+    }
+
+    private void StepRow_DragLeave(object sender, DragEventArgs e)
+    {
+        if (sender is Grid grid) grid.Background = Brushes.Transparent;
+        e.Handled = true;
+    }
+
+    private void StepRow_Drop(object sender, DragEventArgs e)
+    {
+        if (sender is Grid grid)
+        {
+            grid.Background = Brushes.Transparent;
+            if (e.Data.GetDataPresent(typeof(TaskStep)) && grid.DataContext is TaskStep target
+                && ViewModel.SelectedTask != null)
+            {
+                var dragged = e.Data.GetData(typeof(TaskStep)) as TaskStep;
+                if (dragged != null && dragged.Id != target.Id)
+                {
+                    var steps = ViewModel.SelectedTask.Steps;
+                    steps.Remove(dragged);
+                    var targetIdx = steps.IndexOf(target);
+                    steps.Insert(targetIdx, dragged);
+                    for (int i = 0; i < steps.Count; i++) steps[i].Order = i;
+                    ViewModel.UpdateTaskCommand.Execute(ViewModel.SelectedTask);
+                }
+            }
+        }
+        e.Handled = true;
+    }
+
     private void StepDelete_Click(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement fe && fe.DataContext is TaskStep step

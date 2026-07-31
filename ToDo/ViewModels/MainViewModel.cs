@@ -571,6 +571,7 @@ public partial class MainViewModel : ObservableObject
         task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(task);
         LoadTasks();
+        RefreshSelectedTask();
         RefreshActiveTasks();
     }
 
