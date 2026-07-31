@@ -130,6 +130,12 @@ public partial class MainViewModel : ObservableObject
     /// <summary>Public refresh for external callers (drag-drop, etc.)</summary>
     public void NotifyHeaderTitleChanged() => OnPropertyChanged(nameof(HeaderTitle));
 
+    private void RefreshSelectedTask()
+    {
+        if (SelectedTask != null)
+            SelectedTask = Tasks.FirstOrDefault(t => t.Id == SelectedTask.Id);
+    }
+
     public void Refresh()
     {
         LoadTasks();
@@ -681,6 +687,7 @@ public partial class MainViewModel : ObservableObject
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(param.task);
         LoadTasks();
+        RefreshSelectedTask();
     }
 
     /// <summary>Insert a new step after the given index and set it to editing mode</summary>
@@ -697,6 +704,7 @@ public partial class MainViewModel : ObservableObject
         task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(task);
         LoadTasks();
+        RefreshSelectedTask();
     }
 
     [RelayCommand]
@@ -706,6 +714,7 @@ public partial class MainViewModel : ObservableObject
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(param.task);
         LoadTasks();
+        RefreshSelectedTask();
     }
 
     [RelayCommand]
