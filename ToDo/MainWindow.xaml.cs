@@ -1017,7 +1017,13 @@ public partial class MainWindow : Window
     {
         if (sender is FrameworkElement fe && fe.DataContext is TaskStep step)
         {
-            if (e.Key == Key.Enter) { CommitStepEdit(step); e.Handled = true; }
+            if (e.Key == Key.Enter)
+            {
+                CommitStepEdit(step);
+                if (ViewModel.SelectedTask != null)
+                    ViewModel.InsertStepAfter(ViewModel.SelectedTask, step.Order);
+                e.Handled = true;
+            }
             else if (e.Key == Key.Escape) { step.IsEditing = false; e.Handled = true; }
         }
     }

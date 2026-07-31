@@ -683,6 +683,22 @@ public partial class MainViewModel : ObservableObject
         LoadTasks();
     }
 
+    /// <summary>Insert a new step after the given index and set it to editing mode</summary>
+    public void InsertStepAfter(TaskItem task, int afterIndex)
+    {
+        for (int i = afterIndex + 1; i < task.Steps.Count; i++)
+            task.Steps[i].Order++;
+        task.Steps.Insert(afterIndex + 1, new TaskStep
+        {
+            Title = "",
+            Order = afterIndex + 1,
+            IsEditing = true
+        });
+        task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        _db.Tasks.Update(task);
+        LoadTasks();
+    }
+
     [RelayCommand]
     private void ToggleStep((TaskItem task, TaskStep step) param)
     {
