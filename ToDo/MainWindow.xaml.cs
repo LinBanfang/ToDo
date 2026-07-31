@@ -981,6 +981,11 @@ public partial class MainWindow : Window
         RefreshDetailPickers();
     }
 
+    private void AddStepBox_ButtonClick(object sender, RoutedEventArgs e)
+    {
+        AddStepBox.Focus();
+    }
+
     private void AddStepBox_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Enter && sender is TextBox tb && !string.IsNullOrWhiteSpace(tb.Text)

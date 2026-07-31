@@ -831,14 +831,17 @@
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
-                                <Grid Margin="0,6,0,0" Height="30">
+                                <Grid Margin="0,6,0,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="+" FontSize="16" FontWeight="Light"
-                                               Foreground="{StaticResource TextAccentBrush}"
-                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <Button Grid.Column="0" Content="+" FontSize="16"
+                                            Style="{StaticResource FluentSubtleButton}"
+                                            Foreground="{StaticResource TextAccentBrush}"
+                                            Width="24" Height="28" Padding="0"
+                                            VerticalAlignment="Center" Margin="0,0,4,0"
+                                            Click="AddStepBox_ButtonClick"/>
                                     <TextBox x:Name="AddStepBox" Grid.Column="1"
                                              Style="{StaticResource FluentTextBox}" FontSize="12"
                                              KeyDown="AddStepBox_KeyDown"/>
