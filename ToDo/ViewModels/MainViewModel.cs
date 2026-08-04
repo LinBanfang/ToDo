@@ -567,9 +567,11 @@ public partial class MainViewModel : ObservableObject
     {
         if (ActiveList == null) return;
 
-        // System lists → tasks go to inbox ("list-tasks"); custom lists → to that list
-        var listId = ActiveList.Type == ListType.Custom ? ActiveList.Id : "list-tasks";
-        var isMyDay = ActiveList.Type == ListType.MyDay;
+        // Searching → inbox; system lists → inbox; custom lists → to that list
+        var listId = IsSearching
+            ? "list-tasks"
+            : ActiveList.Type == ListType.Custom ? ActiveList.Id : "list-tasks";
+        var isMyDay = !IsSearching && ActiveList.Type == ListType.MyDay;
 
         var task = new TaskItem
         {
