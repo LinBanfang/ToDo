@@ -268,6 +268,10 @@ public partial class MainViewModel : ObservableObject
         };
     }
 
+    /// <summary>Next order slot after the highest existing one, so gaps don't cause duplicates</summary>
+    private static int NextOrder(IEnumerable<int> existing) =>
+        existing.DefaultIfEmpty(-1).Max() + 1;
+
     // ─── Refresh derived data ────────────────────────────
     public void RefreshActiveTasks()
     {
@@ -410,7 +414,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void CreateListGroup(string name)
     {
-        var g = new ListGroup { Name = name, Order = ListGroups.Count };
+        var g = new ListGroup { Name = name, Order = NextOrder(ListGroups.Select(x => x.Order)) };
         _db.ListGroups.Insert(g);
         LoadListGroups();
         RebuildSidebarGroups();
@@ -473,7 +477,7 @@ public partial class MainViewModel : ObservableObject
             Name = name,
             Icon = "📋",
             Type = ListType.Custom,
-            Order = Lists.Count(l => !l.IsSystem),
+            Order = NextOrder(Lists.Where(l => !l.IsSystem).Select(l => l.Order)),
         };
         _db.Lists.Insert(list);
         LastCreatedListId = list.Id;
@@ -518,7 +522,7 @@ public partial class MainViewModel : ObservableObject
         {
             Name = name,
             ListId = ActiveList.Id,
-            Order = Groups.Count(g => g.ListId == ActiveList.Id),
+            Order = NextOrder(Groups.Where(g => g.ListId == ActiveList.Id).Select(g => g.Order)),
         };
         _db.Groups.Insert(group);
         LoadGroups();
@@ -575,8 +579,8 @@ public partial class MainViewModel : ObservableObject
             Title = title,
             ListId = listId,
             IsMyDay = isMyDay,
-            MyDayOrder = isMyDay ? Tasks.Count(t => t.IsMyDay) : -1,
-            Order = Tasks.Count(t => t.ListId == listId),
+            MyDayOrder = isMyDay ? NextOrder(Tasks.Where(t => t.IsMyDay).Select(t => t.MyDayOrder)) : -1,
+            Order = NextOrder(Tasks.Where(t => t.ListId == listId).Select(t => t.Order)),
         };
         _db.Tasks.Insert(task);
         RefreshActiveTasks();
@@ -681,7 +685,7 @@ public partial class MainViewModel : ObservableObject
         else
         {
             task.IsMyDay = true;
-            task.MyDayOrder = Tasks.Count(t => t.IsMyDay);
+            task.MyDayOrder = NextOrder(Tasks.Where(t => t.IsMyDay).Select(t => t.MyDayOrder));
         }
         task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(task);
