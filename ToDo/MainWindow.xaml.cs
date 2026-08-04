@@ -146,6 +146,24 @@ public partial class MainWindow : Window
         menu.Items.Add(d);
     }
 
+    private void SidebarListName_DoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount >= 2 && sender is FrameworkElement fe && fe.DataContext is TaskList list && !list.IsSystem)
+        {
+            list.EditName = list.Name;
+            list.IsRenaming = true;
+            e.Handled = true;
+        }
+    }
+
+    private void SidebarRename_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        // Auto-focus the rename box so typing works immediately and clicking away
+        // commits (via LostFocus) instead of leaving the list stuck in rename mode.
+        if (sender is TextBox tb && tb.IsVisible)
+            Dispatcher.BeginInvoke(() => { tb.Focus(); tb.SelectAll(); });
+    }
+
     private void SidebarRename_KeyDown(object sender, KeyEventArgs e)
     {
         if (sender is FrameworkElement fe && fe.DataContext is TaskList list)
