@@ -804,15 +804,17 @@
                                 <ItemsControl ItemsSource="{Binding SelectedTask.Steps}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate DataType="{x:Type models:TaskStep}">
-                                            <Grid Margin="0,2" AllowDrop="True"
-                                                  DragEnter="StepRow_DragEnter"
-                                                  DragLeave="StepRow_DragLeave"
-                                                  Drop="StepRow_Drop">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
+                                            <Border Margin="0,2" AllowDrop="True"
+                                                    DragEnter="StepRow_DragEnter"
+                                                    DragOver="StepRow_DragOver"
+                                                    DragLeave="StepRow_DragLeave"
+                                                    Drop="StepRow_Drop">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
                                                 <CheckBox Grid.Column="0" IsChecked="{Binding Completed}"
                                                           VerticalAlignment="Center" Margin="0,0,8,0"
                                                           Checked="StepToggle_Changed"
@@ -853,8 +855,9 @@
                                                         PreviewMouseLeftButtonDown="RecordDragStart"
                                                         MouseMove="StepHandle_MouseMove"
                                                         Click="StepHandle_Click"/>
-                                            </Grid>
-                                        </DataTemplate>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                                 <Grid Margin="0,6,0,0">

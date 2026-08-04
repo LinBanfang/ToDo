@@ -1238,22 +1238,69 @@ public partial class MainWindow : Window
         menu.IsOpen = true;
     }
 
+    private Border? _lastStepDropRow;
+
     private void StepRow_DragEnter(object sender, DragEventArgs e)
     {
-        if (e.Data.GetDataPresent(typeof(TaskStep))) { e.Effects = DragDropEffects.Move; }
+        if (e.Data.GetDataPresent(typeof(TaskStep)) && sender is Border border)
+        {
+            e.Effects = DragDropEffects.Move;
+            UpdateStepRowDropIndicator(border, e);
+        }
         e.Handled = true;
     }
-    private void StepRow_DragLeave(object sender, DragEventArgs e) { e.Handled = true; }
+
+    private void StepRow_DragOver(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(typeof(TaskStep)) && sender is Border border)
+        {
+            e.Effects = DragDropEffects.Move;
+            UpdateStepRowDropIndicator(border, e);
+        }
+        e.Handled = true;
+    }
+
+    private void StepRow_DragLeave(object sender, DragEventArgs e)
+    {
+        ClearStepRowDropIndicator();
+        e.Handled = true;
+    }
+
+    private void UpdateStepRowDropIndicator(Border border, DragEventArgs e)
+    {
+        ClearStepRowDropIndicator();
+        bool lowerHalf = e.GetPosition(border).Y > border.ActualHeight / 2;
+        border.BorderBrush = (Brush)Application.Current.FindResource("AccentBlue");
+        border.BorderThickness = new Thickness(0, lowerHalf ? 0 : 2, 0, lowerHalf ? 2 : 0);
+        _lastStepDropRow = border;
+    }
+
+    private void ClearStepRowDropIndicator()
+    {
+        if (_lastStepDropRow != null)
+        {
+            _lastStepDropRow.BorderBrush = Brushes.Transparent;
+            _lastStepDropRow.BorderThickness = new Thickness(0);
+            _lastStepDropRow = null;
+        }
+    }
+
     private void StepRow_Drop(object sender, DragEventArgs e)
     {
-        if (sender is Grid grid && grid.DataContext is TaskStep target
+        ClearStepRowDropIndicator();
+        if (sender is Border border && border.DataContext is TaskStep target
             && ViewModel.SelectedTask != null
             && e.Data.GetDataPresent(typeof(TaskStep))
             && e.Data.GetData(typeof(TaskStep)) is TaskStep dragged && dragged.Id != target.Id)
         {
             var steps = ViewModel.SelectedTask.Steps;
             steps.Remove(dragged);
-            steps.Insert(steps.IndexOf(target), dragged);
+            var targetIdx = steps.IndexOf(target);
+            if (targetIdx < 0) { e.Handled = true; return; }
+
+            // Upper half of the target row inserts before it, lower half after it
+            bool lowerHalf = e.GetPosition(border).Y > border.ActualHeight / 2;
+            steps.Insert(lowerHalf ? targetIdx + 1 : targetIdx, dragged);
             for (int i = 0; i < steps.Count; i++) steps[i].Order = i;
             ViewModel.UpdateTaskCommand.Execute(ViewModel.SelectedTask);
         }
