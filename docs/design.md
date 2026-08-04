@@ -189,7 +189,7 @@ MainViewModel
 ```
 ┌──────────┬──────────────────────┬─────────────┐
 │ Sidebar  │    MainContent       │ DetailPane  │
-│ (280px)  │    (flex)            │ (360px)     │
+│ (可拖动) │    (flex)            │ (360px)     │
 │          │                      │ 仅选中时显示 │
 ├──────────┤                      │             │
 │ 搜索     │  列表标题 + emoji     │  标题编辑    │
@@ -208,7 +208,7 @@ MainViewModel
 
 ### 5.2 组件树
 
-- **ShellLayout** — CSS Grid 三栏
+- **ShellLayout** — CSS Grid 四栏（侧边栏 + GridSplitter + 主内容 + 详情面板）；侧边栏宽度通过 `GridSplitter` 拖动调整，TwoWay 绑定 `MainViewModel.SidebarWidth`，持久化到 settings.json（180–480px 范围）
   - **Sidebar** — 搜索 + 系统列表 + 分割线 + 自定义列表 + 新建输入框 + 底部按钮
   - **MainContent** — 列表标题(emoji+可编辑名称) + AddTaskInput + 任务区
     - 自定义列表：GroupedTaskList（含未分组伪分组）+ 分组标题(可折叠/重命名) + 任务行
