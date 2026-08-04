@@ -77,4 +77,18 @@ public partial class TaskItem : ObservableObject
     /// Notify the UI that the completed-step count may have changed
     /// </summary>
     public void NotifyCompletedStepCount() => OnPropertyChanged(nameof(CompletedStepCount));
+
+    /// <summary>
+    /// Notify the UI that TagIds changed (a plain List, so it can't self-notify)
+    /// </summary>
+    public void NotifyTagsChanged() => OnPropertyChanged(nameof(TagIds));
+
+    /// <summary>
+    /// Notify the UI that the close-state derived properties may have changed
+    /// </summary>
+    public void NotifyCloseDisplay()
+    {
+        OnPropertyChanged(nameof(IsClosed));
+        OnPropertyChanged(nameof(CloseModeDisplay));
+    }
 }
