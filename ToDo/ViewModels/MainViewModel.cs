@@ -761,6 +761,24 @@ public partial class MainViewModel : ObservableObject
         
     }
 
+    [RelayCommand]
+    private void PromoteStepToTask((TaskItem task, TaskStep step) param)
+    {
+        var newTask = new TaskItem
+        {
+            Title = param.step.Title,
+            ListId = param.task.ListId,
+            Order = NextOrder(Tasks.Where(t => t.ListId == param.task.ListId).Select(t => t.Order)),
+        };
+        _db.Tasks.Insert(newTask);
+        param.task.Steps.Remove(param.step);
+        param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        param.task.NotifyCompletedStepCount();
+        _db.Tasks.Update(param.task);
+        LoadTasks();
+        RefreshActiveTasks();
+    }
+
     // ─── Tag Management ───────────────────────────────────
     [RelayCommand]
     private void CreateTag((string name, string color) param)

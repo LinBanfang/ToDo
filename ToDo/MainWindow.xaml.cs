@@ -1069,7 +1069,11 @@ public partial class MainWindow : Window
         menu.Items.Add(completeItem);
         menu.Items.Add(new Separator());
         var promoteItem = new MenuItem { Header = Loc.PromoteToTask };
-        promoteItem.Click += (_, _) => { ViewModel.CreateTaskCommand.Execute(step.Title); ViewModel.DeleteStepCommand.Execute((ViewModel.SelectedTask!, step)); };
+        promoteItem.Click += (_, _) =>
+        {
+            if (ViewModel.SelectedTask != null)
+                ViewModel.PromoteStepToTaskCommand.Execute((ViewModel.SelectedTask, step));
+        };
         menu.Items.Add(promoteItem);
         menu.Items.Add(new Separator());
         var deleteItem = new MenuItem { Header = Loc.Delete };
