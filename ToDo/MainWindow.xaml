@@ -129,6 +129,7 @@
                     MouseMove="TaskRow_MouseMove"
                     ContextMenuOpening="TaskRow_ContextMenuOpening"
                     AllowDrop="True" DragEnter="TaskRow_DragEnter"
+                    DragOver="TaskRow_DragOver"
                     DragLeave="TaskRow_DragLeave" Drop="TaskRow_Drop">
                 <Border.ContextMenu><ContextMenu /></Border.ContextMenu>
                 <ContentControl Content="{Binding}" ContentTemplate="{StaticResource TaskRowContent}"/>

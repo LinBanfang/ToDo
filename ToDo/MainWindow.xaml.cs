@@ -513,11 +513,30 @@ public partial class MainWindow : Window
     {
         if (e.Data.GetDataPresent(typeof(TaskItem)) && sender is Border border)
         {
-            border.BorderBrush = (Brush)Application.Current.FindResource("AccentBlue");
-            border.BorderThickness = new Thickness(0, 0, 0, 2);
+            UpdateTaskRowDropIndicator(border, e);
             e.Effects = DragDropEffects.Move;
         }
         e.Handled = true;
+    }
+
+    private void TaskRow_DragOver(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(typeof(TaskItem)) && sender is Border border)
+        {
+            UpdateTaskRowDropIndicator(border, e);
+            e.Effects = DragDropEffects.Move;
+        }
+        e.Handled = true;
+    }
+
+    /// <summary>Top line on the upper half of the row (insert before), bottom line on
+    /// the lower half (insert after) — matching the drop behavior.</summary>
+    private static void UpdateTaskRowDropIndicator(Border border, DragEventArgs e)
+    {
+        var brush = (Brush)Application.Current.FindResource("AccentBlue");
+        bool lowerHalf = e.GetPosition(border).Y > border.ActualHeight / 2;
+        border.BorderBrush = brush;
+        border.BorderThickness = new Thickness(0, lowerHalf ? 0 : 2, 0, lowerHalf ? 2 : 0);
     }
 
     private void TaskRow_DragLeave(object sender, DragEventArgs e)
@@ -558,7 +577,9 @@ public partial class MainWindow : Window
             var targetIdx = siblings.IndexOf(targetTask);
             if (targetIdx < 0) return;
 
-            siblings.Insert(targetIdx, draggedTask);
+            // Upper half of the target row inserts before it, lower half after it
+            bool lowerHalf = e.GetPosition(border).Y > border.ActualHeight / 2;
+            siblings.Insert(lowerHalf ? targetIdx + 1 : targetIdx, draggedTask);
 
             // Reassign orders
             for (int i = 0; i < siblings.Count; i++)
