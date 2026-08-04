@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ToDo.Models;
@@ -46,6 +47,16 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _theme = "Light"; // Light, Dark
 
+    // ─── Sidebar ──────────────────────────────────────────
+    [ObservableProperty]
+    private GridLength _sidebarWidth = new(280);
+
+    partial void OnSidebarWidthChanged(GridLength value)
+    {
+        SettingsService.Current.SidebarWidth = value.Value;
+        SettingsService.Save();
+    }
+
     // ─── Dialog state ─────────────────────────────────────
     [ObservableProperty]
     private bool _isTagDialogOpen;
@@ -77,6 +88,7 @@ public partial class MainViewModel : ObservableObject
     {
         _db = db;
         Theme = SettingsService.Current.Theme;
+        SidebarWidth = new GridLength(Math.Max(SettingsService.Current.SidebarWidth, 180));
         LoadAll();
         DailyMyDayReset();
     }
