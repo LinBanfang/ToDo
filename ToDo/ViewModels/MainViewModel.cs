@@ -176,19 +176,7 @@ public partial class MainViewModel : ObservableObject
         var all = _db.Lists.Query().OrderBy(x => x.Order).ToArray();
         var allTasks = _db.Tasks.FindAll().ToList();
         foreach (var l in all)
-        {
-            l.TaskCount = l.Type switch
-            {
-                ListType.MyDay => allTasks.Count(t =>
-                    t.CloseRecord == null && (t.IsMyDay || (t.DueDate != null && IsToday(t.DueDate.Value)))),
-                ListType.Important => allTasks.Count(t => t.IsImportant && t.CloseRecord == null),
-                ListType.Planned => allTasks.Count(t =>
-                    (t.DueDate != null || t.Reminder != null) && t.CloseRecord == null),
-                ListType.Tasks => allTasks.Count(t =>
-                    t.CloseRecord == null && t.ListId == "list-tasks"),
-                _ => allTasks.Count(t => t.ListId == l.Id && t.CloseRecord == null),
-            };
-        }
+            l.TaskCount = CountForList(l, allTasks);
 
         // Sync in-place: update existing, add new, remove deleted
         var allIds = new HashSet<string>(all.Select(l => l.Id));
@@ -258,6 +246,22 @@ public partial class MainViewModel : ObservableObject
             Tags.Add(t);
     }
 
+    /// <summary>Unclosed task count for a list (sidebar badge)</summary>
+    private static int CountForList(TaskList list, IEnumerable<TaskItem> tasks)
+    {
+        return list.Type switch
+        {
+            ListType.MyDay => tasks.Count(t =>
+                t.CloseRecord == null && (t.IsMyDay || (t.DueDate != null && IsToday(t.DueDate.Value)))),
+            ListType.Important => tasks.Count(t => t.IsImportant && t.CloseRecord == null),
+            ListType.Planned => tasks.Count(t =>
+                (t.DueDate != null || t.Reminder != null) && t.CloseRecord == null),
+            ListType.Tasks => tasks.Count(t =>
+                t.CloseRecord == null && t.ListId == "list-tasks"),
+            _ => tasks.Count(t => t.ListId == list.Id && t.CloseRecord == null),
+        };
+    }
+
     // ─── Refresh derived data ────────────────────────────
     public void RefreshActiveTasks()
     {
@@ -269,19 +273,7 @@ public partial class MainViewModel : ObservableObject
 
         // Update sidebar counts in real time
         foreach (var l in Lists)
-        {
-            l.TaskCount = l.Type switch
-            {
-                ListType.MyDay => Tasks.Count(t =>
-                    t.CloseRecord == null && (t.IsMyDay || (t.DueDate != null && IsToday(t.DueDate.Value)))),
-                ListType.Important => Tasks.Count(t => t.IsImportant && t.CloseRecord == null),
-                ListType.Planned => Tasks.Count(t =>
-                    (t.DueDate != null || t.Reminder != null) && t.CloseRecord == null),
-                ListType.Tasks => Tasks.Count(t =>
-                    t.CloseRecord == null && t.ListId == "list-tasks"),
-                _ => Tasks.Count(t => t.ListId == l.Id && t.CloseRecord == null),
-            };
-        }
+            l.TaskCount = CountForList(l, Tasks);
 
         var isSearching = !string.IsNullOrWhiteSpace(SearchQuery);
 
