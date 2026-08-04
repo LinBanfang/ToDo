@@ -388,13 +388,36 @@ public partial class MainWindow : Window
         Close();
     }
 
+    private bool _suppressGroupHeaderToggle;
+
     private void GroupHeader_Toggle(object sender, MouseButtonEventArgs e)
     {
+        // Consume suppression set when a group drag or a drop onto the header ends,
+        // so the mouse-up that follows doesn't collapse/expand the group.
+        if (_suppressGroupHeaderToggle) { _suppressGroupHeaderToggle = false; return; }
         if (e.ClickCount >= 2) return;
         if (sender is FrameworkElement fe && fe.DataContext is GroupedTasks gt)
         {
             ViewModel.ToggleGroupCollapseCommand.Execute(gt.Group);
         }
+    }
+
+    private void GroupHeader_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement fe
+            && fe.DataContext is GroupedTasks gt && gt.HasGroup
+            && DragThresholdExceeded(e))
+        {
+            SetGroupHeaderToggleSuppressed();
+            DragDrop.DoDragDrop(fe, gt.Group!, DragDropEffects.Move);
+        }
+    }
+
+    private void SetGroupHeaderToggleSuppressed()
+    {
+        _suppressGroupHeaderToggle = true;
+        // Safety net: clear after input processing in case no mouse-up hits the header
+        Dispatcher.BeginInvoke(DispatcherPriority.Background, () => _suppressGroupHeaderToggle = false);
     }
 
     private void GroupHeader_ContextMenuOpening(object sender, ContextMenuEventArgs e)
@@ -711,21 +734,49 @@ public partial class MainWindow : Window
 
     private void GroupHeader_DragEnter(object sender, DragEventArgs e)
     {
-        if (e.Data.GetDataPresent(typeof(TaskItem)) && sender is Border border)
-        {
-            border.Background = (Brush)Application.Current.FindResource("AccentBlueLight"); // accent blue light
-            e.Effects = DragDropEffects.Move;
-        }
+        if (sender is Border border)
+            UpdateGroupHeaderDropVisual(border, e);
+        e.Handled = true;
+    }
+
+    private void GroupHeader_DragOver(object sender, DragEventArgs e)
+    {
+        if (sender is Border border)
+            UpdateGroupHeaderDropVisual(border, e);
         e.Handled = true;
     }
 
     private void GroupHeader_DragLeave(object sender, DragEventArgs e)
     {
         if (sender is Border border)
-        {
-            border.Background = Brushes.Transparent;
-        }
+            ClearGroupHeaderDropVisual(border);
         e.Handled = true;
+    }
+
+    /// <summary>Task drop → background highlight; group reorder → top/bottom insert line.</summary>
+    private void UpdateGroupHeaderDropVisual(Border border, DragEventArgs e)
+    {
+        ClearGroupHeaderDropVisual(border);
+        if (e.Data.GetDataPresent(typeof(TaskItem)))
+        {
+            border.Background = (Brush)Application.Current.FindResource("AccentBlueLight");
+            e.Effects = DragDropEffects.Move;
+        }
+        else if (e.Data.GetDataPresent(typeof(TaskGroup)) && e.Data.GetData(typeof(TaskGroup)) is TaskGroup draggedGroup
+            && border.DataContext is GroupedTasks gt && gt.HasGroup && draggedGroup.Id != gt.Group!.Id)
+        {
+            bool lowerHalf = e.GetPosition(border).Y > border.ActualHeight / 2;
+            border.BorderBrush = (Brush)Application.Current.FindResource("AccentBlue");
+            border.BorderThickness = new Thickness(0, lowerHalf ? 0 : 2, 0, lowerHalf ? 2 : 0);
+            e.Effects = DragDropEffects.Move;
+        }
+    }
+
+    private void ClearGroupHeaderDropVisual(Border border)
+    {
+        border.Background = Brushes.Transparent;
+        border.BorderBrush = Brushes.Transparent;
+        border.BorderThickness = new Thickness(0);
     }
 
     private void GroupHeader_Drop(object sender, DragEventArgs e)
@@ -733,17 +784,44 @@ public partial class MainWindow : Window
         SuppressPendingTaskClick();
         if (sender is Border border)
         {
-            border.Background = Brushes.Transparent;
-            if (e.Data.GetDataPresent(typeof(TaskItem)) && border.DataContext is GroupedTasks gt && gt.HasGroup)
+            ClearGroupHeaderDropVisual(border);
+            if (border.DataContext is GroupedTasks gt && gt.HasGroup)
             {
-                var task = e.Data.GetData(typeof(TaskItem)) as TaskItem;
-                if (task != null && task.GroupId != gt.Group!.Id)
+                if (e.Data.GetDataPresent(typeof(TaskItem)) && e.Data.GetData(typeof(TaskItem)) is TaskItem task
+                    && task.GroupId != gt.Group!.Id)
                 {
+                    SetGroupHeaderToggleSuppressed();
                     ViewModel.MoveTaskToGroupCommand.Execute((task, gt.Group));
+                }
+                else if (e.Data.GetDataPresent(typeof(TaskGroup)) && e.Data.GetData(typeof(TaskGroup)) is TaskGroup draggedGroup
+                    && draggedGroup.Id != gt.Group!.Id)
+                {
+                    SetGroupHeaderToggleSuppressed();
+                    ReorderTaskGroups(border, e, draggedGroup, gt.Group!);
                 }
             }
         }
         e.Handled = true;
+    }
+
+    private void ReorderTaskGroups(Border border, DragEventArgs e, TaskGroup dragged, TaskGroup target)
+    {
+        var siblings = ViewModel.Groups.Where(g => g.ListId == target.ListId).OrderBy(g => g.Order).ToList();
+        if (!siblings.Contains(dragged)) return;
+        siblings.Remove(dragged);
+        var targetIdx = siblings.IndexOf(target);
+        if (targetIdx < 0) return;
+
+        // Upper half of the target header inserts before it, lower half after it
+        bool lowerHalf = e.GetPosition(border).Y > border.ActualHeight / 2;
+        siblings.Insert(lowerHalf ? targetIdx + 1 : targetIdx, dragged);
+
+        for (int i = 0; i < siblings.Count; i++)
+            siblings[i].Order = i;
+        foreach (var g in siblings)
+            App.Database!.Groups.Update(g);
+
+        ViewModel.RefreshActiveTasks();
     }
 
     // Section-level drop (for both grouped and ungrouped areas)
