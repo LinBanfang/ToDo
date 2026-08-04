@@ -482,7 +482,17 @@ public partial class MainViewModel : ObservableObject
     private void DeleteList(TaskList list)
     {
         if (list.IsSystem) return;
-        _db.Tasks.DeleteMany(t => t.ListId == list.Id);
+
+        // Preserve data: move tasks to the Tasks (inbox) list instead of deleting them
+        var movedTasks = _db.Tasks.Find(t => t.ListId == list.Id).ToList();
+        foreach (var t in movedTasks)
+        {
+            t.ListId = "list-tasks";
+            t.GroupId = null;
+            t.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            _db.Tasks.Update(t);
+        }
+
         _db.Groups.DeleteMany(g => g.ListId == list.Id);
         _db.Lists.Delete(list.Id);
         LoadAll();
