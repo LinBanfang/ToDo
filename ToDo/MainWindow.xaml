@@ -261,6 +261,7 @@
                                                 <TextBlock Grid.Column="1" Text="{Binding Group.Name}" FontSize="14" FontWeight="SemiBold"
                                                            VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"
                                                            Visibility="{Binding IsEditing, Converter={StaticResource InverseBool}}"
+                                                           Tag="ListGroupName"
                                                            MouseLeftButtonDown="ListGroupName_DoubleClick"/>
                                                 <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
                                                          FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"
@@ -583,6 +584,7 @@
                                                        FontWeight="SemiBold" VerticalAlignment="Center"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"
                                                        Visibility="{Binding IsEditing, Converter={StaticResource InverseBool}}"
+                                                       Tag="GroupName"
                                                        MouseLeftButtonDown="GroupName_DoubleClick"/>
                                             <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
                                                      FontSize="15" FontWeight="SemiBold"
