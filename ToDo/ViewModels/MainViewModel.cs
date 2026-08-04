@@ -412,7 +412,6 @@ public partial class MainViewModel : ObservableObject
         _db.ListGroups.Insert(g);
         LoadListGroups();
         RebuildSidebarGroups();
-        // Delete old DB so the new collection schema takes effect
     }
 
     [RelayCommand]

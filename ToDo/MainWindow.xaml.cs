@@ -95,7 +95,6 @@ public partial class MainWindow : Window
         if (sender is not ContextMenu menu || menu.PlacementTarget is not Grid grid
             || grid.DataContext is not TaskList list || list.IsSystem) return;
 
-        Log($"MenuLoaded: list={list.Name}");
         menu.Items.Clear();
         BuildMenu(menu, list);
     }
@@ -107,23 +106,8 @@ public partial class MainWindow : Window
         if (menu == null) return;
         if (grid.DataContext is not TaskList list || list.IsSystem) return;
 
-        Log($"CTX: list={list.Name}, IsSystem={list.IsSystem}, hash={list.GetHashCode()}");
         menu.Items.Clear();
         BuildMenu(menu, list);
-    }
-
-    public void SidebarGrid_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
-    {
-        Log($"DataContextChanged FIRED: {e.NewValue?.GetType().Name} -> {e.OldValue?.GetType().Name}");
-        if (sender is not Grid grid) { Log("  NOT GRID"); return; }
-        var menu = grid.ContextMenu;
-        if (menu == null) { Log("  MENU IS NULL"); return; }
-        if (e.NewValue is not TaskList list || list.IsSystem) { Log($"  SKIP: {e.NewValue?.GetType().Name}"); return; }
-
-        Log($"DataContextChanged: list={list.Name}, menu={menu.GetHashCode()}");
-        menu.Items.Clear();
-        BuildMenu(menu, list);
-        Log($"DataContextChanged DONE: menu.Items={menu.Items.Count}");
     }
 
     private void BuildMenu(ContextMenu menu, TaskList list)
@@ -157,12 +141,6 @@ public partial class MainWindow : Window
         var d = new MenuItem { Header = Loc.Delete, Tag = list };
         d.Click += (_, _) => { if (MessageBox.Show(Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes) ViewModel.DeleteListCommand.Execute(list); };
         menu.Items.Add(d);
-    }
-
-    private static void Log(string msg)
-    {
-        var path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "todo_debug.log");
-        System.IO.File.AppendAllText(path, $"{DateTime.Now:HH:mm:ss.fff} {msg}\n");
     }
 
     private void SidebarRename_KeyDown(object sender, KeyEventArgs e)
