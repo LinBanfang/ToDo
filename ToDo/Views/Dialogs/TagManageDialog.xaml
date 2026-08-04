@@ -5,7 +5,7 @@
         xmlns:services="clr-namespace:ToDo.Services"
         Title="{x:Static services:Loc.ManageTags}" Height="450" Width="400"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
-        Background="{StaticResource CardBackgroundBrush}"
+        Background="{DynamicResource CardBackgroundBrush}"
         FontFamily="{StaticResource FluentFont}">
     <Grid Margin="20">
         <Grid.RowDefinitions>
@@ -15,14 +15,14 @@
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0" Text="{x:Static services:Loc.ManageTags}" FontSize="18" FontWeight="SemiBold"
-                   Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,16"/>
+                   Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,16"/>
 
         <!-- Existing tags list -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <ItemsControl x:Name="TagListControl">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:Tag}">
-                        <Border Background="{StaticResource AppBackgroundBrush}"
+                        <Border Background="{DynamicResource AppBackgroundBrush}"
                                 CornerRadius="6" Padding="10" Margin="0,0,0,8">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -43,7 +43,7 @@
                                 <!-- Delete -->
                                 <Button Grid.Column="2" Content="&#xE10A;" FontFamily="Segoe MDL2 Assets"
                                         Style="{StaticResource FluentSubtleButton}" FontSize="14"
-                                        Foreground="{StaticResource AccentRed}"
+                                        Foreground="{DynamicResource AccentRed}"
                                         Click="DeleteTag_Click" Tag="{Binding}"/>
                             </Grid>
                         </Border>
@@ -53,7 +53,7 @@
         </ScrollViewer>
 
         <!-- New tag row -->
-        <Border Grid.Row="2" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0"
+        <Border Grid.Row="2" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
                 Padding="0,12,0,0" Margin="0,12,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>

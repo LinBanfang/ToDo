@@ -7,9 +7,9 @@
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="Padding" Value="12,6"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderLightBrush}"/>
-        <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderLightBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -22,10 +22,10 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="{StaticResource CardHoverBrush}"/>
+                            <Setter Property="Background" Value="{DynamicResource CardHoverBrush}"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter Property="Background" Value="{StaticResource SidebarBorderBrush}"/>
+                            <Setter Property="Background" Value="{DynamicResource SidebarBorderBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -35,9 +35,9 @@
 
     <!-- Fluent Accent Button -->
     <Style x:Key="FluentAccentButton" TargetType="Button" BasedOn="{StaticResource FluentButton}">
-        <Setter Property="Background" Value="{StaticResource TextAccentBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource TextAccentBrush}"/>
         <Setter Property="Foreground" Value="White"/>
-        <Setter Property="BorderBrush" Value="{StaticResource TextAccentBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource TextAccentBrush}"/>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="#106EBE"/>
@@ -58,10 +58,10 @@
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="Padding" Value="10,8"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="BorderBrush" Value="{StaticResource NeutralGray60}"/>
-        <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-        <Setter Property="CaretBrush" Value="{StaticResource TextAccentBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NeutralGray60}"/>
+        <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="CaretBrush" Value="{DynamicResource TextAccentBrush}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
@@ -73,10 +73,10 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="BorderBrush" Value="{StaticResource NeutralGray90}"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource NeutralGray90}"/>
                         </Trigger>
                         <Trigger Property="IsFocused" Value="True">
-                            <Setter Property="BorderBrush" Value="{StaticResource TextAccentBrush}"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource TextAccentBrush}"/>
                             <Setter Property="BorderThickness" Value="2"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -89,7 +89,7 @@
     <Style x:Key="FluentCheckBox" TargetType="CheckBox">
         <Setter Property="FontFamily" Value="{StaticResource FluentFont}"/>
         <Setter Property="FontSize" Value="13"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="Cursor" Value="Hand"/>
     </Style>
 
@@ -101,7 +101,7 @@
         <Setter Property="Margin" Value="4,1"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="AllowDrop" Value="True"/>
         <Setter Property="Template">
@@ -116,12 +116,12 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="{StaticResource CardHoverBrush}"/>
-                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                            <Setter Property="Background" Value="{DynamicResource CardHoverBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="Background" Value="{StaticResource CardSelectedBrush}"/>
-                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                            <Setter Property="Background" Value="{DynamicResource CardSelectedBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -131,14 +131,14 @@
 
     <!-- Task Row style -->
     <Style x:Key="TaskRowStyle" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
         <Setter Property="CornerRadius" Value="8"/>
         <Setter Property="Padding" Value="12,10"/>
         <Setter Property="Margin" Value="12,2"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{StaticResource CardHoverBrush}"/>
+                <Setter Property="Background" Value="{DynamicResource CardHoverBrush}"/>
             </Trigger>
         </Style.Triggers>
     </Style>
@@ -156,10 +156,10 @@
         <Setter Property="FontFamily" Value="{StaticResource FluentFont}"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="BorderBrush" Value="{StaticResource NeutralGray40}"/>
-        <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-        <Setter Property="CaretBrush" Value="{StaticResource TextAccentBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NeutralGray40}"/>
+        <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="CaretBrush" Value="{DynamicResource TextAccentBrush}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
@@ -171,7 +171,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsFocused" Value="True">
-                            <Setter Property="BorderBrush" Value="{StaticResource NeutralGray60}"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource NeutralGray60}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -184,9 +184,9 @@
         <Setter Property="FontFamily" Value="{StaticResource FluentFont}"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="Padding" Value="10,6"/>
-        <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource NeutralGray60}"/>
+        <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NeutralGray60}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -210,7 +210,7 @@
                                             </Grid.ColumnDefinitions>
                                             <ContentPresenter Grid.Column="0" VerticalAlignment="Center"/>
                                             <TextBlock Grid.Column="1" Text="&#xE70D;" FontFamily="Segoe MDL2 Assets"
-                                                       FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"
+                                                       FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
                                                        VerticalAlignment="Center" Margin="8,0,0,0"/>
                                         </Grid>
                                     </Border>
@@ -226,8 +226,8 @@
                         <Popup x:Name="Popup" Placement="Bottom"
                                IsOpen="{TemplateBinding IsDropDownOpen}"
                                AllowsTransparency="True" Focusable="False">
-                            <Border Background="{StaticResource CardBackgroundBrush}"
-                                    BorderBrush="{StaticResource NeutralGray50}"
+                            <Border Background="{DynamicResource CardBackgroundBrush}"
+                                    BorderBrush="{DynamicResource NeutralGray50}"
                                     BorderThickness="1" CornerRadius="4"
                                     Margin="0,2" Padding="4">
                                 <ScrollViewer MaxHeight="200">
@@ -243,8 +243,8 @@
 
     <!-- Fluent ContextMenu style (applied globally) -->
     <Style TargetType="ContextMenu">
-        <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource NeutralGray50}"/>
+        <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NeutralGray50}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="4"/>
         <Setter Property="FontFamily" Value="{StaticResource FluentFont}"/>
@@ -270,7 +270,7 @@
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="Padding" Value="10,6"/>
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Template">
@@ -292,7 +292,7 @@
                             <ContentPresenter Grid.Column="1" ContentSource="Header"
                                               VerticalAlignment="Center" RecognizesAccessKey="True"/>
                             <TextBlock Grid.Column="2" Text="&#xE76C;" FontFamily="Segoe MDL2 Assets"
-                                       FontSize="10" Foreground="{StaticResource TextDisabledBrush}"
+                                       FontSize="10" Foreground="{DynamicResource TextDisabledBrush}"
                                        VerticalAlignment="Center" Margin="16,0,0,0"
                                        x:Name="SubmenuArrow"/>
                         </Grid>
@@ -302,8 +302,8 @@
                            HorizontalOffset="-2" VerticalOffset="-3"
                            AllowsTransparency="True" Focusable="False"
                            IsOpen="{Binding Path=IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}">
-                        <Border Background="{StaticResource CardBackgroundBrush}"
-                                BorderBrush="{StaticResource NeutralGray50}"
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource NeutralGray50}"
                                 BorderThickness="1" CornerRadius="6" Padding="4">
                             <ScrollViewer MaxHeight="300">
                                 <ItemsPresenter/>
@@ -313,10 +313,10 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Border" Property="Background" Value="{StaticResource CardHoverBrush}"/>
+                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Foreground" Value="{StaticResource TextDisabledBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextDisabledBrush}"/>
                         </Trigger>
                         <!-- Top-level item: no submenu arrow -->
                         <Trigger Property="Role" Value="TopLevelItem">
@@ -347,7 +347,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Separator">
-                    <Border Height="1" Background="{StaticResource DividerBrush}"/>
+                    <Border Height="1" Background="{DynamicResource DividerBrush}"/>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -358,7 +358,7 @@
         <Setter Property="FontFamily" Value="{StaticResource FluentFont}"/>
         <Setter Property="FontSize" Value="12"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{StaticResource TextDisabledBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextDisabledBrush}"/>
         <Setter Property="Margin" Value="14,12,14,6"/>
         <Setter Property="TextOptions.TextFormattingMode" Value="Ideal"/>
     </Style>

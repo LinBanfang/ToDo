@@ -238,7 +238,7 @@ MainViewModel
 - 圆角、阴影、悬停效果
 - Segoe MDL2 Assets 图标字体 + Segoe UI Emoji 彩色表情
 - ComboBox、ContextMenu、MenuItem 均有自定义 Fluent 模板
-- `FluentColors.xaml` 以 SolidColorBrush 定义浅色色板；侧边栏已有主题切换按钮，但深色色板尚未实现（当前仅浅色主题）
+- 浅色/深色主题：`FluentColors.xaml` 以 SolidColorBrush 定义浅色色板，深色色板由 `ThemeService` 在代码中构建（键一致）；所有主题刷引用均为 `{DynamicResource}`，侧边栏主题按钮运行时替换 `FluentColors` 字典即时生效，选择持久化到 settings.json，启动时恢复
 
 ---
 
