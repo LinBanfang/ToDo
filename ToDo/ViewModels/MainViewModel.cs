@@ -295,7 +295,9 @@ public partial class MainViewModel : ObservableObject
             active = active.Where(t =>
                 t.Title.ToLower().Contains(q) ||
                 (t.Note?.ToLower().Contains(q) ?? false));
-            completed = completed.Where(t => t.Title.ToLower().Contains(q));
+            completed = completed.Where(t =>
+                t.Title.ToLower().Contains(q) ||
+                (t.Note?.ToLower().Contains(q) ?? false));
         }
 
         // Sort based on list type
