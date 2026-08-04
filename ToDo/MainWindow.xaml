@@ -270,7 +270,9 @@
                                                  SelectedValuePath="Id" BorderThickness="0" Background="Transparent"
                                                  ItemContainerStyle="{StaticResource SidebarNavItem}"
                                                  Visibility="{Binding TaskListVisible, Converter={StaticResource BoolToVis}}"
-                                                 Margin="16,0,0,0">
+                                                 Margin="16,0,0,0"
+                                                 DragEnter="SidebarList_DragEnter" DragLeave="SidebarList_DragLeave"
+                                                 Drop="SidebarList_Drop">
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate DataType="{x:Type models:TaskList}">
                                                     <Grid ContextMenuOpening="SidebarGrid_ContextMenuOpening"><Grid.ContextMenu><ContextMenu Loaded="SidebarGrid_MenuLoaded"/></Grid.ContextMenu>
