@@ -473,33 +473,130 @@ public partial class MainWindow : Window
         gt.IsEditing = false;
     }
 
-    // ─── Sidebar List Drop (move task to another list) ───
+    // ─── Sidebar List Drag & Drop ────────────────────────
+    // TaskItem → move the task to the target list
+    // TaskList → reorder the list within its sidebar area (half-zone insertion)
+    private ListBoxItem? _lastSidebarDropItem;
+
     private void SidebarList_DragEnter(object sender, DragEventArgs e)
     {
-        if (e.Data.GetDataPresent(typeof(TaskItem)))
-            e.Effects = DragDropEffects.Move;
+        if (sender is ListBox listBox)
+            UpdateSidebarDragState(listBox, e);
         e.Handled = true;
     }
 
-    private void SidebarList_DragLeave(object sender, DragEventArgs e) => e.Handled = true;
+    private void SidebarList_DragOver(object sender, DragEventArgs e)
+    {
+        if (sender is ListBox listBox)
+            UpdateSidebarDragState(listBox, e);
+        e.Handled = true;
+    }
+
+    private void UpdateSidebarDragState(ListBox listBox, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(typeof(TaskItem)))
+        {
+            e.Effects = DragDropEffects.Move;
+            return;
+        }
+
+        if (e.Data.GetDataPresent(typeof(TaskList)) && e.Data.GetData(typeof(TaskList)) is TaskList dragged)
+        {
+            // Lists can only be reordered within the same sidebar area
+            bool sameArea = listBox.Items.Cast<TaskList>().Contains(dragged) && !dragged.IsSystem;
+            if (sameArea)
+            {
+                e.Effects = DragDropEffects.Move;
+                UpdateSidebarDropIndicator(listBox, e);
+            }
+        }
+    }
+
+    private void SidebarList_DragLeave(object sender, DragEventArgs e)
+    {
+        ClearSidebarDropIndicator();
+        e.Handled = true;
+    }
 
     private void SidebarList_Drop(object sender, DragEventArgs e)
     {
-        if (sender is not ListBox listBox || !e.Data.GetDataPresent(typeof(TaskItem))) return;
-        var task = e.Data.GetData(typeof(TaskItem)) as TaskItem;
-        if (task == null) return;
+        ClearSidebarDropIndicator();
+        if (sender is not ListBox listBox) { e.Handled = true; return; }
 
+        var item = HitTestSidebarItem(listBox, e);
+        if (item?.DataContext is not TaskList targetList) { e.Handled = true; return; }
+
+        if (e.Data.GetDataPresent(typeof(TaskItem)) && e.Data.GetData(typeof(TaskItem)) is TaskItem task)
+        {
+            // Move a task to this list
+            if (targetList.Id != task.ListId)
+                ViewModel.MoveTaskToListCommand.Execute((task, targetList));
+        }
+        else if (e.Data.GetDataPresent(typeof(TaskList)) && e.Data.GetData(typeof(TaskList)) is TaskList draggedList)
+        {
+            // Reorder a sidebar list within the same area (half-zone insertion)
+            if (draggedList.Id != targetList.Id)
+                ReorderSidebarList(listBox, e, draggedList, item!);
+        }
+        e.Handled = true;
+    }
+
+    private static ListBoxItem? HitTestSidebarItem(ListBox listBox, DragEventArgs e)
+    {
         var pos = e.GetPosition(listBox);
         var element = listBox.InputHitTest(pos) as DependencyObject;
         while (element != null && element is not ListBoxItem)
             element = VisualTreeHelper.GetParent(element);
+        return element as ListBoxItem;
+    }
 
-        if (element is ListBoxItem lbi && lbi.DataContext is TaskList targetList
-            && targetList.Id != task.ListId)
+    private void UpdateSidebarDropIndicator(ListBox listBox, DragEventArgs e)
+    {
+        ClearSidebarDropIndicator();
+        // Only lists show an insert position; task drops are a plain "move to list"
+        if (!e.Data.GetDataPresent(typeof(TaskList))) return;
+        var item = HitTestSidebarItem(listBox, e);
+        if (item == null) return;
+
+        bool lowerHalf = e.GetPosition(item).Y > item.ActualHeight / 2;
+        item.BorderBrush = (Brush)Application.Current.FindResource("AccentBlue");
+        item.BorderThickness = new Thickness(0, lowerHalf ? 0 : 2, 0, lowerHalf ? 2 : 0);
+        _lastSidebarDropItem = item;
+    }
+
+    private void ClearSidebarDropIndicator()
+    {
+        if (_lastSidebarDropItem != null)
         {
-            ViewModel.MoveTaskToListCommand.Execute((task, targetList));
+            _lastSidebarDropItem.BorderBrush = Brushes.Transparent;
+            _lastSidebarDropItem.BorderThickness = new Thickness(0);
+            _lastSidebarDropItem = null;
         }
-        e.Handled = true;
+    }
+
+    private void ReorderSidebarList(ListBox listBox, DragEventArgs e, TaskList dragged, ListBoxItem targetItem)
+    {
+        var siblings = listBox.Items.Cast<TaskList>()
+            .Where(l => !l.IsSystem) // system lists stay in fixed order
+            .OrderBy(l => l.Order)
+            .ToList();
+        if (!siblings.Contains(dragged)) return; // dragged from a different area
+
+        siblings.Remove(dragged);
+        var targetIdx = siblings.IndexOf((TaskList)targetItem.DataContext!);
+        if (targetIdx < 0) return;
+
+        // Upper half of the target row inserts before it, lower half after it
+        bool lowerHalf = e.GetPosition(targetItem).Y > targetItem.ActualHeight / 2;
+        siblings.Insert(lowerHalf ? targetIdx + 1 : targetIdx, dragged);
+
+        for (int i = 0; i < siblings.Count; i++)
+            siblings[i].Order = i;
+
+        foreach (var l in siblings)
+            App.Database!.Lists.Update(l);
+
+        ViewModel.Refresh();
     }
 
     // ─── Drag & Drop ──────────────────────────────────────

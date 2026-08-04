@@ -191,7 +191,7 @@
                                  SelectedValuePath="Id"
                                  BorderThickness="0" Background="Transparent"
                                  ItemContainerStyle="{StaticResource SidebarNavItem}" Margin="0,4,0,4"
-                                 DragEnter="SidebarList_DragEnter" DragLeave="SidebarList_DragLeave"
+                                 DragEnter="SidebarList_DragEnter" DragOver="SidebarList_DragOver" DragLeave="SidebarList_DragLeave"
                                  Drop="SidebarList_Drop">
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:TaskList}">
@@ -271,7 +271,7 @@
                                                  ItemContainerStyle="{StaticResource SidebarNavItem}"
                                                  Visibility="{Binding TaskListVisible, Converter={StaticResource BoolToVis}}"
                                                  Margin="16,0,0,0"
-                                                 DragEnter="SidebarList_DragEnter" DragLeave="SidebarList_DragLeave"
+                                                 DragEnter="SidebarList_DragEnter" DragOver="SidebarList_DragOver" DragLeave="SidebarList_DragLeave"
                                                  Drop="SidebarList_Drop">
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate DataType="{x:Type models:TaskList}">
@@ -309,7 +309,7 @@
                                  SelectedValuePath="Id"
                                  BorderThickness="0" Background="Transparent"
                                  ItemContainerStyle="{StaticResource SidebarNavItem}" Margin="0,0,0,4"
-                                 DragEnter="SidebarList_DragEnter" DragLeave="SidebarList_DragLeave"
+                                 DragEnter="SidebarList_DragEnter" DragOver="SidebarList_DragOver" DragLeave="SidebarList_DragLeave"
                                  Drop="SidebarList_Drop">
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:TaskList}">
