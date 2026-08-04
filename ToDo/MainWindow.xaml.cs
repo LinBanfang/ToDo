@@ -1133,7 +1133,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            ReminderLabel.Text = "";
+            ReminderLabel.Text = Loc.AddReminder;
         }
 
         // Due date label
@@ -1146,7 +1146,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            DueDateLabel.Text = "";
+            DueDateLabel.Text = Loc.AddDueDate;
         }
 
         // Populate tag list
