@@ -72,8 +72,11 @@ public partial class MainWindow : Window
     {
         // Consume suppression set when a group drag or a drop onto the header ends
         if (_suppressListGroupHeaderToggle) { _suppressListGroupHeaderToggle = false; return; }
-        if (sender is FrameworkElement fe && fe.DataContext is ListGroupDisplay lgd)
-            ViewModel.ToggleListGroupCollapseCommand.Execute(lgd.Group);
+        if (sender is not FrameworkElement fe || fe.DataContext is not ListGroupDisplay lgd) return;
+        // The name is double-click-to-rename; toggling here would rebuild the list and
+        // reset ClickCount, breaking the rename. Also stay out of the way while editing.
+        if (lgd.IsEditing || IsInsideTaggedElement(e.OriginalSource, "ListGroupName")) return;
+        ViewModel.ToggleListGroupCollapseCommand.Execute(lgd.Group);
     }
 
     private void ListGroupHeader_PreviewMouseMove(object sender, MouseEventArgs e)
@@ -101,7 +104,11 @@ public partial class MainWindow : Window
             if (menu == null) return;
             menu.Items.Clear();
             var rename = new MenuItem { Header = Loc.Rename };
-            rename.Click += (s, _) => { /* inline rename */ };
+            rename.Click += (s, _) =>
+            {
+                lgd.EditName = lgd.Group.Name;
+                lgd.IsEditing = true;
+            };
             menu.Items.Add(rename);
             var delete = new MenuItem { Header = Loc.DeleteGroup };
             delete.Click += (s, _) =>
@@ -488,10 +495,11 @@ public partial class MainWindow : Window
         // so the mouse-up that follows doesn't collapse/expand the group.
         if (_suppressGroupHeaderToggle) { _suppressGroupHeaderToggle = false; return; }
         if (e.ClickCount >= 2) return;
-        if (sender is FrameworkElement fe && fe.DataContext is GroupedTasks gt)
-        {
-            ViewModel.ToggleGroupCollapseCommand.Execute(gt.Group);
-        }
+        if (sender is not FrameworkElement fe || fe.DataContext is not GroupedTasks gt) return;
+        // The name is double-click-to-rename; toggling here would rebuild the list and
+        // reset ClickCount, breaking the rename. Also stay out of the way while editing.
+        if (gt.IsEditing || IsInsideTaggedElement(e.OriginalSource, "GroupName")) return;
+        ViewModel.ToggleGroupCollapseCommand.Execute(gt.Group);
     }
 
     private void GroupHeader_PreviewMouseMove(object sender, MouseEventArgs e)
@@ -726,6 +734,18 @@ public partial class MainWindow : Window
         var pos = e.GetPosition(null);
         return Math.Abs(pos.X - _dragStartPoint.X) >= SystemParameters.MinimumHorizontalDragDistance
             || Math.Abs(pos.Y - _dragStartPoint.Y) >= SystemParameters.MinimumVerticalDragDistance;
+    }
+
+    /// <summary>True if the event source lies inside an element tagged with the given value.</summary>
+    private static bool IsInsideTaggedElement(object? source, string tag)
+    {
+        var el = source as DependencyObject;
+        while (el != null)
+        {
+            if (el is FrameworkElement fe && fe.Tag is string s && s == tag) return true;
+            el = VisualTreeHelper.GetParent(el);
+        }
+        return false;
     }
 
     private void TaskRow_MouseMove(object sender, MouseEventArgs e)
