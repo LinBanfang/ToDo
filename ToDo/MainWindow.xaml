@@ -760,7 +760,8 @@
                                     <TextBlock Text="{x:Static services:Loc.MyDay}" FontSize="13" VerticalAlignment="Center"
                                                Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </StackPanel>
-                                <CheckBox Grid.Column="1" IsChecked="{Binding SelectedTask.IsMyDay, Mode=OneWay}"
+                                <CheckBox Grid.Column="1" Style="{StaticResource FluentCheckBox}"
+                                          IsChecked="{Binding SelectedTask.IsMyDay, Mode=OneWay}"
                                           Click="MyDayToggle_Click"/>
                             </Grid>
                         </Border>
@@ -815,7 +816,8 @@
                                                         <ColumnDefinition Width="*"/>
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
-                                                <CheckBox Grid.Column="0" IsChecked="{Binding Completed}"
+                                                <CheckBox Grid.Column="0" Style="{StaticResource FluentCheckBox}"
+                                                          IsChecked="{Binding Completed}"
                                                           VerticalAlignment="Center" Margin="0,0,8,0"
                                                           Checked="StepToggle_Changed"
                                                           Unchecked="StepToggle_Changed"/>
