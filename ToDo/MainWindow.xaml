@@ -501,7 +501,7 @@
                         <TextBox x:Name="ListTitleEdit" FontSize="28" FontWeight="Bold"
                                  Foreground="{DynamicResource TextPrimaryBrush}"
                                  VerticalAlignment="Center" Visibility="Collapsed"
-                                 Style="{StaticResource FluentTextBox}" MinWidth="100"
+                                 Style="{StaticResource FluentInlineEditBox}" MinWidth="100"
                                  KeyDown="ListTitleEdit_KeyDown"
                                  LostFocus="ListTitleEdit_LostFocus"/>
                     </StackPanel>
