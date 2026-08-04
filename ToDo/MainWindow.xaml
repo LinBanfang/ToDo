@@ -211,7 +211,7 @@
                                         <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
                                                  FontSize="14" VerticalAlignment="Center"
                                                  Visibility="{Binding IsRenaming, Converter={StaticResource BoolToVis}}"
-                                                 Style="{StaticResource SearchTextBox}" Padding="2,0"
+                                                 Style="{StaticResource FluentInlineEditBox}"
                                                  KeyDown="SidebarRename_KeyDown"
                                                  LostFocus="SidebarRename_LostFocus"
                                                  IsVisibleChanged="SidebarRename_IsVisibleChanged"/>
@@ -266,7 +266,7 @@
                                                 <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
                                                          FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"
                                                          Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}"
-                                                         Style="{StaticResource SearchTextBox}" Padding="2,0"
+                                                         Style="{StaticResource FluentInlineEditBox}"
                                                          KeyDown="ListGroupName_KeyDown"
                                                          LostFocus="ListGroupName_LostFocus"/>
                                             </Grid>
@@ -295,7 +295,7 @@
                                                         <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
                                                                  FontSize="14" VerticalAlignment="Center"
                                                                  Visibility="{Binding IsRenaming, Converter={StaticResource BoolToVis}}"
-                                                                 Style="{StaticResource SearchTextBox}" Padding="2,0"
+                                                                 Style="{StaticResource FluentInlineEditBox}"
                                                                  KeyDown="SidebarRename_KeyDown"
                                                                  LostFocus="SidebarRename_LostFocus"
                                                                  IsVisibleChanged="SidebarRename_IsVisibleChanged"/>
@@ -347,7 +347,7 @@
                                         <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
                                                  FontSize="14" VerticalAlignment="Center"
                                                  Visibility="{Binding IsRenaming, Converter={StaticResource BoolToVis}}"
-                                                 Style="{StaticResource SearchTextBox}" Padding="2,0"
+                                                 Style="{StaticResource FluentInlineEditBox}"
                                                  KeyDown="SidebarRename_KeyDown"
                                                  LostFocus="SidebarRename_LostFocus"
                                                  IsVisibleChanged="SidebarRename_IsVisibleChanged"/>
@@ -858,7 +858,7 @@
                                                          Text="{Binding EditTitle, UpdateSourceTrigger=PropertyChanged}"
                                                          FontSize="13" VerticalAlignment="Center"
                                                          Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}"
-                                                         Style="{StaticResource SearchTextBox}" Padding="2,0"
+                                                         Style="{StaticResource FluentInlineEditBox}"
                                                          KeyDown="StepEdit_KeyDown"
                                                          LostFocus="StepEdit_LostFocus"/>
                                                 <Button Grid.Column="2" Content="&#xE712;" FontFamily="Segoe MDL2 Assets"
