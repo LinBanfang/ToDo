@@ -7,6 +7,7 @@ public class AppSettings
 {
     public string DbPath { get; set; } = "";
     public string Theme { get; set; } = "Light"; // Light, Dark
+    public double SidebarWidth { get; set; } = 280;
 }
 
 public static class SettingsService
