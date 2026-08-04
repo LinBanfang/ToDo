@@ -17,6 +17,7 @@
 | Icon | string | 表情图标，空则默认 📋 |
 | Type | enum | MyDay / Important / Planned / Tasks / Custom |
 | IsSystem | bool | 是否系统列表 |
+| GroupId | string? | 所属侧边栏列表分组 Id（null = 未分组） |
 | Order | int | 排序 |
 | TaskCount | int | 未关闭待办项数量（实时计算） |
 
@@ -45,11 +46,15 @@
 | MyDayOrder | int | 我的一天排序 |
 | DueDate | long? | 截止日期（Unix 毫秒） |
 | Reminder | long? | 提醒时间 |
-| TagIds | List\<string\> | 标签 Id 列表 |
-| Steps | List\<TaskStep\> | 子步骤 |
+| TagIds | List\<string\> | 标签 Id 列表（普通 List，变更需手动通知） |
+| Steps | ObservableCollection\<TaskStep\> | 子步骤（实时更新，自定义 BSON 序列化） |
+| Completed | bool | 完成标记（镜像 CloseRecord.CloseMode 的便捷字段） |
 | CloseRecord | CloseRecord? | 关闭记录（null = 未关闭） |
 | CreatedAt | long | 创建时间 |
 | ModifiedAt | long | 修改时间 |
+
+计算属性：`IsClosed`（是否关闭）、`CloseModeDisplay`（关闭方式文本）、`CompletedStepCount`（已完成步骤数）。
+通知方法：`NotifyTagsChanged()` / `NotifyCloseDisplay()` / `NotifyCompletedStepCount()` —— 供就地更新模型手动触发 UI 刷新。
 
 ### 2.4 CloseRecord（关闭记录）
 
@@ -75,6 +80,17 @@
 | Title | string | 步骤描述 |
 | Completed | bool | 是否完成 |
 | Order | int | 排序 |
+
+### 2.7 ListGroup（侧边栏列表分组）
+
+侧边栏自定义列表的分组容器：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| Id | string | 主键 |
+| Name | string | 分组名 |
+| Order | int | 排序 |
+| Collapsed | bool | 是否折叠 |
 
 ---
 
@@ -146,15 +162,21 @@ MainViewModel
     ├── 分组 CRUD
     ├── 任务 CRUD
     ├── 关闭系统（Complete / Cancel / Reopen / EditCloseTime）
-    ├── My Day / Important / 步骤 / 标签
+    ├── My Day / Important / 步骤 / 标签（含 PromoteStepToTask）
     └── MoveTaskToList / MoveTaskToGroup
 ```
 
 ### 4.3 数据刷新策略
 
-- `RefreshActiveTasks()` 是核心刷新入口，每次任务变更后调用
-- 采用"就地更新"策略：`LoadLists()` 不重建集合，而是在现有对象上修改属性
-- 侧边栏计数在 `RefreshActiveTasks()` 中实时计算
+采用"就地更新 + 派生视图重建"的统一模型：
+
+- `RefreshActiveTasks()` 是核心刷新入口，从内存 `Tasks` 集合重建所有派生视图（`ActiveTasks` / `CompletedTasks` / `GroupedTaskList`），并实时计算侧边栏计数
+- **任务级变更**：直接修改内存 `Tasks` 中的实例，再调用 `RefreshActiveTasks()`，不重新读取数据库
+  - 新增任务（`CreateTask` / `PromoteStepToTask`）显式 `Tasks.Add()`；删除任务 `Tasks.Remove()`，保持内存集合与数据库同步
+  - 无法自通知的派生属性在命令中显式通知：`NotifyTagsChanged()`（TagIds 为普通 List）、`NotifyCloseDisplay()`（IsClosed / CloseModeDisplay）、`NotifyCompletedStepCount()`（已完成步骤数）
+- **步骤级变更**：`Steps` 为 ObservableCollection，靠实时更新反映到 UI，不触发集合重建（避免步骤编辑时丢焦点）
+- **全量重载**只在同步点保留：启动 `LoadAll()`、外部拖放同步 `Refresh()`、切换列表 `OnActiveListChanged`、列表 / 分组级命令
+- `LoadLists()` 就地更新（在现有对象上修改属性）；重载后重新指向 `ActiveList`，并通过 `RefreshSelectedTask()` 将 `SelectedTask` 指向最新实例
 - 切换列表时通过 `ActiveListId`（字符串绑定）+ `OnActiveListIdChanged` 解析对象
 
 ---
@@ -203,6 +225,10 @@ MainViewModel
 | 移到分组 | 任务行 | 分组标题 / 分组区域 | 移入该分组 |
 | 移到未分组 | 任务行 | 未分组区域 | `GroupId = null` |
 
+所有拖起均要求鼠标位移超过 `SystemParameters.MinimumHorizontalDragDistance` / `MinimumVerticalDragDistance` 才启动拖放，避免点击时轻微手抖误触发。
+
+拖放结束后通过 `_suppressTaskClick` 标志（而非时间窗）抑制误触发的行选中点击。
+
 ---
 
 ## 6. Fluent Design 实现
@@ -212,7 +238,7 @@ MainViewModel
 - 圆角、阴影、悬停效果
 - Segoe MDL2 Assets 图标字体 + Segoe UI Emoji 彩色表情
 - ComboBox、ContextMenu、MenuItem 均有自定义 Fluent 模板
-- 浅色/深色主题（通过 `FluentColors.xaml` SolidColorBrush 切换）
+- `FluentColors.xaml` 以 SolidColorBrush 定义浅色色板；侧边栏已有主题切换按钮，但深色色板尚未实现（当前仅浅色主题）
 
 ---
 
@@ -220,7 +246,7 @@ MainViewModel
 
 - `Services/LocalizationService.cs` — 静态 `Loc` 类，属性按 `AppLanguage` 返回中/英文
 - XAML 绑定 `{x:Static services:Loc.XXX}`
-- 代码中 `Loc.XXX` 引用
+- 代码中 `Loc.XXX` 引用；值转换器（相对时间 / 日期）与对话框（DbPathDialog）同样走 `Loc`
 - 侧边栏地球按钮切换语言 → 重建窗口
 - 默认中文
 
@@ -228,9 +254,10 @@ MainViewModel
 
 ## 8. 持久化
 
-- LiteDB 嵌入式 NoSQL，数据文件 `todo.db` 在程序目录
-- 4 张表：lists / groups / tasks / tags
+- LiteDB 嵌入式 NoSQL
+- 5 张集合：lists / groups / tasks / tags / listgroups
 - 索引：ListId、GroupId、IsMyDay、IsImportant、DueDate、tagIds（多值索引）
+- 数据库路径可配置：`SettingsService` 持久化到 `%LOCALAPPDATA%\ToDo\settings.json`，默认数据库在 `%LOCALAPPDATA%\ToDo\todo.db`；`DbPathDialog` 可更改路径并自动迁移数据；旧版程序目录下的 `todo.db` 会自动迁移到新位置
 
 ### 8.1 种子数据
 
@@ -258,3 +285,7 @@ MainViewModel
 ```
 
 关闭时间可编辑，支持设置自定义时间戳。
+
+步骤生命周期：添加 / 行内编辑 / 拖拽排序 / 完成切换 / 升级为任务（按父任务所在列表新建任务并移除该步骤）。
+
+删除列表：列表内任务**移入收件箱（`list-tasks`）** 而非删除，数据不丢失；列表的分组一并删除。
