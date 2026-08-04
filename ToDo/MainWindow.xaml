@@ -46,7 +46,9 @@
                             </MultiBinding>
                         </TextBlock.Text>
                     </TextBlock>
-                    <TextBlock Text="{Binding Title}" FontSize="15" Foreground="{DynamicResource TextPrimaryBrush}">
+                    <TextBlock Text="{Binding Title}" FontSize="15" Foreground="{DynamicResource TextPrimaryBrush}"
+                               Visibility="{Binding IsEditingTitle, Converter={StaticResource InverseBoolToVis}}"
+                               MouseLeftButtonDown="TaskTitle_DoubleClick">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Style.Triggers>
@@ -64,6 +66,12 @@
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
+                    <TextBox Text="{Binding EditTitle, UpdateSourceTrigger=PropertyChanged}"
+                             FontSize="15" Style="{StaticResource FluentInlineEditBox}"
+                             Visibility="{Binding IsEditingTitle, Converter={StaticResource BoolToVis}}"
+                             IsVisibleChanged="TaskTitleEdit_IsVisibleChanged"
+                             KeyDown="TaskTitleEdit_KeyDown"
+                             LostFocus="TaskTitleEdit_LostFocus"/>
                     <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
                         <TextBlock Text="{Binding DueDate, Converter={StaticResource DueDateToString}}"
                                    FontSize="13" Margin="0,0,8,0"

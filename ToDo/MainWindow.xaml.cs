@@ -751,7 +751,7 @@ public partial class MainWindow : Window
     private void TaskRow_MouseMove(object sender, MouseEventArgs e)
     {
         if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement fe
-            && fe.DataContext is TaskItem task && !task.IsClosed
+            && fe.DataContext is TaskItem task && !task.IsClosed && !task.IsEditingTitle
             && DragThresholdExceeded(e))
         {
             DragDrop.DoDragDrop(fe, task, DragDropEffects.Move);
@@ -991,6 +991,49 @@ public partial class MainWindow : Window
         }
     }
 
+    // ─── Inline task title rename ──────────────────────────
+    private void TaskTitle_DoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount >= 2 && sender is FrameworkElement fe && fe.DataContext is TaskItem task && !task.IsClosed)
+        {
+            task.EditTitle = task.Title;
+            task.IsEditingTitle = true;
+            e.Handled = true;
+        }
+    }
+
+    private void TaskTitleEdit_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (sender is TextBox tb && tb.IsVisible)
+            Dispatcher.BeginInvoke(() => { tb.Focus(); tb.SelectAll(); });
+    }
+
+    private void TaskTitleEdit_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.DataContext is TaskItem task)
+        {
+            if (e.Key == Key.Enter) { CommitTaskTitle(task); e.Handled = true; }
+            else if (e.Key == Key.Escape) { task.IsEditingTitle = false; e.Handled = true; }
+        }
+    }
+
+    private void TaskTitleEdit_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.DataContext is TaskItem task)
+            CommitTaskTitle(task);
+    }
+
+    private void CommitTaskTitle(TaskItem task)
+    {
+        var n = task.EditTitle?.Trim();
+        task.IsEditingTitle = false;
+        if (!string.IsNullOrEmpty(n) && n != task.Title)
+        {
+            task.Title = n;
+            ViewModel.UpdateTaskCommand.Execute(task);
+        }
+    }
+
     private void Checkbox_Click(object sender, MouseButtonEventArgs e)
     {
         if (sender is FrameworkElement fe && fe.DataContext is TaskItem task)
@@ -1179,8 +1222,14 @@ public partial class MainWindow : Window
 
     private void DetailField_LostFocus(object sender, RoutedEventArgs e)
     {
-        if (sender is TextBox tb && ViewModel.SelectedTask != null && tb.Text != _detailFieldOriginal)
-            ViewModel.UpdateTaskCommand.Execute(ViewModel.SelectedTask);
+        if (sender is TextBox tb)
+        {
+            // Commit the pending binding update first so the edited value reaches
+            // SelectedTask regardless of handler/binding order, then persist.
+            tb.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+            if (ViewModel.SelectedTask != null && tb.Text != _detailFieldOriginal)
+                ViewModel.UpdateTaskCommand.Execute(ViewModel.SelectedTask);
+        }
     }
 
     private void DetailPane_Delete(object sender, RoutedEventArgs e)
