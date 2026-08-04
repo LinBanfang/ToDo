@@ -540,9 +540,12 @@
                                     <!-- Group header (only for real groups) -->
                                     <Border Style="{StaticResource GroupHeaderStyle}" Cursor="Hand"
                                             Visibility="{Binding HasGroup, Converter={StaticResource BoolToVis}}"
-                                            MouseLeftButtonDown="GroupHeader_Toggle"
+                                            PreviewMouseLeftButtonDown="RecordDragStart"
+                                            PreviewMouseMove="GroupHeader_PreviewMouseMove"
+                                            MouseLeftButtonUp="GroupHeader_Toggle"
                                             ContextMenuOpening="GroupHeader_ContextMenuOpening"
                                             AllowDrop="True" DragEnter="GroupHeader_DragEnter"
+                                            DragOver="GroupHeader_DragOver"
                                             DragLeave="GroupHeader_DragLeave" Drop="GroupHeader_Drop">
                                         <Border.ContextMenu><ContextMenu /></Border.ContextMenu>
                                         <Grid>
