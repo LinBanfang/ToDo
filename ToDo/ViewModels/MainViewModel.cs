@@ -33,6 +33,9 @@ public partial class MainViewModel : ObservableObject
     private string? _activeListId;
 
     [ObservableProperty]
+    private string? _lastCreatedListId;
+
+    [ObservableProperty]
     private TaskItem? _selectedTask;
 
     // ─── Search ───────────────────────────────────────────
@@ -470,6 +473,7 @@ public partial class MainViewModel : ObservableObject
             Order = Lists.Count(l => !l.IsSystem),
         };
         _db.Lists.Insert(list);
+        LastCreatedListId = list.Id;
         LoadLists();
     }
 
