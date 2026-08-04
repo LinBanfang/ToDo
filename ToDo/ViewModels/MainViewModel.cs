@@ -240,6 +240,9 @@ public partial class MainViewModel : ObservableObject
         Tasks.Clear();
         foreach (var t in _db.Tasks.FindAll().OrderBy(x => x.Order))
             Tasks.Add(t);
+
+        // Re-point the selection so the detail pane always edits the live instance
+        RefreshSelectedTask();
     }
 
     private void LoadTags()
