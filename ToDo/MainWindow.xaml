@@ -140,7 +140,8 @@
     <!-- ═══ MAIN 3-COLUMN LAYOUT ═══ -->
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="280"/>
+            <ColumnDefinition Width="{Binding SidebarWidth, Mode=TwoWay}" MinWidth="180" MaxWidth="480"/>
+            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
@@ -410,8 +411,13 @@
             </Grid>
         </Border>
 
-        <!-- ═══════════════ MAIN CONTENT (Column 1) ═══════════════ -->
-        <Grid Grid.Column="1">
+        <!-- GridSplitter: resize the sidebar, width persisted via SidebarWidth -->
+        <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch" Background="Transparent"
+                      ResizeBehavior="PreviousAndNext" Cursor="SizeWE" ShowsPreview="True"/>
+
+        <!-- ═══════════════ MAIN CONTENT (Column 2) ═══════════════ -->
+        <Grid Grid.Column="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
@@ -683,7 +689,7 @@
         </Grid>
 
         <!-- ═══════════════ TASK DETAIL PANE (Column 2) ═══════════════ -->
-        <Border Grid.Column="2" Width="360" Background="{DynamicResource CardBackgroundBrush}"
+        <Border Grid.Column="3" Width="360" Background="{DynamicResource CardBackgroundBrush}"
                 BorderBrush="{DynamicResource SidebarBorderBrush}" BorderThickness="1,0,0,0"
                 Visibility="{Binding SelectedTask, Converter={StaticResource NullToVis}}">
             <Grid>
