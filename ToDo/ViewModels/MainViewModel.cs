@@ -610,7 +610,7 @@ public partial class MainViewModel : ObservableObject
     {
         param.task.ListId = param.targetList.Id;
         param.task.GroupId = null;
-        param.task.Order = Tasks.Count(t => t.ListId == param.targetList.Id);
+        param.task.Order = NextOrder(Tasks.Where(t => t.ListId == param.targetList.Id).Select(t => t.Order));
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(param.task);
         RefreshActiveTasks();
