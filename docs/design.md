@@ -163,7 +163,8 @@ MainViewModel
     ├── 任务 CRUD
     ├── 关闭系统（Complete / Cancel / Reopen / EditCloseTime）
     ├── My Day / Important / 步骤 / 标签（含 PromoteStepToTask）
-    └── MoveTaskToList / MoveTaskToGroup
+    ├── MoveTaskToList / MoveTaskToGroup
+    └── ToggleTheme（主题切换）
 ```
 
 ### 4.3 数据刷新策略
@@ -215,7 +216,7 @@ MainViewModel
     - 已完成区：CompletedTasks
   - **TaskDetailPane** — 标题 + 截止日期菜单 + 步骤 + 标签 + 分组 + 关闭信息 + 备注 + 删除
   - **ContextMenuLayer**（通过代码动态生成）
-  - **Dialogs**：TagManageDialog、DateTimeDialog
+  - **Dialogs**：TagManageDialog、DateTimeDialog、DbPathDialog
 
 ### 5.3 拖放系统
 
@@ -259,6 +260,7 @@ MainViewModel
 - 5 张集合：lists / groups / tasks / tags / listgroups
 - 索引：ListId、GroupId、IsMyDay、IsImportant、DueDate、tagIds（多值索引）
 - 数据库路径可配置：`SettingsService` 持久化到 `%LOCALAPPDATA%\ToDo\settings.json`，默认数据库在 `%LOCALAPPDATA%\ToDo\todo.db`；`DbPathDialog` 可更改路径并自动迁移数据；旧版程序目录下的 `todo.db` 会自动迁移到新位置
+- settings.json 同时持久化主题选择（`Theme`：Light / Dark），启动时由 `App.OnStartup` 恢复
 
 ### 8.1 种子数据
 
@@ -290,3 +292,13 @@ MainViewModel
 步骤生命周期：添加 / 行内编辑 / 拖拽排序 / 完成切换 / 升级为任务（按父任务所在列表新建任务并移除该步骤）。
 
 删除列表：列表内任务**移入收件箱（`list-tasks`）** 而非删除，数据不丢失；列表的分组一并删除。
+
+---
+
+## 10. 已知限制
+
+- **提醒不触发系统通知** — `Reminder` 仅记录提醒时间并展示在详情面板、参与 Planned 视图排序，应用不含定时器 / 系统通知机制，到点不弹通知
+- **搜索模式下新建任务归属** — 搜索时 AddTaskBox 新建任务进入搜索前的活动列表，而非收件箱
+- **步骤拖拽排序固定插到目标之前** — 步骤行未采用任务行的半区插入
+- **`MoveTaskToList` 用数量分配排序号** — 目标列表出现排序空洞后可能与已有 `Order` 重复（任务新建路径已改用 max+1，移动路径未改）
+- **默认 CheckBox 未套用 Fluent 样式** — 步骤勾选框与 My Day 勾选框使用系统默认 CheckBox 模板，深色主题下可能带浅色边框
