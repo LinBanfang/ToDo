@@ -602,12 +602,7 @@
                                   Visibility="{Binding IsSystemList, Converter={StaticResource BoolToVis}}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="{x:Type models:TaskItem}">
-                                <Border Style="{StaticResource TaskRowStyle}"
-                                        MouseLeftButtonDown="TaskRow_Click"
-                                        ContextMenuOpening="TaskRow_ContextMenuOpening">
-                                    <Border.ContextMenu><ContextMenu /></Border.ContextMenu>
-                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource TaskRowContent}"/>
-                                </Border>
+                                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource TaskRowReorder}"/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
