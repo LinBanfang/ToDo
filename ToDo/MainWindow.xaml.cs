@@ -79,7 +79,7 @@ public partial class MainWindow : Window
     private void ListGroupHeader_PreviewMouseMove(object sender, MouseEventArgs e)
     {
         if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement fe
-            && fe.DataContext is ListGroupDisplay lgd
+            && fe.DataContext is ListGroupDisplay lgd && !lgd.IsEditing
             && DragThresholdExceeded(e))
         {
             SetListGroupHeaderToggleSuppressed();
@@ -348,7 +348,7 @@ public partial class MainWindow : Window
             if (el is ListBoxItem) break;
             el = VisualTreeHelper.GetParent(el);
         }
-        if (el is ListBoxItem lbi && lbi.DataContext is TaskList list)
+        if (el is ListBoxItem lbi && lbi.DataContext is TaskList list && !list.IsRenaming)
             DragDrop.DoDragDrop(lbi, list, DragDropEffects.Move);
     }
 
@@ -497,7 +497,7 @@ public partial class MainWindow : Window
     private void GroupHeader_PreviewMouseMove(object sender, MouseEventArgs e)
     {
         if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement fe
-            && fe.DataContext is GroupedTasks gt && gt.HasGroup
+            && fe.DataContext is GroupedTasks gt && gt.HasGroup && !gt.IsEditing
             && DragThresholdExceeded(e))
         {
             SetGroupHeaderToggleSuppressed();
