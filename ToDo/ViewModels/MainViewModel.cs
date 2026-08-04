@@ -336,7 +336,8 @@ public partial class MainViewModel : ObservableObject
             ? completed
             : ActiveList.Type switch
             {
-                ListType.MyDay => completed.Where(t => t.IsMyDay),
+                ListType.MyDay => completed.Where(t =>
+                    t.IsMyDay || (t.DueDate != null && IsToday(t.DueDate.Value))),
                 ListType.Important => completed.Where(t => t.IsImportant),
                 ListType.Planned => completed.Where(t => t.DueDate != null || t.Reminder != null),
                 ListType.Tasks => completed.Where(t => t.ListId == "list-tasks"),
