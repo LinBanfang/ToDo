@@ -620,6 +620,14 @@ public partial class MainViewModel : ObservableObject
         param.task.GroupId = param.group?.Id;
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(param.task);
+
+        // Auto-expand the target group so the moved task is visible
+        if (param.group != null && param.group.Collapsed)
+        {
+            param.group.Collapsed = false;
+            _db.Groups.Update(param.group);
+        }
+
         RefreshActiveTasks();
     }
 
