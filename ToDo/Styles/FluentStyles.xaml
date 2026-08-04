@@ -209,6 +209,13 @@
         </Setter>
     </Style>
 
+    <!-- Inline rename/edit box: transparent, no border, keeps the surrounding layout -->
+    <Style x:Key="FluentInlineEditBox" TargetType="TextBox" BasedOn="{StaticResource SearchTextBox}">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+
     <!-- Fluent ComboBox -->
     <Style x:Key="FluentComboBox" TargetType="ComboBox">
         <Setter Property="FontFamily" Value="{StaticResource FluentFont}"/>
