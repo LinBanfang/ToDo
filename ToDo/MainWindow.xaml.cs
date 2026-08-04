@@ -245,8 +245,8 @@ public partial class MainWindow : Window
     {
         var name = Loc.NewListName;
         ViewModel.CreateListCommand.Execute(name);
-        // Find the newly created list and put it in rename mode
-        var newList = ViewModel.CustomLists.LastOrDefault();
+        // Find the newly created list by id and put it in rename mode
+        var newList = ViewModel.CustomLists.FirstOrDefault(l => l.Id == ViewModel.LastCreatedListId);
         if (newList != null)
         {
             ViewModel.ActiveListId = newList.Id;
