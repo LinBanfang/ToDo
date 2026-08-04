@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using ToDo.Converters;
 using ToDo.Models;
+using ToDo.Services;
 using ToDo.ViewModels;
 
 namespace ToDo.Views.Dialogs;
@@ -103,7 +104,9 @@ public partial class TagManageDialog : Window
     {
         if (sender is Button btn && btn.Tag is Tag tag)
         {
-            ViewModel.DeleteTagCommand.Execute(tag);
+            if (MessageBox.Show(Loc.ConfirmDeleteMsg(tag.Name), Loc.ConfirmDelete,
+                    MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                ViewModel.DeleteTagCommand.Execute(tag);
         }
     }
 }
