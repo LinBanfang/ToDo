@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -841,6 +842,21 @@ public partial class MainWindow : Window
             OpenEditCloseTimeDialog(ViewModel.SelectedTask);
     }
 
+    // ─── Detail Pane: persist title / note edits ─────────
+    private string _detailFieldOriginal = "";
+
+    private void DetailField_GotFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is TextBox tb)
+            _detailFieldOriginal = tb.Text;
+    }
+
+    private void DetailField_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is TextBox tb && ViewModel.SelectedTask != null && tb.Text != _detailFieldOriginal)
+            ViewModel.UpdateTaskCommand.Execute(ViewModel.SelectedTask);
+    }
+
     private void DetailPane_Delete(object sender, RoutedEventArgs e)
     {
         if (ViewModel.SelectedTask == null) return;
@@ -1250,5 +1266,15 @@ public partial class MainWindow : Window
             AddTaskBox.Focus();
             e.Handled = true;
         }
+    }
+
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        // Flush any pending detail-pane title/note edits before exiting
+        DetailTitleBox?.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+        DetailNoteBox?.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+        if (ViewModel.SelectedTask != null)
+            ViewModel.UpdateTaskCommand.Execute(ViewModel.SelectedTask);
+        base.OnClosing(e);
     }
 }
