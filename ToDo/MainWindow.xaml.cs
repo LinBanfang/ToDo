@@ -241,7 +241,7 @@ public partial class MainWindow : Window
 
     private void NewList_Click(object sender, RoutedEventArgs e)
     {
-        var name = Loc.NewListGroup.Contains("+") ? "新列表" : "New list";
+        var name = Loc.NewListName;
         ViewModel.CreateListCommand.Execute(name);
         // Find the newly created list and put it in rename mode
         var newList = ViewModel.CustomLists.LastOrDefault();
@@ -1043,11 +1043,11 @@ public partial class MainWindow : Window
             || ViewModel.SelectedTask == null) return;
 
         var menu = new ContextMenu { PlacementTarget = fe as UIElement };
-        var completeItem = new MenuItem { Header = step.Completed ? "Mark incomplete" : "Complete" };
+        var completeItem = new MenuItem { Header = step.Completed ? Loc.MarkIncomplete : Loc.Complete };
         completeItem.Click += (_, _) => { step.Completed = !step.Completed; ViewModel.UpdateTaskCommand.Execute(ViewModel.SelectedTask); };
         menu.Items.Add(completeItem);
         menu.Items.Add(new Separator());
-        var promoteItem = new MenuItem { Header = "Promote to task" };
+        var promoteItem = new MenuItem { Header = Loc.PromoteToTask };
         promoteItem.Click += (_, _) => { ViewModel.CreateTaskCommand.Execute(step.Title); ViewModel.DeleteStepCommand.Execute((ViewModel.SelectedTask!, step)); };
         menu.Items.Add(promoteItem);
         menu.Items.Add(new Separator());

@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 using ToDo.Models;
+using ToDo.Services;
 
 namespace ToDo.Converters;
 
@@ -111,11 +112,11 @@ public class TimestampToRelativeStringConverter : IValueConverter
             var now = DateTime.Now;
             var diff = now - dt;
 
-            if (diff.TotalMinutes < 1) return "just now";
-            if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
-            if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
-            if (diff.TotalDays < 7) return $"{(int)diff.TotalDays}d ago";
-            return dt.ToString("MMM d, yyyy");
+            if (diff.TotalMinutes < 1) return Loc.JustNow;
+            if (diff.TotalMinutes < 60) return Loc.MinutesAgo((int)diff.TotalMinutes);
+            if (diff.TotalHours < 24) return Loc.HoursAgo((int)diff.TotalHours);
+            if (diff.TotalDays < 7) return Loc.DaysAgo((int)diff.TotalDays);
+            return Loc.RelativeDate(dt);
         }
         return "";
     }
@@ -133,11 +134,11 @@ public class DueDateToStringConverter : IValueConverter
             var dt = DateTimeOffset.FromUnixTimeMilliseconds(ts).LocalDateTime;
             var today = DateTime.Today;
 
-            if (dt.Date == today) return "Today";
-            if (dt.Date == today.AddDays(1)) return "Tomorrow";
-            if (dt.Date == today.AddDays(-1)) return "Yesterday";
-            if (dt.Date < today) return $"Overdue {dt:MMM d}";
-            return dt.ToString("MMM d");
+            if (dt.Date == today) return Loc.Today;
+            if (dt.Date == today.AddDays(1)) return Loc.Tomorrow;
+            if (dt.Date == today.AddDays(-1)) return Loc.Yesterday;
+            if (dt.Date < today) return Loc.OverdueDate(dt);
+            return Loc.ShortDate(dt);
         }
         return "";
     }
