@@ -209,7 +209,7 @@ public partial class MainWindow : Window
     private void ListGroupHeader_DragEnter(object sender, DragEventArgs e)
     {
         if (e.Data.GetDataPresent(typeof(TaskList)) && sender is Border b)
-        { b.Background = new SolidColorBrush(Color.FromRgb(0xE6, 0xF2, 0xFC)); e.Effects = DragDropEffects.Move; }
+        { b.Background = (Brush)Application.Current.FindResource("AccentBlueLight"); e.Effects = DragDropEffects.Move; }
         e.Handled = true;
     }
     private void ListGroupHeader_DragLeave(object sender, DragEventArgs e)
@@ -513,7 +513,7 @@ public partial class MainWindow : Window
     {
         if (e.Data.GetDataPresent(typeof(TaskItem)) && sender is Border border)
         {
-            border.BorderBrush = new SolidColorBrush(Color.FromRgb(0x00, 0x78, 0xD4));
+            border.BorderBrush = (Brush)Application.Current.FindResource("AccentBlue");
             border.BorderThickness = new Thickness(0, 0, 0, 2);
             e.Effects = DragDropEffects.Move;
         }
@@ -577,7 +577,7 @@ public partial class MainWindow : Window
     {
         if (e.Data.GetDataPresent(typeof(TaskItem)) && sender is Border border)
         {
-            border.Background = new SolidColorBrush(Color.FromRgb(0xE6, 0xF2, 0xFC)); // accent blue light
+            border.Background = (Brush)Application.Current.FindResource("AccentBlueLight"); // accent blue light
             e.Effects = DragDropEffects.Move;
         }
         e.Handled = true;
@@ -615,7 +615,7 @@ public partial class MainWindow : Window
     {
         if (e.Data.GetDataPresent(typeof(TaskItem)) && sender is Border border)
         {
-            border.Background = new SolidColorBrush(Color.FromRgb(0xE6, 0xF2, 0xFC));
+            border.Background = (Brush)Application.Current.FindResource("AccentBlueLight");
             e.Effects = DragDropEffects.Move;
         }
         e.Handled = true;

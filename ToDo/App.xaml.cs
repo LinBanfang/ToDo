@@ -16,6 +16,9 @@ public partial class App : Application
         Database = new DatabaseService();
         ViewModel = new MainViewModel(Database);
 
+        // Apply the persisted theme before the first window loads
+        ThemeService.Apply(ViewModel.Theme);
+
         var mainWindow = new MainWindow { DataContext = ViewModel };
         mainWindow.Icon = new System.Windows.Media.Imaging.BitmapImage(
             new Uri("pack://application:,,,/Resources/app.ico"));

@@ -76,6 +76,7 @@ public partial class MainViewModel : ObservableObject
     public MainViewModel(DatabaseService db)
     {
         _db = db;
+        Theme = SettingsService.Current.Theme;
         LoadAll();
         DailyMyDayReset();
     }
@@ -831,6 +832,9 @@ public partial class MainViewModel : ObservableObject
     private void ToggleTheme()
     {
         Theme = Theme == "Light" ? "Dark" : "Light";
+        SettingsService.Current.Theme = Theme;
+        SettingsService.Save();
+        ThemeService.Apply(Theme);
     }
 }
 
