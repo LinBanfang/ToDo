@@ -420,8 +420,15 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <!-- Header icon: emoji (list) or search icon, clickable for custom lists -->
-                        <Button x:Name="EmojiBtn" FontSize="24" Width="40" Height="40" Padding="0"
-                                Cursor="Hand" Click="ListEmoji_Click" VerticalAlignment="Center">
+                        <Button x:Name="EmojiBtn" Cursor="Hand" Click="ListEmoji_Click"
+                                VerticalAlignment="Center" Margin="0,0,12,0">
+                            <Button.Template>
+                                <!-- Left-align the emoji like the system-list icon; the button
+                                     sizes to its content so there is no centering gap -->
+                                <ControlTemplate TargetType="Button">
+                                    <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                </ControlTemplate>
+                            </Button.Template>
                             <Button.Style>
                                 <Style TargetType="Button" BasedOn="{StaticResource FluentSubtleButton}">
                                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -443,7 +450,7 @@
                             </Button.Content>
                         </Button>
                         <!-- Read-only icon: system list or searching -->
-                        <TextBlock VerticalAlignment="Center" Margin="0,0,8,0">
+                        <TextBlock VerticalAlignment="Center" Margin="0,0,12,0">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Visibility" Value="Collapsed"/>
