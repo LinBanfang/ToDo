@@ -96,6 +96,12 @@ public static class Loc
     public static string DbPathTitle => Language == AppLanguage.Chinese ? "数据库路径" : "Database Path";
     public static string DbPathPrompt => Language == AppLanguage.Chinese ? "请输入数据库文件的完整路径。修改后当前数据将自动迁移到新位置。" : "Enter the full path for the database file. Existing data will be migrated to the new location.";
     public static string DbPathChanged => Language == AppLanguage.Chinese ? "路径已更改。请重启应用以使用新数据库位置。" : "Path changed. Please restart the app to use the new database location.";
+    public static string SelectDbFile => Language == AppLanguage.Chinese ? "选择数据库文件" : "Select database file";
+    public static string DbFileFilter => Language == AppLanguage.Chinese
+        ? "数据库文件 (*.db)|*.db|所有文件 (*.*)|*.*"
+        : "Database files (*.db)|*.db|All files (*.*)|*.*";
+    public static string InvalidPathMsg => Language == AppLanguage.Chinese ? "请输入有效路径。" : "Please enter a valid path.";
+    public static string Error => Language == AppLanguage.Chinese ? "错误" : "Error";
     public static string Yesterday => Language == AppLanguage.Chinese ? "昨天" : "Yesterday";
     public static string NewListName => Language == AppLanguage.Chinese ? "新列表" : "New list";
     public static string MarkIncomplete => Language == AppLanguage.Chinese ? "标记为未完成" : "Mark incomplete";
