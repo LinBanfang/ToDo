@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using LiteDB;
 using System.Linq;
 
 namespace ToDo.Models;
@@ -55,6 +56,15 @@ public partial class TaskItem : ObservableObject
 
     [ObservableProperty]
     private long _modifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+    /// <summary>Inline title editing state (not persisted)</summary>
+    [ObservableProperty]
+    [BsonIgnore]
+    private bool _isEditingTitle;
+
+    [ObservableProperty]
+    [BsonIgnore]
+    private string _editTitle = string.Empty;
 
     /// <summary>
     /// Convenience: is the task closed?
