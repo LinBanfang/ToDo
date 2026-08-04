@@ -283,7 +283,11 @@ public partial class MainWindow : Window
             Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom,
             StaysOpen = false,
         };
-        var panel = new WrapPanel { Width = 400, Background = new SolidColorBrush(Colors.White) };
+        var panel = new WrapPanel
+        {
+            Width = 400,
+            Background = (Brush)Application.Current.FindResource("CardBackgroundBrush"),
+        };
         foreach (var em in emojis)
         {
             var embtn = new Button { Content = em, FontSize = 20, Width = 38, Height = 38,
