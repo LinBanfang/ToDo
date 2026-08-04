@@ -72,4 +72,9 @@ public partial class TaskItem : ObservableObject
     /// Number of completed steps
     /// </summary>
     public int CompletedStepCount => Steps.Count(s => s.Completed);
+
+    /// <summary>
+    /// Notify the UI that the completed-step count may have changed
+    /// </summary>
+    public void NotifyCompletedStepCount() => OnPropertyChanged(nameof(CompletedStepCount));
 }

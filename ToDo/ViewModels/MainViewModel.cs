@@ -709,6 +709,7 @@ public partial class MainViewModel : ObservableObject
             Order = param.task.Steps.Count,
         });
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        param.task.NotifyCompletedStepCount();
         _db.Tasks.Update(param.task);
         
         
@@ -726,6 +727,7 @@ public partial class MainViewModel : ObservableObject
             IsEditing = true
         });
         task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        task.NotifyCompletedStepCount();
         _db.Tasks.Update(task);
         
         
@@ -736,6 +738,7 @@ public partial class MainViewModel : ObservableObject
     {
         param.step.Completed = !param.step.Completed;
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        param.task.NotifyCompletedStepCount();
         _db.Tasks.Update(param.task);
         
         
@@ -746,6 +749,7 @@ public partial class MainViewModel : ObservableObject
     {
         param.task.Steps.Remove(param.step);
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        param.task.NotifyCompletedStepCount();
         _db.Tasks.Update(param.task);
         
     }
