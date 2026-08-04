@@ -66,10 +66,31 @@ public partial class MainWindow : Window
         ViewModel.CreateListGroupCommand.Execute("New group");
     }
 
+    private bool _suppressListGroupHeaderToggle;
+
     private void ListGroupHeader_Click(object sender, MouseButtonEventArgs e)
     {
+        // Consume suppression set when a group drag or a drop onto the header ends
+        if (_suppressListGroupHeaderToggle) { _suppressListGroupHeaderToggle = false; return; }
         if (sender is FrameworkElement fe && fe.DataContext is ListGroupDisplay lgd)
             ViewModel.ToggleListGroupCollapseCommand.Execute(lgd.Group);
+    }
+
+    private void ListGroupHeader_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement fe
+            && fe.DataContext is ListGroupDisplay lgd
+            && DragThresholdExceeded(e))
+        {
+            SetListGroupHeaderToggleSuppressed();
+            DragDrop.DoDragDrop(fe, lgd.Group, DragDropEffects.Move);
+        }
+    }
+
+    private void SetListGroupHeaderToggleSuppressed()
+    {
+        _suppressListGroupHeaderToggle = true;
+        Dispatcher.BeginInvoke(DispatcherPriority.Background, () => _suppressListGroupHeaderToggle = false);
     }
 
     private void ListGroup_ContextMenuOpening(object sender, ContextMenuEventArgs e)
@@ -223,25 +244,96 @@ public partial class MainWindow : Window
         lgd.IsEditing = false;
     }
 
-    // ─── Drag list to group handlers ──────────────────────
+    // ─── Drag list to group / reorder group handlers ──────
     private void ListGroupHeader_DragEnter(object sender, DragEventArgs e)
     {
-        if (e.Data.GetDataPresent(typeof(TaskList)) && sender is Border b)
-        { b.Background = (Brush)Application.Current.FindResource("AccentBlueLight"); e.Effects = DragDropEffects.Move; }
+        if (sender is Border b)
+            UpdateListGroupHeaderDropVisual(b, e);
         e.Handled = true;
     }
+
+    private void ListGroupHeader_DragOver(object sender, DragEventArgs e)
+    {
+        if (sender is Border b)
+            UpdateListGroupHeaderDropVisual(b, e);
+        e.Handled = true;
+    }
+
     private void ListGroupHeader_DragLeave(object sender, DragEventArgs e)
     {
-        if (sender is Border b) b.Background = Brushes.Transparent;
+        if (sender is Border b)
+            ClearListGroupHeaderDropVisual(b);
         e.Handled = true;
     }
+
+    /// <summary>List drop → background highlight; group reorder → top/bottom insert line.</summary>
+    private void UpdateListGroupHeaderDropVisual(Border b, DragEventArgs e)
+    {
+        ClearListGroupHeaderDropVisual(b);
+        if (e.Data.GetDataPresent(typeof(TaskList)))
+        {
+            b.Background = (Brush)Application.Current.FindResource("AccentBlueLight");
+            e.Effects = DragDropEffects.Move;
+        }
+        else if (e.Data.GetDataPresent(typeof(ListGroup)) && e.Data.GetData(typeof(ListGroup)) is ListGroup draggedGroup
+            && b.DataContext is ListGroupDisplay lgd && draggedGroup.Id != lgd.Group.Id)
+        {
+            bool lowerHalf = e.GetPosition(b).Y > b.ActualHeight / 2;
+            b.BorderBrush = (Brush)Application.Current.FindResource("AccentBlue");
+            b.BorderThickness = new Thickness(0, lowerHalf ? 0 : 2, 0, lowerHalf ? 2 : 0);
+            e.Effects = DragDropEffects.Move;
+        }
+    }
+
+    private void ClearListGroupHeaderDropVisual(Border b)
+    {
+        b.Background = Brushes.Transparent;
+        b.BorderBrush = Brushes.Transparent;
+        b.BorderThickness = new Thickness(0);
+    }
+
     private void ListGroupHeader_Drop(object sender, DragEventArgs e)
     {
-        if (sender is Border b) { b.Background = Brushes.Transparent;
-            if (e.Data.GetDataPresent(typeof(TaskList)) && b.DataContext is ListGroupDisplay lgd
-                && e.Data.GetData(typeof(TaskList)) is TaskList list && list.GroupId != lgd.Group.Id)
-                ViewModel.MoveListToGroupCommand.Execute((list, lgd.Group)); }
+        if (sender is Border b)
+        {
+            ClearListGroupHeaderDropVisual(b);
+            if (b.DataContext is ListGroupDisplay lgd)
+            {
+                if (e.Data.GetDataPresent(typeof(TaskList)) && e.Data.GetData(typeof(TaskList)) is TaskList list
+                    && list.GroupId != lgd.Group.Id)
+                {
+                    SetListGroupHeaderToggleSuppressed();
+                    ViewModel.MoveListToGroupCommand.Execute((list, lgd.Group));
+                }
+                else if (e.Data.GetDataPresent(typeof(ListGroup)) && e.Data.GetData(typeof(ListGroup)) is ListGroup draggedGroup
+                    && draggedGroup.Id != lgd.Group.Id)
+                {
+                    SetListGroupHeaderToggleSuppressed();
+                    ReorderListGroups(b, e, draggedGroup, lgd.Group);
+                }
+            }
+        }
         e.Handled = true;
+    }
+
+    private void ReorderListGroups(Border b, DragEventArgs e, ListGroup dragged, ListGroup target)
+    {
+        var siblings = ViewModel.ListGroups.OrderBy(g => g.Order).ToList();
+        if (!siblings.Contains(dragged)) return;
+        siblings.Remove(dragged);
+        var targetIdx = siblings.IndexOf(target);
+        if (targetIdx < 0) return;
+
+        // Upper half of the target header inserts before it, lower half after it
+        bool lowerHalf = e.GetPosition(b).Y > b.ActualHeight / 2;
+        siblings.Insert(lowerHalf ? targetIdx + 1 : targetIdx, dragged);
+
+        for (int i = 0; i < siblings.Count; i++)
+            siblings[i].Order = i;
+        foreach (var g in siblings)
+            App.Database!.ListGroups.Update(g);
+
+        ViewModel.Refresh();
     }
 
     // ─── Drag sidebar list items ──────────────────────────

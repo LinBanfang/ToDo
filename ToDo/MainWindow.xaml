@@ -232,7 +232,12 @@
                                 <DataTemplate DataType="{x:Type vm:ListGroupDisplay}">
                                     <StackPanel>
                                         <Border Margin="4,2" Padding="14,6" CornerRadius="6" Background="Transparent" Cursor="Hand"
-                                                MouseLeftButtonDown="ListGroupHeader_Click" ContextMenuOpening="ListGroup_ContextMenuOpening" AllowDrop="True" DragEnter="ListGroupHeader_DragEnter" DragLeave="ListGroupHeader_DragLeave" Drop="ListGroupHeader_Drop">
+                                                PreviewMouseLeftButtonDown="RecordDragStart"
+                                                PreviewMouseMove="ListGroupHeader_PreviewMouseMove"
+                                                MouseLeftButtonUp="ListGroupHeader_Click"
+                                                ContextMenuOpening="ListGroup_ContextMenuOpening"
+                                                AllowDrop="True" DragEnter="ListGroupHeader_DragEnter" DragOver="ListGroupHeader_DragOver"
+                                                DragLeave="ListGroupHeader_DragLeave" Drop="ListGroupHeader_Drop">
                                             <Border.ContextMenu><ContextMenu /></Border.ContextMenu>
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
