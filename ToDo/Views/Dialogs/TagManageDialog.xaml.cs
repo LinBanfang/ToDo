@@ -61,7 +61,7 @@ public partial class TagManageDialog : Window
         var wrapPanel = new WrapPanel
         {
             Width = 200,
-            Background = new SolidColorBrush(Colors.White),
+            Background = (Brush)Application.Current.FindResource("CardBackgroundBrush"),
         };
 
         foreach (var color in _tagColors)
