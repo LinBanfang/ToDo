@@ -26,6 +26,17 @@ public class InverseBoolConverter : IValueConverter
         => value is false;
 }
 
+/// <summary>Inverse bool mapped to Visibility (true → Collapsed), for hiding a label
+/// while an edit box takes over.</summary>
+public class InverseBoolToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is true ? Visibility.Collapsed : Visibility.Visible;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
 public class NullToVisibilityConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object parameter, CultureInfo culture)

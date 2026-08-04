@@ -207,7 +207,7 @@
                                         <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="14"
                                                    VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                                                    MouseLeftButtonDown="SidebarListName_DoubleClick"
-                                                   Visibility="{Binding IsRenaming, Converter={StaticResource InverseBool}}"/>
+                                                   Visibility="{Binding IsRenaming, Converter={StaticResource InverseBoolToVis}}"/>
                                         <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
                                                  FontSize="14" VerticalAlignment="Center"
                                                  Visibility="{Binding IsRenaming, Converter={StaticResource BoolToVis}}"
@@ -260,7 +260,7 @@
                                                 </TextBlock>
                                                 <TextBlock Grid.Column="1" Text="{Binding Group.Name}" FontSize="14" FontWeight="SemiBold"
                                                            VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"
-                                                           Visibility="{Binding IsEditing, Converter={StaticResource InverseBool}}"
+                                                           Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVis}}"
                                                            Tag="ListGroupName"
                                                            MouseLeftButtonDown="ListGroupName_DoubleClick"/>
                                                 <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
@@ -291,7 +291,7 @@
                                                         <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="14" FontFamily="Segoe UI Emoji" VerticalAlignment="Center" Margin="0,-2,6,0"/>
                                                         <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="14" VerticalAlignment="Center"
                                                                    MouseLeftButtonDown="SidebarListName_DoubleClick"
-                                                                   Visibility="{Binding IsRenaming, Converter={StaticResource InverseBool}}"/>
+                                                                   Visibility="{Binding IsRenaming, Converter={StaticResource InverseBoolToVis}}"/>
                                                         <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
                                                                  FontSize="14" VerticalAlignment="Center"
                                                                  Visibility="{Binding IsRenaming, Converter={StaticResource BoolToVis}}"
@@ -343,7 +343,7 @@
                                         <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="14"
                                                    VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                                                    MouseLeftButtonDown="SidebarListName_DoubleClick"
-                                                   Visibility="{Binding IsRenaming, Converter={StaticResource InverseBool}}"/>
+                                                   Visibility="{Binding IsRenaming, Converter={StaticResource InverseBoolToVis}}"/>
                                         <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
                                                  FontSize="14" VerticalAlignment="Center"
                                                  Visibility="{Binding IsRenaming, Converter={StaticResource BoolToVis}}"
@@ -526,7 +526,7 @@
                                 <ContextMenu>
                                     <MenuItem Header="{x:Static services:Loc.RenameList}" Click="ListMenu_Rename"/>
                                     <MenuItem Header="{x:Static services:Loc.DeleteList}" Click="ListMenu_Delete"
-                                              Visibility="{Binding ActiveList.IsSystem, Converter={StaticResource InverseBool}}"/>
+                                              Visibility="{Binding ActiveList.IsSystem, Converter={StaticResource InverseBoolToVis}}"/>
                                 </ContextMenu>
                             </Button.ContextMenu>
                         </Button>
@@ -583,14 +583,14 @@
                                             <TextBlock Grid.Column="1" Text="{Binding Group.Name}" FontSize="15"
                                                        FontWeight="SemiBold" VerticalAlignment="Center"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"
-                                                       Visibility="{Binding IsEditing, Converter={StaticResource InverseBool}}"
+                                                       Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVis}}"
                                                        Tag="GroupName"
                                                        MouseLeftButtonDown="GroupName_DoubleClick"/>
                                             <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
                                                      FontSize="15" FontWeight="SemiBold"
                                                      VerticalAlignment="Center"
                                                      Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}"
-                                                     Style="{StaticResource FluentTextBox}"
+                                                     Style="{StaticResource FluentInlineEditBox}"
                                                      KeyDown="GroupNameEdit_KeyDown"
                                                      LostFocus="GroupNameEdit_LostFocus"/>
                                             <TextBlock Grid.Column="2" FontSize="13" VerticalAlignment="Center"
@@ -835,7 +835,7 @@
                                                 <Button Grid.Column="1" HorizontalAlignment="Left"
                                                         Style="{StaticResource FluentSubtleButton}"
                                                         FontSize="13" Padding="0"
-                                                        Visibility="{Binding IsEditing, Converter={StaticResource InverseBool}}"
+                                                        Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVis}}"
                                                         Click="StepTitle_Click">
                                                     <Button.Content>
                                                         <TextBlock Text="{Binding Title}" FontSize="13"

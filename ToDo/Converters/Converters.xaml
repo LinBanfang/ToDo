@@ -4,6 +4,7 @@
 
     <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
     <conv:InverseBoolConverter x:Key="InverseBool"/>
+    <conv:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
     <conv:NullToVisibilityConverter x:Key="NullToVis"/>
     <conv:InverseNullToVisibilityConverter x:Key="InverseNullToVis"/>
     <conv:StringToColorBrushConverter x:Key="StringToBrush"/>
