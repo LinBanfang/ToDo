@@ -12,23 +12,32 @@ public static class ThemeService
 {
     private static readonly Uri LightUri = new("pack://application:,,,/Styles/FluentColors.xaml");
 
+    /// <summary>The currently installed code-built dark dictionary (Source is null, so
+    /// it can't be identified by URI like the light one).</summary>
+    private static ResourceDictionary? _darkDictionary;
+
     public static void Apply(string theme)
     {
         var merged = Application.Current.Resources.MergedDictionaries;
         var target = theme == "Dark" ? CreateDarkDictionary() : LoadLightDictionary();
 
-        // Replace the existing FluentColors dictionary in place (light or dark)
+        // Replace the active theme dictionary in place: the light one is found by
+        // Source URI, the code-built dark one by reference (its Source is null).
         for (int i = 0; i < merged.Count; i++)
         {
-            if (merged[i].Source != null && merged[i].Source.OriginalString.Contains("FluentColors"))
+            bool isThemeDict = (merged[i].Source != null && merged[i].Source.OriginalString.Contains("FluentColors"))
+                || ReferenceEquals(merged[i], _darkDictionary);
+            if (isThemeDict)
             {
                 merged.RemoveAt(i);
                 merged.Insert(i, target);
+                _darkDictionary = theme == "Dark" ? target : null;
                 return;
             }
         }
 
         merged.Insert(0, target);
+        _darkDictionary = theme == "Dark" ? target : null;
     }
 
     private static ResourceDictionary LoadLightDictionary() => new() { Source = LightUri };
