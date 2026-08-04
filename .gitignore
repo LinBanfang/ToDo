@@ -3,3 +3,6 @@ bin/
 obj/
 *.db
 .vs/
+
+# Claude Code local (personal) overrides — project settings.json is shared
+.claude/settings.local.json
