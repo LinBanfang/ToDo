@@ -1,0 +1,36 @@
+name: Build and Release
+
+# 触发方式：
+#   git tag v1.0.0 && git push origin v1.0.0   → 自动构建并发布
+#   或在 GitHub Actions 页面手动 "Run workflow"
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write # 创建 GitHub Release 需要写权限
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Publish (self-contained win-x64)
+        run: dotnet publish ToDo/ToDo.csproj -c Release -r win-x64 --self-contained true -o publish
+
+      - name: Package zip
+        run: Compress-Archive -Path publish/* -DestinationPath "ToDo-${{ github.ref_name }}.zip"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ToDo-${{ github.ref_name }}.zip
+          generate_release_notes: true
