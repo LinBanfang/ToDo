@@ -205,13 +205,15 @@
                                                    FontFamily="Segoe UI Emoji" VerticalAlignment="Center"/>
                                         <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="14"
                                                    VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                   MouseLeftButtonDown="SidebarListName_DoubleClick"
                                                    Visibility="{Binding IsRenaming, Converter={StaticResource InverseBool}}"/>
                                         <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
                                                  FontSize="14" VerticalAlignment="Center"
                                                  Visibility="{Binding IsRenaming, Converter={StaticResource BoolToVis}}"
                                                  Style="{StaticResource SearchTextBox}" Padding="2,0"
                                                  KeyDown="SidebarRename_KeyDown"
-                                                 LostFocus="SidebarRename_LostFocus"/>
+                                                 LostFocus="SidebarRename_LostFocus"
+                                                 IsVisibleChanged="SidebarRename_IsVisibleChanged"/>
                                         <TextBlock Grid.Column="2" Text="{Binding TaskCount}" VerticalAlignment="Center"
                                                    Margin="8,0,0,0" FontSize="12"
                                                    Foreground="{DynamicResource TextDisabledBrush}"
@@ -279,13 +281,15 @@
                                                         </Grid.ColumnDefinitions>
                                                         <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="14" FontFamily="Segoe UI Emoji" VerticalAlignment="Center" Margin="0,0,6,0"/>
                                                         <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="14" VerticalAlignment="Center"
+                                                                   MouseLeftButtonDown="SidebarListName_DoubleClick"
                                                                    Visibility="{Binding IsRenaming, Converter={StaticResource InverseBool}}"/>
                                                         <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
                                                                  FontSize="14" VerticalAlignment="Center"
                                                                  Visibility="{Binding IsRenaming, Converter={StaticResource BoolToVis}}"
                                                                  Style="{StaticResource SearchTextBox}" Padding="2,0"
                                                                  KeyDown="SidebarRename_KeyDown"
-                                                                 LostFocus="SidebarRename_LostFocus"/>
+                                                                 LostFocus="SidebarRename_LostFocus"
+                                                                 IsVisibleChanged="SidebarRename_IsVisibleChanged"/>
                                                         <TextBlock Grid.Column="2" Text="{Binding TaskCount}" FontSize="11" Foreground="{DynamicResource TextDisabledBrush}" Margin="4,0,0,0"/>
                                                     </Grid>
                                                 </DataTemplate>
@@ -329,13 +333,15 @@
                                         </TextBlock>
                                         <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="14"
                                                    VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                   MouseLeftButtonDown="SidebarListName_DoubleClick"
                                                    Visibility="{Binding IsRenaming, Converter={StaticResource InverseBool}}"/>
                                         <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
                                                  FontSize="14" VerticalAlignment="Center"
                                                  Visibility="{Binding IsRenaming, Converter={StaticResource BoolToVis}}"
                                                  Style="{StaticResource SearchTextBox}" Padding="2,0"
                                                  KeyDown="SidebarRename_KeyDown"
-                                                 LostFocus="SidebarRename_LostFocus"/>
+                                                 LostFocus="SidebarRename_LostFocus"
+                                                 IsVisibleChanged="SidebarRename_IsVisibleChanged"/>
                                         <TextBlock Grid.Column="2" Text="{Binding TaskCount}" VerticalAlignment="Center"
                                                    Margin="8,0,0,0" FontSize="12"
                                                    Foreground="{DynamicResource TextDisabledBrush}"
