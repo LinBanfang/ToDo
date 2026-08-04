@@ -394,7 +394,9 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsCustomList));
         OnPropertyChanged(nameof(IsSystemList));
         OnPropertyChanged(nameof(HeaderTitle));
-        LoadTasks();
+        // Tasks is always current in this single-process app (every mutation
+        // reloads it), so filter it in memory instead of re-reading the DB
+        // and rebuilding the collection on every keystroke.
         RefreshActiveTasks();
     }
 
