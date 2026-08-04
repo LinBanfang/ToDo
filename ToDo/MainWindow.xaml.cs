@@ -14,6 +14,7 @@ public partial class MainWindow : Window
     private MainViewModel ViewModel => (MainViewModel)DataContext;
     private bool _suppressDetailEvents;
     private DateTime _lastDropTime = DateTime.MinValue;
+    private Point _dragStartPoint;
 
     public MainWindow()
     {
@@ -226,7 +227,7 @@ public partial class MainWindow : Window
     // ─── Drag sidebar list items ──────────────────────────
     public void SidebarList_PreviewMouseMove(object sender, MouseEventArgs e)
     {
-        if (e.LeftButton != MouseButtonState.Pressed || sender is not ListBox lb) return;
+        if (e.LeftButton != MouseButtonState.Pressed || !DragThresholdExceeded(e) || sender is not ListBox lb) return;
         var pos = e.GetPosition(lb);
         var el = lb.InputHitTest(pos) as DependencyObject;
         while (el != null)
@@ -478,10 +479,24 @@ public partial class MainWindow : Window
     }
 
     // ─── Drag & Drop ──────────────────────────────────────
+    private void RecordDragStart(object sender, MouseButtonEventArgs e)
+    {
+        if (e.LeftButton == MouseButtonState.Pressed)
+            _dragStartPoint = e.GetPosition(null);
+    }
+
+    private bool DragThresholdExceeded(MouseEventArgs e)
+    {
+        var pos = e.GetPosition(null);
+        return Math.Abs(pos.X - _dragStartPoint.X) >= SystemParameters.MinimumHorizontalDragDistance
+            || Math.Abs(pos.Y - _dragStartPoint.Y) >= SystemParameters.MinimumVerticalDragDistance;
+    }
+
     private void TaskRow_MouseMove(object sender, MouseEventArgs e)
     {
         if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement fe
-            && fe.DataContext is TaskItem task && !task.IsClosed)
+            && fe.DataContext is TaskItem task && !task.IsClosed
+            && DragThresholdExceeded(e))
         {
             DragDrop.DoDragDrop(fe, task, DragDropEffects.Move);
         }
@@ -1031,7 +1046,7 @@ public partial class MainWindow : Window
     private void StepHandle_MouseMove(object sender, MouseEventArgs e)
     {
         if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement fe
-            && fe.DataContext is TaskStep step)
+            && fe.DataContext is TaskStep step && DragThresholdExceeded(e))
             DragDrop.DoDragDrop(fe, step, DragDropEffects.Move);
     }
 

@@ -124,6 +124,7 @@
         <!-- Task row wrapper with drag-drop + context menu -->
         <DataTemplate x:Key="TaskRowReorder">
             <Border Style="{StaticResource TaskRowStyle}"
+                    PreviewMouseLeftButtonDown="RecordDragStart"
                     MouseLeftButtonDown="TaskRow_Click"
                     MouseMove="TaskRow_MouseMove"
                     ContextMenuOpening="TaskRow_ContextMenuOpening"
@@ -260,7 +261,8 @@
                                                          LostFocus="ListGroupName_LostFocus"/>
                                             </Grid>
                                         </Border>
-                                        <ListBox ItemsSource="{Binding Lists}" PreviewMouseMove="SidebarList_PreviewMouseMove"
+                                        <ListBox ItemsSource="{Binding Lists}" PreviewMouseLeftButtonDown="RecordDragStart"
+                                                 PreviewMouseMove="SidebarList_PreviewMouseMove"
                                                  SelectedValue="{Binding DataContext.ActiveListId, RelativeSource={RelativeSource AncestorType=Window}}"
                                                  SelectedValuePath="Id" BorderThickness="0" Background="Transparent"
                                                  ItemContainerStyle="{StaticResource SidebarNavItem}"
@@ -294,6 +296,7 @@
                         </ItemsControl>
                         <!-- Ungrouped -->
                         <ListBox ItemsSource="{Binding UngroupedCustomLists}"
+                                 PreviewMouseLeftButtonDown="RecordDragStart"
                                  PreviewMouseMove="SidebarList_PreviewMouseMove"
                                  SelectedValue="{Binding ActiveListId}"
                                  SelectedValuePath="Id"
@@ -829,6 +832,7 @@
                                                         Style="{StaticResource FluentSubtleButton}" FontSize="14"
                                                         Width="24" Height="24" Padding="0" Cursor="SizeAll"
                                                         Foreground="{StaticResource TextDisabledBrush}"
+                                                        PreviewMouseLeftButtonDown="RecordDragStart"
                                                         MouseMove="StepHandle_MouseMove"
                                                         Click="StepHandle_Click"/>
                                             </Grid>
