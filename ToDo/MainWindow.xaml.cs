@@ -840,9 +840,7 @@ public partial class MainWindow : Window
         menu.Items.Add(tomorrowItem);
 
         // Next week (next Monday)
-        var daysUntilMonday = ((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7;
-        if (daysUntilMonday == 0) daysUntilMonday = 7;
-        var nextMonday = today.AddDays(daysUntilMonday);
+        var nextMonday = GetNextMonday();
         var nextWeekItem = new MenuItem { Header = Loc.ThisWeek };
         nextWeekItem.Click += (s, _) => SetDueDate(nextMonday);
         menu.Items.Add(nextWeekItem);
