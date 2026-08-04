@@ -1,5 +1,6 @@
 using System.Windows;
 using Microsoft.Win32;
+using ToDo.Services;
 
 namespace ToDo.Views.Dialogs;
 
@@ -18,9 +19,9 @@ public partial class DbPathDialog : Window
     {
         var dialog = new SaveFileDialog
         {
-            Title = "Select database file",
+            Title = Loc.SelectDbFile,
             FileName = "todo.db",
-            Filter = "Database files (*.db)|*.db|All files (*.*)|*.*",
+            Filter = Loc.DbFileFilter,
             DefaultExt = "db"
         };
         if (dialog.ShowDialog() == true)
@@ -34,7 +35,7 @@ public partial class DbPathDialog : Window
         var path = PathBox.Text.Trim();
         if (string.IsNullOrEmpty(path))
         {
-            MessageBox.Show("Please enter a valid path.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(Loc.InvalidPathMsg, Loc.Error, MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
         ResultPath = path;
