@@ -1100,7 +1100,7 @@ public partial class MainWindow : Window
         if (task.Reminder != null)
         {
             var rdt = DateTimeOffset.FromUnixTimeMilliseconds(task.Reminder.Value).LocalDateTime;
-            ReminderLabel.Text = rdt.ToString("MMM d, HH:mm");
+            ReminderLabel.Text = Loc.ReminderTime(rdt);
         }
         else
         {
@@ -1113,7 +1113,7 @@ public partial class MainWindow : Window
             var dt = DateTimeOffset.FromUnixTimeMilliseconds(task.DueDate.Value).LocalDateTime;
             DueDateLabel.Text = dt.Date == DateTime.Today ? Loc.Today
                 : dt.Date == DateTime.Today.AddDays(1) ? Loc.Tomorrow
-                : dt.ToString("MMM d");
+                : Loc.ShortDate(dt);
         }
         else
         {

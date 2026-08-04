@@ -114,4 +114,6 @@ public static class Loc
         Language == AppLanguage.Chinese ? $"{dt.Month}月{dt.Day}日" : dt.ToString("MMM d");
     public static string OverdueDate(DateTime dt) =>
         Language == AppLanguage.Chinese ? $"逾期 {dt.Month}月{dt.Day}日" : $"Overdue {dt:MMM d}";
+    public static string ReminderTime(DateTime dt) =>
+        Language == AppLanguage.Chinese ? $"{dt.Month}月{dt.Day}日 {dt:HH:mm}" : dt.ToString("MMM d, HH:mm");
 }
