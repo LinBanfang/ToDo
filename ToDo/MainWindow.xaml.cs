@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using ToDo.Models;
 using ToDo.Services;
 using ToDo.ViewModels;
@@ -13,7 +14,7 @@ public partial class MainWindow : Window
 {
     private MainViewModel ViewModel => (MainViewModel)DataContext;
     private bool _suppressDetailEvents;
-    private DateTime _lastDropTime = DateTime.MinValue;
+    private bool _suppressTaskClick;
     private Point _dragStartPoint;
 
     public MainWindow()
@@ -526,7 +527,7 @@ public partial class MainWindow : Window
 
     private void TaskRow_Drop(object sender, DragEventArgs e)
     {
-        _lastDropTime = DateTime.Now;
+        SuppressPendingTaskClick();
         if (sender is Border border && border.DataContext is TaskItem targetTask
             && e.Data.GetDataPresent(typeof(TaskItem)))
         {
@@ -588,7 +589,7 @@ public partial class MainWindow : Window
 
     private void GroupHeader_Drop(object sender, DragEventArgs e)
     {
-        _lastDropTime = DateTime.Now;
+        SuppressPendingTaskClick();
         if (sender is Border border)
         {
             border.Background = Brushes.Transparent;
@@ -624,7 +625,7 @@ public partial class MainWindow : Window
 
     private void GroupSection_Drop(object sender, DragEventArgs e)
     {
-        _lastDropTime = DateTime.Now;
+        SuppressPendingTaskClick();
         if (sender is Border border)
         {
             border.Background = Brushes.Transparent;
@@ -643,9 +644,16 @@ public partial class MainWindow : Window
     }
 
     // ─── Task Row Events ──────────────────────────────────
+    private void SuppressPendingTaskClick()
+    {
+        _suppressTaskClick = true;
+        // Clear after the pending mouse-up/click events have been dispatched
+        Dispatcher.BeginInvoke(DispatcherPriority.Input, () => _suppressTaskClick = false);
+    }
+
     private void TaskRow_Click(object sender, MouseButtonEventArgs e)
     {
-        if ((DateTime.Now - _lastDropTime).TotalMilliseconds < 500) return;
+        if (_suppressTaskClick) return;
         if (sender is Border border && border.DataContext is TaskItem task)
         {
             ViewModel.SelectedTask = task;
