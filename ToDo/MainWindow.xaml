@@ -201,7 +201,7 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="16" Margin="0,0,8,0"
+                                        <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="16" Margin="0,-2,8,0"
                                                    FontFamily="Segoe UI Emoji" VerticalAlignment="Center"/>
                                         <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="14"
                                                    VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
@@ -279,7 +279,7 @@
                                                             <ColumnDefinition Width="*"/>
                                                             <ColumnDefinition Width="Auto"/>
                                                         </Grid.ColumnDefinitions>
-                                                        <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="14" FontFamily="Segoe UI Emoji" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                        <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="14" FontFamily="Segoe UI Emoji" VerticalAlignment="Center" Margin="0,-2,6,0"/>
                                                         <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="14" VerticalAlignment="Center"
                                                                    MouseLeftButtonDown="SidebarListName_DoubleClick"
                                                                    Visibility="{Binding IsRenaming, Converter={StaticResource InverseBool}}"/>
@@ -319,7 +319,7 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="16"
                                                    FontFamily="Segoe UI Emoji"
-                                                   VerticalAlignment="Center" Margin="0,0,8,0">
+                                                   VerticalAlignment="Center" Margin="0,-2,8,0">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
                                                     <Style.Triggers>
@@ -421,7 +421,7 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <!-- Header icon: emoji (list) or search icon, clickable for custom lists -->
                         <Button x:Name="EmojiBtn" Cursor="Hand" Click="ListEmoji_Click"
-                                VerticalAlignment="Center" Margin="0,0,12,0">
+                                VerticalAlignment="Center" Margin="0,-2,12,0">
                             <Button.Template>
                                 <!-- Left-align the emoji like the system-list icon; the button
                                      sizes to its content so there is no centering gap -->
@@ -450,7 +450,7 @@
                             </Button.Content>
                         </Button>
                         <!-- Read-only icon: system list or searching -->
-                        <TextBlock VerticalAlignment="Center" Margin="0,0,12,0">
+                        <TextBlock VerticalAlignment="Center" Margin="0,-2,12,0">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Visibility" Value="Collapsed"/>
