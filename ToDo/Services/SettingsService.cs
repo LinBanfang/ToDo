@@ -29,6 +29,14 @@ public static class SettingsService
     public static string DefaultDbPath => Path.Combine(SettingsDir, "todo.db");
 
     private static AppSettings? _current;
+
+    /// <summary>Auto-update feeds written on first launch and used when settings has none.</summary>
+    public static List<UpdateSourceSetting> DefaultUpdateSources { get; } = new()
+    {
+        new() { Type = "github", Url = "https://api.github.com/repos/LinBanfang/ToDo/releases/latest" },
+        new() { Type = "gitee", Url = "https://gitee.com/api/v5/repos/wu-bin-921/ToDo/releases/latest" },
+    };
+
     public static AppSettings Current
     {
         get
@@ -57,6 +65,13 @@ public static class SettingsService
 
         if (string.IsNullOrEmpty(_current.DbPath))
             _current.DbPath = DefaultDbPath;
+
+        // First launch: create the settings file with the default update sources
+        if (!File.Exists(SettingsFile))
+        {
+            _current.UpdateSources = new List<UpdateSourceSetting>(DefaultUpdateSources);
+            Save();
+        }
     }
 
     public static void Save()
