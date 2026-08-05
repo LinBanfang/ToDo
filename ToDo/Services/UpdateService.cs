@@ -24,23 +24,17 @@ public sealed class UpdateSource
 /// </summary>
 public static class UpdateService
 {
-    // Default feed used when settings.json has no UpdateSources configured.
-    private static readonly UpdateSource[] DefaultSources =
-    {
-        new() { Type = "github", Url = "https://api.github.com/repos/LinBanfang/ToDo/releases/latest" },
-    };
-
-    private static UpdateSource[] _sources = DefaultSources;
+    private static UpdateSource[] _sources = Array.Empty<UpdateSource>();
     private static string? _latestReleaseBody;
 
     public static void Configure()
     {
         // Update feeds come from settings.json (UpdateSources), tried in order;
-        // an empty list falls back to the default GitHub feed.
+        // an empty list falls back to the default GitHub + Gitee feeds.
         var configured = SettingsService.Current.UpdateSources;
-        _sources = configured is { Count: > 0 }
-            ? configured.Select(s => new UpdateSource { Type = s.Type, Url = s.Url }).ToArray()
-            : DefaultSources;
+        _sources = (configured is { Count: > 0 } ? configured : SettingsService.DefaultUpdateSources)
+            .Select(s => new UpdateSource { Type = s.Type, Url = s.Url })
+            .ToArray();
 
         AutoUpdater.InstalledVersion = typeof(UpdateService).Assembly.GetName().Version;
         AutoUpdater.PersistenceProvider = new JsonFilePersistenceProvider(
