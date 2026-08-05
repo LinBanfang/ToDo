@@ -50,21 +50,19 @@ jobs:
           $token = $env:GITEE_TOKEN
 
           # 1. Ensure the tag exists on Gitee (release creation requires it)
-          $tagBody = @{ tag_name = $tag; refs = 'master' } | ConvertTo-Json
           try {
-            Invoke-RestMethod -Method Post -Uri "$base/tags?access_token=$token" -ContentType 'application/json' -Body $tagBody -ErrorAction Stop | Out-Null
+            Invoke-RestMethod -Method Post -Uri "$base/tags?access_token=$token" -Body @{ tag_name = $tag; refs = 'master' } -ErrorAction Stop | Out-Null
             Write-Host "Created Gitee tag $tag"
           } catch {
-            Write-Host "Gitee tag $tag already exists or create failed: $($_.Exception.Message)"
+            Write-Host "Gitee tag $tag already exists or create failed: $($_.ErrorDetails.Message)"
           }
 
-          # 2. Create the release
-          $body = @{ tag_name = $tag; name = "Release $tag"; target_commitish = 'master' } | ConvertTo-Json
+          # 2. Create the release (Gitee expects form-encoded params, not a JSON body)
           try {
-            Invoke-RestMethod -Method Post -Uri "$base/releases?access_token=$token" -ContentType 'application/json' -Body $body -ErrorAction Stop | Out-Null
+            Invoke-RestMethod -Method Post -Uri "$base/releases?access_token=$token" -Body @{ tag_name = $tag; name = "Release $tag"; target_commitish = 'master' } -ErrorAction Stop | Out-Null
             Write-Host "Created Gitee release $tag"
           } catch {
-            Write-Host "Gitee release $tag already exists or create failed: $($_.Exception.Message)"
+            Write-Host "Gitee release $tag create failed: $($_.ErrorDetails.Message)"
           }
 
           # 3. Get the release id
