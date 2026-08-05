@@ -50,4 +50,6 @@ ToDo/
 ## 设计文档
 
 - 详细设计方案：[docs/design.md](docs/design.md)
+- 设置页设计：[docs/settings-page.md](docs/settings-page.md)
+- 诊断日志设计：[docs/logging.md](docs/logging.md)
 - 架构决策记录（ADR）：[docs/adr/](docs/adr/)
