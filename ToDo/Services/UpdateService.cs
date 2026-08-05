@@ -24,21 +24,24 @@ public sealed class UpdateSource
 /// </summary>
 public static class UpdateService
 {
-    // Tried in order; add/edit/remove sources here. For Gitee, mirror the repo first
-    // (github.com/LinBanfang/ToDo → gitee.com/yourname/ToDo) and put the tag + zip asset
-    // on the release. For a private server, host an AutoUpdater.NET appcast XML with
-    // <version>, <url> (absolute zip URL) and <changelog>.
-    private static readonly UpdateSource[] Sources =
+    // Default feed used when settings.json has no UpdateSources configured.
+    private static readonly UpdateSource[] DefaultSources =
     {
         new() { Type = "github", Url = "https://api.github.com/repos/LinBanfang/ToDo/releases/latest" },
-        new() { Type = "gitee", Url = "https://gitee.com/api/v5/repos/LinBanfang/ToDo/releases/latest" },
-        // new() { Type = "appcast", Url = "https://example.com/todo/appcast.xml" },
     };
 
+    private static UpdateSource[] _sources = DefaultSources;
     private static string? _latestReleaseBody;
 
     public static void Configure()
     {
+        // Update feeds come from settings.json (UpdateSources), tried in order;
+        // an empty list falls back to the default GitHub feed.
+        var configured = SettingsService.Current.UpdateSources;
+        _sources = configured is { Count: > 0 }
+            ? configured.Select(s => new UpdateSource { Type = s.Type, Url = s.Url }).ToArray()
+            : DefaultSources;
+
         AutoUpdater.InstalledVersion = typeof(UpdateService).Assembly.GetName().Version;
         AutoUpdater.PersistenceProvider = new JsonFilePersistenceProvider(
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ToDo", "updater.json"));
@@ -51,7 +54,7 @@ public static class UpdateService
 
     private static void ParseUpdateInfo(ParseUpdateInfoEventArgs args)
     {
-        foreach (var source in Sources)
+        foreach (var source in _sources)
         {
             try
             {
