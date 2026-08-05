@@ -130,4 +130,40 @@ public static class Loc
     public static string RemindLater => Language == AppLanguage.Chinese ? "以后再说" : "Remind me later";
     public static string SkipVersion => Language == AppLanguage.Chinese ? "跳过此版本" : "Skip this version";
     public static string UpdateDownloaded => Language == AppLanguage.Chinese ? "已下载到" : "Downloaded to";
+    public static string UpdateUpToDate => Language == AppLanguage.Chinese ? "已是最新版本" : "You're up to date";
+    public static string UpdateCheckFailed(string detail) =>
+        Language == AppLanguage.Chinese ? $"检查更新失败：{detail}" : $"Update check failed: {detail}";
+
+    // Settings page
+    public static string Settings => Language == AppLanguage.Chinese ? "设置" : "Settings";
+    public static string Back => Language == AppLanguage.Chinese ? "返回" : "Back";
+    public static string General => Language == AppLanguage.Chinese ? "常规" : "General";
+    public static string Appearance => Language == AppLanguage.Chinese ? "外观" : "Appearance";
+    public static string Data => Language == AppLanguage.Chinese ? "数据" : "Data";
+    public static string Updates => Language == AppLanguage.Chinese ? "更新" : "Updates";
+    public static string RemindersSection => Language == AppLanguage.Chinese ? "提醒" : "Reminders";
+    public static string LanguageName => Language == AppLanguage.Chinese ? "语言" : "Language";
+    public static string Theme => Language == AppLanguage.Chinese ? "主题" : "Theme";
+    public static string LightTheme => Language == AppLanguage.Chinese ? "浅色" : "Light";
+    public static string DarkTheme => Language == AppLanguage.Chinese ? "深色" : "Dark";
+    public static string RestartToApply => Language == AppLanguage.Chinese ? "重启后生效" : "Takes effect after restart";
+    public static string AppliesImmediately => Language == AppLanguage.Chinese ? "即时生效" : "Applies immediately";
+    public static string Change => Language == AppLanguage.Chinese ? "更改" : "Change";
+    public static string ExportBackup => Language == AppLanguage.Chinese ? "导出备份" : "Export backup";
+    public static string RestoreBackup => Language == AppLanguage.Chinese ? "从备份恢复" : "Restore from backup";
+    public static string BackupSaved(string path) =>
+        Language == AppLanguage.Chinese ? $"备份已导出到：{path}" : $"Backup exported to: {path}";
+    public static string RestoreStaged => Language == AppLanguage.Chinese
+        ? "备份已暂存，将在下次启动时替换当前数据。" : "Backup staged. It will replace the current data on next startup.";
+    public static string SelectBackupFile => Language == AppLanguage.Chinese ? "选择备份文件" : "Select backup file";
+    public static string BackupFileFilter => Language == AppLanguage.Chinese
+        ? "数据库备份 (*.db)|*.db|所有文件 (*.*)|*.*"
+        : "Database backup (*.db)|*.db|All files (*.*)|*.*";
+    public static string CheckForUpdatesOnStartup => Language == AppLanguage.Chinese ? "启动时检查更新" : "Check for updates on startup";
+    public static string UpdateSources => Language == AppLanguage.Chinese ? "更新源" : "Update sources";
+    public static string AddSource => Language == AppLanguage.Chinese ? "添加源" : "Add source";
+    public static string RemoveSource => Language == AppLanguage.Chinese ? "移除" : "Remove";
+    public static string CheckUpdatesNow => Language == AppLanguage.Chinese ? "立即检查更新" : "Check for updates now";
+    public static string EnableReminderNotifications => Language == AppLanguage.Chinese ? "启用提醒通知" : "Enable reminder notifications";
+    public static string PlayReminderSound => Language == AppLanguage.Chinese ? "播放提示音" : "Play reminder sound";
 }

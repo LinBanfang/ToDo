@@ -67,6 +67,18 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private TaskItem? _dateTimeTargetTask;
 
+    // ─── Settings page ────────────────────────────────────
+    [ObservableProperty]
+    private bool _isSettingsMode;
+
+    public SettingsViewModel Settings { get; }
+
+    partial void OnIsSettingsModeChanged(bool value)
+    {
+        // Hide the detail pane while the settings page covers the main area
+        if (value) SelectedTask = null;
+    }
+
     // ─── Grouped tasks for current list ──────────────────
     public ObservableCollection<GroupedTasks> GroupedTaskList { get; } = new();
     public bool IsCustomList => ActiveList?.Type == ListType.Custom && !IsSearching;
@@ -89,6 +101,7 @@ public partial class MainViewModel : ObservableObject
         _db = db;
         Theme = SettingsService.Current.Theme;
         SidebarWidth = new GridLength(Math.Max(SettingsService.Current.SidebarWidth, 180));
+        Settings = new SettingsViewModel();
         LoadAll();
         DailyMyDayReset();
     }
@@ -398,6 +411,8 @@ public partial class MainViewModel : ObservableObject
         // No need to reload Tasks: the in-place model keeps it current on every
         // mutation, so a list switch only needs the views rebuilt.
         RefreshActiveTasks();
+        // Selecting a sidebar list exits the settings page to show that list
+        IsSettingsMode = false;
     }
 
     partial void OnActiveListIdChanged(string? value)
@@ -862,6 +877,13 @@ public partial class MainViewModel : ObservableObject
         SettingsService.Save();
         ThemeService.Apply(Theme);
     }
+
+    // ─── Settings page ────────────────────────────────────
+    [RelayCommand]
+    private void OpenSettings() => IsSettingsMode = true;
+
+    [RelayCommand]
+    private void CloseSettings() => IsSettingsMode = false;
 }
 
 /// <summary>

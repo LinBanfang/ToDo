@@ -1,0 +1,171 @@
+<UserControl x:Class="ToDo.Views.SettingsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:ToDo.ViewModels"
+             xmlns:services="clr-namespace:ToDo.Services">
+    <UserControl.Resources>
+        <Style x:Key="SettingSectionHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextAccentBrush}"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+        <Style x:Key="SettingHint" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextDisabledBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="12,0,0,0"/>
+        </Style>
+
+        <!-- ═════ 常规 ═════ -->
+        <DataTemplate DataType="{x:Type vm:GeneralSection}">
+            <StackPanel Margin="0,4">
+                <TextBlock Style="{StaticResource SettingSectionHeader}" Text="{x:Static services:Loc.LanguageName}"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ComboBox Grid.Column="0" Style="{StaticResource FluentComboBox}" Width="150"
+                              SelectedValue="{Binding Language}" SelectedValuePath="Tag">
+                        <ComboBoxItem Content="中文" Tag="Chinese"/>
+                        <ComboBoxItem Content="English" Tag="English"/>
+                    </ComboBox>
+                    <TextBlock Grid.Column="1" Style="{StaticResource SettingHint}" Text="{Binding LanguageHint}"/>
+                </Grid>
+                <Button Content="{x:Static services:Loc.ManageTags}" Style="{StaticResource FluentButton}"
+                        Click="ManageTags_Click"
+                        Padding="14,6" HorizontalAlignment="Left" Margin="0,20,0,0"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- ═════ 外观 ═════ -->
+        <DataTemplate DataType="{x:Type vm:AppearanceSection}">
+            <StackPanel Margin="0,4">
+                <TextBlock Style="{StaticResource SettingSectionHeader}" Text="{x:Static services:Loc.Theme}"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ComboBox Grid.Column="0" Style="{StaticResource FluentComboBox}" Width="150"
+                              SelectedValue="{Binding Theme}" SelectedValuePath="Tag">
+                        <ComboBoxItem Content="{x:Static services:Loc.LightTheme}" Tag="Light"/>
+                        <ComboBoxItem Content="{x:Static services:Loc.DarkTheme}" Tag="Dark"/>
+                    </ComboBox>
+                    <TextBlock Grid.Column="1" Style="{StaticResource SettingHint}"
+                               Text="{x:Static services:Loc.AppliesImmediately}"/>
+                </Grid>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- ═════ 数据 ═════ -->
+        <DataTemplate DataType="{x:Type vm:DataSection}">
+            <StackPanel Margin="0,4">
+                <TextBlock Style="{StaticResource SettingSectionHeader}" Text="{x:Static services:Loc.DbPathTitle}"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" FontSize="13" VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"
+                               Text="{Binding DbPath}"/>
+                    <Button Grid.Column="1" Content="{x:Static services:Loc.Change}" Style="{StaticResource FluentButton}"
+                            Command="{Binding ChangeDbPathCommand}" Padding="14,6" Margin="12,0,0,0"/>
+                </Grid>
+                <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                    <Button Content="{x:Static services:Loc.ExportBackup}" Style="{StaticResource FluentButton}"
+                            Command="{Binding ExportBackupCommand}" Padding="14,6" Margin="0,0,8,0"/>
+                    <Button Content="{x:Static services:Loc.RestoreBackup}" Style="{StaticResource FluentButton}"
+                            Command="{Binding RestoreBackupCommand}" Padding="14,6"/>
+                </StackPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- ═════ 更新 ═════ -->
+        <DataTemplate DataType="{x:Type vm:UpdateSection}">
+            <StackPanel Margin="0,4">
+                <CheckBox Style="{StaticResource FluentCheckBox}" Content="{x:Static services:Loc.CheckForUpdatesOnStartup}"
+                          IsChecked="{Binding CheckForUpdatesOnStartup}"/>
+                <TextBlock Style="{StaticResource SettingSectionHeader}" Margin="0,20,0,8"
+                           Text="{x:Static services:Loc.UpdateSources}"/>
+                <ItemsControl ItemsSource="{Binding UpdateSources}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:UpdateSourceRow}">
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <ComboBox Grid.Column="0" Style="{StaticResource FluentComboBox}" Width="110"
+                                          SelectedValue="{Binding Type}" SelectedValuePath="Tag">
+                                    <ComboBoxItem Content="GitHub" Tag="github"/>
+                                    <ComboBoxItem Content="Gitee" Tag="gitee"/>
+                                    <ComboBoxItem Content="Appcast" Tag="appcast"/>
+                                </ComboBox>
+                                <TextBox Grid.Column="1" Style="{StaticResource FluentTextBox}"
+                                         Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}" Margin="8,0"/>
+                                <Button Grid.Column="2" Content="&#xE711;" FontFamily="Segoe MDL2 Assets"
+                                        Style="{StaticResource FluentSubtleButton}" FontSize="14" Padding="8,6"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        ToolTip="{x:Static services:Loc.RemoveSource}"
+                                        Command="{Binding DataContext.RemoveSourceCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <Button Content="{x:Static services:Loc.AddSource}" Style="{StaticResource FluentButton}"
+                            Command="{Binding AddSourceCommand}" Padding="14,6" Margin="0,0,8,0"/>
+                    <Button Content="{x:Static services:Loc.CheckUpdatesNow}" Style="{StaticResource FluentAccentButton}"
+                            Command="{Binding CheckNowCommand}" Padding="14,6"
+                            AutomationProperties.AutomationId="CheckUpdatesNow"/>
+                </StackPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- ═════ 提醒 ═════ -->
+        <DataTemplate DataType="{x:Type vm:ReminderSection}">
+            <StackPanel Margin="0,4">
+                <CheckBox Style="{StaticResource FluentCheckBox}" Content="{x:Static services:Loc.EnableReminderNotifications}"
+                          IsChecked="{Binding ReminderNotifications}" Margin="0,0,0,10"/>
+                <CheckBox Style="{StaticResource FluentCheckBox}" Content="{x:Static services:Loc.PlayReminderSound}"
+                          IsChecked="{Binding ReminderSound}"/>
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Nav -->
+        <ListBox Grid.Column="0" ItemsSource="{Binding Sections}" SelectedItem="{Binding SelectedSection}"
+                 BorderThickness="0" Background="Transparent"
+                 FocusVisualStyle="{x:Null}"
+                 AutomationProperties.AutomationId="SettingsNav">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem" BasedOn="{StaticResource SidebarNavItem}">
+                    <Setter Property="AutomationProperties.Name" Value="{Binding Title}"/>
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:SettingsSection}">
+                    <TextBlock Text="{Binding Title}" FontSize="14"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- Right content: non-focusable so clicking blank space doesn't grab focus
+             and paint the default dashed focus rectangle over the whole region -->
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto"
+                      Focusable="False" FocusVisualStyle="{x:Null}">
+            <ContentControl Content="{Binding SelectedSection}" Margin="0,4,16,0" Focusable="False"/>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

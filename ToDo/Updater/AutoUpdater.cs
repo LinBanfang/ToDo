@@ -386,6 +386,22 @@ public static class AutoUpdater
         }
     }
 
+    /// <summary>
+    /// Cancel any pending "remind me later" state — both the in-memory timer and
+    /// the persisted date — so a manual check can run immediately instead of being
+    /// skipped by the <c>Running || _remindLaterTimer != null</c> guard in <see cref="Start(Assembly)"/>.
+    /// </summary>
+    public static void CancelRemindLater()
+    {
+        if (_remindLaterTimer != null)
+        {
+            _remindLaterTimer.Stop();
+            _remindLaterTimer.Close();
+            _remindLaterTimer = null;
+        }
+        PersistenceProvider?.SetRemindLater(null);
+    }
+
     private static object CheckUpdate(Assembly mainAssembly)
     {
         var companyAttribute =
