@@ -53,3 +53,7 @@ ToDo/
 - 设置页设计：[docs/settings-page.md](docs/settings-page.md)
 - 诊断日志设计：[docs/logging.md](docs/logging.md)
 - 架构决策记录（ADR）：[docs/adr/](docs/adr/)
+
+## 许可
+
+本项目基于 MIT 许可开源，详见 [LICENSE](LICENSE)。

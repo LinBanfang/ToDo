@@ -176,4 +176,11 @@ public static class Loc
     public static string Apply => Language == AppLanguage.Chinese ? "应用" : "Apply";
     public static string MoreColors => Language == AppLanguage.Chinese ? "更多颜色…" : "More colors…";
     public static string PlayReminderSound => Language == AppLanguage.Chinese ? "播放提示音" : "Play reminder sound";
+    public static string About => Language == AppLanguage.Chinese ? "关于" : "About";
+    public static string VersionLabel => Language == AppLanguage.Chinese ? "版本" : "Version";
+    public static string AppDescription => Language == AppLanguage.Chinese
+        ? "一款 Fluent Design 风格的待办事项桌面应用"
+        : "A Fluent Design-style todo desktop app";
+    public static string Homepage => Language == AppLanguage.Chinese ? "项目主页" : "Homepage";
+    public static string ThirdPartyLicenses => Language == AppLanguage.Chinese ? "第三方组件许可" : "Third-party licenses";
 }

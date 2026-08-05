@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -26,6 +28,7 @@ public partial class SettingsViewModel : ObservableObject
         Sections.Add(new DataSection { Key = "data", Title = Loc.Data });
         Sections.Add(new UpdateSection { Key = "update", Title = Loc.Updates });
         Sections.Add(new ReminderSection { Key = "reminder", Title = Loc.RemindersSection });
+        Sections.Add(new AboutSection { Key = "about", Title = Loc.About });
         SelectedSection = Sections[0];
     }
 }
@@ -288,5 +291,40 @@ public sealed class ReminderSection : SettingsSection
     {
         _notifications = SettingsService.Current.ReminderNotifications;
         _sound = SettingsService.Current.ReminderSound;
+    }
+}
+
+/// <summary>关于：应用名称、版本、简介、项目主页与第三方组件许可。</summary>
+public sealed class AboutSection : SettingsSection
+{
+    public string Version { get; }
+    public string VersionText => $"{Loc.VersionLabel} {Version}";
+    public string Copyright => "© 2026 LinBanfang · MIT License";
+    public string GitHubUrl => "https://github.com/LinBanfang/ToDo";
+    public string GiteeUrl => "https://gitee.com/wu-bin-921/ToDo";
+    public ImageSource? Icon { get; } = LoadAppIcon();
+
+    public AboutSection()
+    {
+        // 从程序集读取版本（1.0.13.0 → 1.0.13），避免与 csproj 版本号脱节
+        var v = typeof(AboutSection).Assembly.GetName().Version;
+        Version = v == null ? "0.0.0" : v.ToString(3);
+    }
+
+    /// <summary>加载应用图标并取最大帧，保证 48px 显示在高 DPI 下依然清晰。</summary>
+    private static ImageSource? LoadAppIcon()
+    {
+        try
+        {
+            var decoder = new IconBitmapDecoder(
+                new Uri("pack://application:,,,/Resources/app.ico"),
+                BitmapCreateOptions.PreservePixelFormat,
+                BitmapCacheOption.OnLoad);
+            return decoder.Frames.OrderByDescending(f => f.PixelWidth * f.PixelHeight).FirstOrDefault();
+        }
+        catch
+        {
+            return null; // 图标加载失败不应影响设置页
+        }
     }
 }
