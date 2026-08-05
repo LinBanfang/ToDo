@@ -102,11 +102,12 @@ public class CloseModeToBrushConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
+        // Use the theme's semantic brushes so the colors work on both themes
         if (value is CloseMode mode)
             return mode == CloseMode.Complete
-                ? new SolidColorBrush(Color.FromRgb(0x10, 0x7C, 0x10))
-                : new SolidColorBrush(Color.FromRgb(0x79, 0x77, 0x75));
-        return new SolidColorBrush(Colors.Gray);
+                ? (Brush)System.Windows.Application.Current.FindResource("AccentGreenBrush")
+                : (Brush)System.Windows.Application.Current.FindResource("TextDisabledBrush");
+        return (Brush)System.Windows.Application.Current.FindResource("TextDisabledBrush");
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -166,9 +167,9 @@ public class DueDateToBrushConverter : IValueConverter
         {
             var dt = DateTimeOffset.FromUnixTimeMilliseconds(ts).LocalDateTime;
             if (dt.Date < DateTime.Today)
-                return new SolidColorBrush(Color.FromRgb(0xC4, 0x2B, 0x1C));
+                return (Brush)System.Windows.Application.Current.FindResource("AccentRedBrush");
         }
-        return new SolidColorBrush(Color.FromRgb(0x60, 0x5E, 0x5C));
+        return (Brush)System.Windows.Application.Current.FindResource("TextSecondaryBrush");
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
