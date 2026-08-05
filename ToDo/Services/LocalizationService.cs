@@ -126,7 +126,7 @@ public static class Loc
     public static string AddDueDate => Language == AppLanguage.Chinese ? "添加截止日期" : "Add due date";
     public static string AddReminder => Language == AppLanguage.Chinese ? "添加提醒" : "Add reminder";
     public static string UpdateAvailable => Language == AppLanguage.Chinese ? "发现新版本" : "Update available";
-    public static string DownloadUpdate => Language == AppLanguage.Chinese ? "下载更新" : "Download update";
+    public static string DownloadUpdate => Language == AppLanguage.Chinese ? "立即更新" : "Update now";
     public static string RemindLater => Language == AppLanguage.Chinese ? "以后再说" : "Remind me later";
     public static string SkipVersion => Language == AppLanguage.Chinese ? "跳过此版本" : "Skip this version";
     public static string UpdateDownloaded => Language == AppLanguage.Chinese ? "已下载到" : "Downloaded to";
