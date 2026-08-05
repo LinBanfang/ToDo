@@ -1,4 +1,7 @@
 #nullable disable
+// Vendored AutoUpdater.NET: keeps the obsolete ServicePointManager/WebClient calls
+// for behavior parity with the upstream library (no-ops on .NET 9, harmless).
+#pragma warning disable SYSLIB0014
 using System;
 using System.ComponentModel;
 using System.Diagnostics;

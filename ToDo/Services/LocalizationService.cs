@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace ToDo.Services;
@@ -112,16 +113,18 @@ public static class Loc
     public static string MinutesAgo(int n) => Language == AppLanguage.Chinese ? $"{n} 分钟前" : $"{n}m ago";
     public static string HoursAgo(int n) => Language == AppLanguage.Chinese ? $"{n} 小时前" : $"{n}h ago";
     public static string DaysAgo(int n) => Language == AppLanguage.Chinese ? $"{n} 天前" : $"{n}d ago";
+    // English date strings use InvariantCulture so they stay English regardless of
+    // the OS culture (a zh-CN system must not render "Mar 5, 2024" as "3月 5, 2024").
     public static string RelativeDate(DateTime dt) =>
-        Language == AppLanguage.Chinese ? $"{dt.Year}年{dt.Month}月{dt.Day}日" : dt.ToString("MMM d, yyyy");
+        Language == AppLanguage.Chinese ? $"{dt.Year}年{dt.Month}月{dt.Day}日" : dt.ToString("MMM d, yyyy", CultureInfo.InvariantCulture);
 
     // Short date (DueDateToStringConverter)
     public static string ShortDate(DateTime dt) =>
-        Language == AppLanguage.Chinese ? $"{dt.Month}月{dt.Day}日" : dt.ToString("MMM d");
+        Language == AppLanguage.Chinese ? $"{dt.Month}月{dt.Day}日" : dt.ToString("MMM d", CultureInfo.InvariantCulture);
     public static string OverdueDate(DateTime dt) =>
         Language == AppLanguage.Chinese ? $"逾期 {dt.Month}月{dt.Day}日" : $"Overdue {dt:MMM d}";
     public static string ReminderTime(DateTime dt) =>
-        Language == AppLanguage.Chinese ? $"{dt.Month}月{dt.Day}日 {dt:HH:mm}" : dt.ToString("MMM d, HH:mm");
+        Language == AppLanguage.Chinese ? $"{dt.Month}月{dt.Day}日 {dt:HH:mm}" : dt.ToString("MMM d, HH:mm", CultureInfo.InvariantCulture);
     public static string Reminder => Language == AppLanguage.Chinese ? "提醒" : "Reminder";
     public static string AddDueDate => Language == AppLanguage.Chinese ? "添加截止日期" : "Add due date";
     public static string AddReminder => Language == AppLanguage.Chinese ? "添加提醒" : "Add reminder";
