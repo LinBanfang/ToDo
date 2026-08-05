@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using ToDo.Services;
 using ToDo.ViewModels;
@@ -14,11 +15,16 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        // Swap in a restored backup before the database is opened
+        RestorePendingDatabase();
+
         Database = new DatabaseService();
         ViewModel = new MainViewModel(Database);
         Reminders = new ReminderService(Database);
 
-        // Apply the persisted theme before the first window loads
+        // Apply the persisted language + theme before the first window loads
+        Loc.SetLanguage(SettingsService.Current.Language == "English"
+            ? AppLanguage.English : AppLanguage.Chinese);
         ThemeService.Apply(ViewModel.Theme);
 
         var mainWindow = new MainWindow { DataContext = ViewModel };
@@ -27,8 +33,26 @@ public partial class App : Application
         mainWindow.Show();
 
         UpdateService.Configure();
-        Dispatcher.BeginInvoke(() => UpdateService.CheckForUpdates(),
-            System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        if (SettingsService.Current.CheckForUpdatesOnStartup)
+        {
+            Dispatcher.BeginInvoke(() => UpdateService.CheckForUpdates(),
+                System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        }
+    }
+
+    /// <summary>Applies a pending "restore from backup" staged by the settings page.</summary>
+    private static void RestorePendingDatabase()
+    {
+        var pending = SettingsService.Current.PendingRestorePath;
+        if (string.IsNullOrEmpty(pending) || !File.Exists(pending)) return;
+
+        var dbPath = SettingsService.Current.DbPath;
+        Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
+        File.Copy(pending, dbPath, overwrite: true);
+        File.Delete(pending);
+
+        SettingsService.Current.PendingRestorePath = null;
+        SettingsService.Save();
     }
 
     protected override void OnExit(ExitEventArgs e)

@@ -26,15 +26,11 @@ public static class UpdateService
 {
     private static UpdateSource[] _sources = Array.Empty<UpdateSource>();
     private static string? _latestReleaseBody;
+    private static bool _manualCheck;
 
     public static void Configure()
     {
-        // Update feeds come from settings.json (UpdateSources), tried in order;
-        // an empty list falls back to the default GitHub + Gitee feeds.
-        var configured = SettingsService.Current.UpdateSources;
-        _sources = (configured is { Count: > 0 } ? configured : SettingsService.DefaultUpdateSources)
-            .Select(s => new UpdateSource { Type = s.Type, Url = s.Url })
-            .ToArray();
+        RefreshSources();
 
         AutoUpdater.InstalledVersion = typeof(UpdateService).Assembly.GetName().Version;
         AutoUpdater.PersistenceProvider = new JsonFilePersistenceProvider(
@@ -44,7 +40,35 @@ public static class UpdateService
             Application.Current?.Dispatcher.Invoke(() => OnUpdateChecked(args));
     }
 
-    public static void CheckForUpdates() => AutoUpdater.Start();
+    /// <summary>Re-reads update sources from settings so edits apply to the next check.</summary>
+    public static void RefreshSources()
+    {
+        // Update feeds come from settings.json (UpdateSources), tried in order;
+        // an empty list falls back to the default GitHub + Gitee feeds.
+        var configured = SettingsService.Current.UpdateSources;
+        _sources = (configured is { Count: > 0 } ? configured : SettingsService.DefaultUpdateSources)
+            .Select(s => new UpdateSource { Type = s.Type, Url = s.Url })
+            .ToArray();
+    }
+
+    public static void CheckForUpdates()
+    {
+        RefreshSources();
+        AutoUpdater.Start();
+    }
+
+    /// <summary>
+    /// Manual check from the settings page: bypasses the "remind later" delay and
+    /// surfaces the outcome (up to date / failed / update dialog) to the user.
+    /// </summary>
+    public static void CheckForUpdatesNow()
+    {
+        AutoUpdater.CancelRemindLater();
+        AutoUpdater.Running = false; // a lingering background check must not swallow this
+        _manualCheck = true;
+        RefreshSources();
+        AutoUpdater.Start();
+    }
 
     private static void ParseUpdateInfo(ParseUpdateInfoEventArgs args)
     {
@@ -139,9 +163,31 @@ public static class UpdateService
 
     private static void OnUpdateChecked(UpdateInfoEventArgs args)
     {
-        if (args.Error != null || !args.IsUpdateAvailable) return;
         var owner = Application.Current?.MainWindow;
-        if (owner == null) return;
+        if (owner == null) { _manualCheck = false; return; }
+
+        // Manual checks from the settings page report the outcome; background checks stay silent
+        if (_manualCheck)
+        {
+            _manualCheck = false;
+            if (args.Error != null)
+            {
+                MessageBox.Show(Loc.UpdateCheckFailed(args.Error.Message),
+                    Loc.Updates, MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (!args.IsUpdateAvailable)
+            {
+                MessageBox.Show(Loc.UpdateUpToDate, Loc.Updates,
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+        }
+        else if (args.Error != null || !args.IsUpdateAvailable)
+        {
+            return;
+        }
+
         var dialog = new Views.Dialogs.UpdateDialog(args, _latestReleaseBody) { Owner = owner };
         dialog.ShowDialog();
     }

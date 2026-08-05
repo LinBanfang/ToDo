@@ -73,8 +73,11 @@ public class ReminderService : IDisposable
             var key = $"{t.Id}|{t.Reminder}";
             if (_fired.Add(key))
             {
-                _trayIcon.ShowBalloonTip(5000, Loc.Reminder, t.Title, ToolTipIcon.Info);
-                SystemSounds.Exclamation.Play();
+                // Respect the settings toggles on each poll so changes apply live
+                if (SettingsService.Current.ReminderNotifications)
+                    _trayIcon.ShowBalloonTip(5000, Loc.Reminder, t.Title, ToolTipIcon.Info);
+                if (SettingsService.Current.ReminderSound)
+                    SystemSounds.Exclamation.Play();
             }
         }
     }

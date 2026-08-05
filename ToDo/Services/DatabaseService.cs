@@ -111,6 +111,14 @@ public class DatabaseService : IDisposable
         return configured;
     }
 
+    /// <summary>Flushes LiteDB's journal then copies the database file to <paramref name="destPath"/>.</summary>
+    public void ExportTo(string destPath)
+    {
+        _db.Checkpoint();
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+        File.Copy(_dbPath, destPath, overwrite: true);
+    }
+
     public void Dispose()
     {
         _db?.Dispose();

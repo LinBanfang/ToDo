@@ -6,6 +6,7 @@
         xmlns:models="clr-namespace:ToDo.Models"
         xmlns:vm="clr-namespace:ToDo.ViewModels"
         xmlns:services="clr-namespace:ToDo.Services"
+        xmlns:views="clr-namespace:ToDo.Views"
         mc:Ignorable="d"
         Title="{x:Static services:Loc.AppTitle}"
         Height="720" Width="1200"
@@ -390,31 +391,18 @@
                     </Grid>
                 </Border>
 
-                <!-- Footer -->
+                <!-- Footer: the settings gear opens the in-app settings page -->
                 <Border Grid.Row="3" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
                         Padding="14,10">
                     <StackPanel Orientation="Horizontal">
                         <Button Content="&#xE713;" FontFamily="Segoe MDL2 Assets"
-                                Style="{StaticResource FluentSubtleButton}" FontSize="14"
-                                Width="28" Height="24" Padding="0"
-                                Click="TagManage_Click"
-                                Foreground="{DynamicResource TextSecondaryBrush}"
-                                ToolTip="{x:Static services:Loc.ManageTags}"/>
-                        <Button Content="&#xE706;" FontFamily="Segoe MDL2 Assets"
                                 Style="{StaticResource FluentSubtleButton}" FontSize="16"
-                                Command="{Binding ToggleThemeCommand}"
-                                Foreground="{DynamicResource TextSecondaryBrush}"/>
-                        <Button Content="&#xE8F1;" FontFamily="Segoe MDL2 Assets"
-                                Style="{StaticResource FluentSubtleButton}" FontSize="16"
-                                Click="LanguageToggle_Click"
-                                Foreground="{DynamicResource TextSecondaryBrush}"
-                                ToolTip="中/EN"/>
-                        <Button Content="&#xE753;" FontFamily="Segoe MDL2 Assets"
-                                Style="{StaticResource FluentSubtleButton}" FontSize="14"
                                 Width="28" Height="24" Padding="0"
-                                Click="DbPath_Click"
+                                Command="{Binding OpenSettingsCommand}"
                                 Foreground="{DynamicResource TextSecondaryBrush}"
-                                ToolTip="{Binding DbPath}"/>
+                                AutomationProperties.AutomationId="OpenSettings"
+                                AutomationProperties.Name="{x:Static services:Loc.Settings}"
+                                ToolTip="{x:Static services:Loc.Settings}"/>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -426,7 +414,7 @@
                       ResizeBehavior="PreviousAndNext" Cursor="SizeWE" ShowsPreview="True"/>
 
         <!-- ═══════════════ MAIN CONTENT (Column 2) ═══════════════ -->
-        <Grid Grid.Column="2">
+        <Grid Grid.Column="2" Visibility="{Binding IsSettingsMode, Converter={StaticResource InverseBoolToVis}}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
@@ -696,6 +684,32 @@
                              KeyDown="AddTaskBox_KeyDown"/>
                 </Grid>
             </Border>
+        </Grid>
+
+        <!-- ═══════════════ SETTINGS PAGE (Column 2 overlay) ═══════════════ -->
+        <Grid Grid.Column="2" Visibility="{Binding IsSettingsMode, Converter={StaticResource BoolToVis}}"
+              AutomationProperties.AutomationId="SettingsHost">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0" Margin="20,12,20,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Content="&#xE72B;" FontFamily="Segoe MDL2 Assets"
+                        Style="{StaticResource FluentSubtleButton}" FontSize="18"
+                        Padding="8,6" Command="{Binding CloseSettingsCommand}"
+                        AutomationProperties.AutomationId="CloseSettings"
+                        AutomationProperties.Name="{x:Static services:Loc.Back}"
+                        ToolTip="{x:Static services:Loc.Back}"
+                        Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <TextBlock Grid.Column="1" Text="{x:Static services:Loc.Settings}" FontSize="22"
+                           FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
+                           VerticalAlignment="Center" Margin="12,0,0,0"/>
+            </Grid>
+            <views:SettingsPage Grid.Row="1" DataContext="{Binding Settings}"/>
         </Grid>
 
         <!-- ═══════════════ TASK DETAIL PANE (Column 2) ═══════════════ -->

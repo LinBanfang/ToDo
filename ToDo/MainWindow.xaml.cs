@@ -43,24 +43,6 @@ public partial class MainWindow : Window
         ViewModel.SearchQuery = "";
     }
 
-    private void DbPath_Click(object sender, RoutedEventArgs e)
-    {
-        var currentPath = App.Database!.StoragePath;
-        var dialog = new Views.Dialogs.DbPathDialog(currentPath) { Owner = this };
-        if (dialog.ShowDialog() == true && dialog.ResultPath != currentPath)
-        {
-            try
-            {
-                SettingsService.SetDbPath(dialog.ResultPath);
-                MessageBox.Show(Loc.DbPathChanged, "To Do", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-    }
-
     private void NewListGroup_Click(object sender, RoutedEventArgs e)
     {
         ViewModel.CreateListGroupCommand.Execute("New group");
@@ -373,12 +355,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void TagManage_Click(object sender, RoutedEventArgs e)
-    {
-        var dialog = new TagManageDialog { Owner = this };
-        dialog.ShowDialog();
-    }
-
     // ─── List Header: emoji + rename ─────────────────────
     private void ListEmoji_Click(object sender, RoutedEventArgs e)
     {
@@ -476,15 +452,6 @@ public partial class MainWindow : Window
     private void NewGroup_Click(object sender, RoutedEventArgs e)
     {
         ViewModel.CreateGroupCommand.Execute(Loc.NewGroup);
-    }
-
-    private void LanguageToggle_Click(object sender, RoutedEventArgs e)
-    {
-        Loc.Toggle();
-        // Restart window to apply language
-        var newWindow = new MainWindow();
-        newWindow.Show();
-        Close();
     }
 
     private bool _suppressGroupHeaderToggle;

@@ -202,19 +202,22 @@ MainViewModel
 │ ──────── │  ┌ 分组2       [+] ┐ │             │
 │ 新建列表 │  │  (折叠)         │ │             │
 │ ──────── │  └────────────────┘ │             │
-│ ⚙ 🌐 🎨 │  已完成 (3)          │  删除按钮    │
+│ ⚙        │  已完成 (3)          │  删除按钮    │
 └──────────┴──────────────────────┴─────────────┘
 ```
+
+设置模式下主内容区被 `SettingsPage` 覆盖（左导航 + 右内容，5 节），详情面板隐藏。
 
 ### 5.2 组件树
 
 - **ShellLayout** — CSS Grid 四栏（侧边栏 + GridSplitter + 主内容 + 详情面板）；侧边栏宽度通过 `GridSplitter` 拖动调整，TwoWay 绑定 `MainViewModel.SidebarWidth`，持久化到 settings.json（180–480px 范围）
-  - **Sidebar** — 搜索 + 系统列表 + 分割线 + 自定义列表 + 新建输入框 + 底部按钮
-  - **MainContent** — 列表标题(emoji+可编辑名称) + AddTaskInput + 任务区
+  - **Sidebar** — 搜索 + 系统列表 + 分割线 + 自定义列表 + 新建输入框 + 底部按钮（设置齿轮，`OpenSettingsCommand`）
+  - **MainContent** — 列表标题(emoji+可编辑名称) + AddTaskInput + 任务区；`IsSettingsMode` 时被 **SettingsPage** 覆盖
     - 自定义列表：GroupedTaskList（含未分组伪分组）+ 分组标题(可折叠/重命名) + 任务行
     - 系统列表：平铺 ActiveTasks
     - 已完成区：CompletedTasks
-  - **TaskDetailPane** — 标题 + 截止日期菜单 + 步骤 + 标签 + 分组 + 关闭信息 + 备注 + 删除
+  - **SettingsPage**（UserControl，左导航 + 右内容 5 节：常规/外观/数据/更新/提醒）——见 [settings-page.md](settings-page.md)
+  - **TaskDetailPane** — 标题 + 截止日期菜单 + 步骤 + 标签 + 分组 + 关闭信息 + 备注 + 删除（设置模式隐藏）
   - **ContextMenuLayer**（通过代码动态生成）
   - **Dialogs**：TagManageDialog、DateTimeDialog、DbPathDialog
 
@@ -251,7 +254,7 @@ MainViewModel
 - `Services/LocalizationService.cs` — 静态 `Loc` 类，属性按 `AppLanguage` 返回中/英文
 - XAML 绑定 `{x:Static services:Loc.XXX}`
 - 代码中 `Loc.XXX` 引用；值转换器（相对时间 / 日期）与对话框（DbPathDialog）同样走 `Loc`
-- 侧边栏地球按钮切换语言 → 重建窗口
+- 设置页"常规"节切换语言 → 持久化到 settings.json，**重启生效**，启动时由 `App.OnStartup` 恢复
 - 默认中文
 
 ---
@@ -262,7 +265,7 @@ MainViewModel
 - 5 张集合：lists / groups / tasks / tags / listgroups
 - 索引：ListId、GroupId、IsMyDay、IsImportant、DueDate、tagIds（多值索引）
 - 数据库路径可配置：`SettingsService` 持久化到 `%LOCALAPPDATA%\ToDo\settings.json`，默认数据库在 `%LOCALAPPDATA%\ToDo\todo.db`；`DbPathDialog` 可更改路径并自动迁移数据；旧版程序目录下的 `todo.db` 会自动迁移到新位置
-- settings.json 同时持久化主题选择（`Theme`：Light / Dark），启动时由 `App.OnStartup` 恢复
+- settings.json 持久化：`SchemaVersion`（当前 1，旧文件加载时补默认值并盖章）、`Theme`（Light / Dark，启动时由 `App.OnStartup` 恢复）、`Language`、`CheckForUpdatesOnStartup`、`ReminderNotifications`、`ReminderSound`、`SidebarWidth`、`UpdateSources`、`PendingRestorePath`（待恢复备份暂存，启动替换后清除）
 
 ### 8.1 种子数据
 
@@ -309,7 +312,7 @@ MainViewModel
 ## 11. 自动更新
 
 - 应用启动空闲后按顺序尝试更新源，第一个成功的生效：**GitHub**（`api.github.com` JSON）、**Gitee**（`api.gitee.com` JSON，需镜像仓库）、**私有服务器**（AutoUpdater.NET appcast XML，`<version>/<url>/<changelog>`，相对 url 按 appcast 地址解析）；比对最新版本与程序集版本（csproj `<Version>`）
-- **更新源可配置**：读 `%LOCALAPPDATA%\ToDo\settings.json` 的 `UpdateSources` 数组（`{"Type","Url"}` 列表，按序尝试）；为空时回退到默认 GitHub 源。Type 取值：`github` / `gitee`（JSON）、`appcast`（XML）
+- **更新源可配置**：设置页"更新"节可视化编辑 `UpdateSources`（增删行，Type 下拉 + URL 输入），写回 `%LOCALAPPDATA%\ToDo\settings.json`；为空时回退到默认 GitHub 源。Type 取值：`github` / `gitee`（JSON）、`appcast`（XML）。"立即检查更新"先 `RefreshSources()` 再检查，保证新源生效；`CheckForUpdatesOnStartup` 开关控制启动检查
 - 有新版时弹出主题化 `UpdateDialog`：显示版本与发布说明，支持**立即更新**（全自动：下载 zip 到临时目录 → 写隐藏 PowerShell 更新脚本（路径 base64 编码）→ 应用退出 → 脚本等待进程结束、解压到临时目录、覆盖安装目录、重启应用）、**以后再说**（2 天后重询）、**跳过此版本**
 - 先解压到临时目录再覆盖，下载损坏不会破坏当前安装；失败记录到 `%TEMP%\ToDoUpdateError.log`
 - 基于 **vendored AutoUpdater.NET**（`ToDo/Updater/`，保留 `AutoUpdaterDotNET` 命名空间与 MIT 许可，`LICENSE` 随附；去掉了 WinForms UI / WebView2 / resx，宿主用自己的 WPF 对话框）
@@ -329,3 +332,4 @@ MainViewModel
 | [ADR-005](adr/0005-auto-release-ci.md) | GitHub Actions 自动发布 + Gitee 同步 |
 | [ADR-006](adr/0006-auto-update-vendored.md) | 应用自动更新（vendored AutoUpdater.NET + 多源） |
 | [ADR-007](adr/0007-reminder-notification.md) | 提醒到点通知（托盘 + 定时查询） |
+| [ADR-008](adr/0008-in-app-settings-page.md) | 内嵌设置页（主内容区页面切换 + settings.json 版本化） |

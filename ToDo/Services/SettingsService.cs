@@ -5,12 +5,21 @@ namespace ToDo.Services;
 
 public class AppSettings
 {
+    /// <summary>Bumped when the file gains fields; legacy files are stamped + saved on load.</summary>
+    public int SchemaVersion { get; set; }
     public string DbPath { get; set; } = "";
     public string Theme { get; set; } = "Light"; // Light, Dark
     public double SidebarWidth { get; set; } = 280;
+    public string Language { get; set; } = "Chinese"; // Chinese, English
+    public bool CheckForUpdatesOnStartup { get; set; } = true;
+    public bool ReminderNotifications { get; set; } = true;
+    public bool ReminderSound { get; set; } = true;
 
     /// <summary>Auto-update feeds, tried in order. Empty = default (GitHub).</summary>
     public List<UpdateSourceSetting> UpdateSources { get; set; } = new();
+
+    /// <summary>Temp copy of a restored backup; swapped over DbPath on next startup, then cleared.</summary>
+    public string? PendingRestorePath { get; set; }
 }
 
 public class UpdateSourceSetting
@@ -27,6 +36,11 @@ public static class SettingsService
     private static readonly string SettingsFile = Path.Combine(SettingsDir, "settings.json");
 
     public static string DefaultDbPath => Path.Combine(SettingsDir, "todo.db");
+
+    /// <summary>Where a chosen backup is staged before it replaces the live DB on restart.</summary>
+    public static string PendingRestoreFilePath => Path.Combine(SettingsDir, "pending-restore.db");
+
+    private const int CurrentSchemaVersion = 1;
 
     private static AppSettings? _current;
 
@@ -49,7 +63,8 @@ public static class SettingsService
     public static void Load()
     {
         Directory.CreateDirectory(SettingsDir);
-        if (File.Exists(SettingsFile))
+        var isNewFile = !File.Exists(SettingsFile);
+        if (!isNewFile)
         {
             try
             {
@@ -66,10 +81,17 @@ public static class SettingsService
         if (string.IsNullOrEmpty(_current.DbPath))
             _current.DbPath = DefaultDbPath;
 
-        // First launch: create the settings file with the default update sources
-        if (!File.Exists(SettingsFile))
+        if (isNewFile)
         {
+            // First launch: prefill the default update sources
             _current.UpdateSources = new List<UpdateSourceSetting>(DefaultUpdateSources);
+        }
+
+        // Legacy files (no SchemaVersion) keep the property defaults for fields
+        // added later, so stamping the version + saving is all the migration needs.
+        if (isNewFile || _current.SchemaVersion < CurrentSchemaVersion)
+        {
+            _current.SchemaVersion = CurrentSchemaVersion;
             Save();
         }
     }
