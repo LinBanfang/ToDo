@@ -293,11 +293,14 @@ public partial class MainViewModel : ObservableObject
 
         if (ActiveList == null) return;
 
-        // Update sidebar counts in real time
-        foreach (var l in Lists)
-            l.TaskCount = CountForList(l, Tasks);
-
         var isSearching = !string.IsNullOrWhiteSpace(SearchQuery);
+
+        // Sidebar counts don't change while searching; skip the per-keystroke scan
+        if (!isSearching)
+        {
+            foreach (var l in Lists)
+                l.TaskCount = CountForList(l, Tasks);
+        }
 
         // Searching → across ALL lists; otherwise → filter by current list
         var allListTasks = isSearching
@@ -392,7 +395,8 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsCustomList));
         OnPropertyChanged(nameof(IsSystemList));
         OnPropertyChanged(nameof(HeaderTitle));
-        LoadTasks();
+        // No need to reload Tasks: the in-place model keeps it current on every
+        // mutation, so a list switch only needs the views rebuilt.
         RefreshActiveTasks();
     }
 
