@@ -1,4 +1,3 @@
-#nullable disable
 using System.IO;
 using System.Net.Http;
 using System.Text.Json;
@@ -131,7 +130,8 @@ public static class UpdateService
             {
                 using var reader = XmlReader.Create(new StringReader(xml),
                     new XmlReaderSettings { XmlResolver = null });
-                info = (UpdateInfoEventArgs)new XmlSerializer(typeof(UpdateInfoEventArgs)).Deserialize(reader);
+                info = new XmlSerializer(typeof(UpdateInfoEventArgs)).Deserialize(reader) as UpdateInfoEventArgs
+                    ?? throw new InvalidDataException($"Update source '{source.Url}' returned an unusable appcast");
             }
             finally
             {
@@ -154,7 +154,7 @@ public static class UpdateService
         var root = doc.RootElement;
 
         version = (root.TryGetProperty("tag_name", out var tag) ? tag.GetString() : null)?.TrimStart('v') ?? "";
-        body = root.TryGetProperty("body", out var b) ? b.GetString() : "";
+        body = root.TryGetProperty("body", out var b) ? b.GetString() ?? "" : "";
         downloadUrl = FindZipUrl(root);
         if (string.IsNullOrEmpty(version) || string.IsNullOrEmpty(downloadUrl))
             throw new InvalidDataException($"Update source '{source.Url}' returned no version or download URL");
