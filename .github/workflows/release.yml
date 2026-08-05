@@ -70,12 +70,14 @@ jobs:
             Write-Host "Gitee release $tag create failed: $($_.ErrorDetails.Message)"
           }
 
-          # 3. Fetch the release id by tag (dump the response if it can't be read)
-          $resp = Invoke-WebRequest -Method Get -Uri "$base/releases/tags/$tag?access_token=$token" -ErrorAction Stop
-          Write-Host "GET /releases/tags response starts: $($resp.Content.Substring(0, [Math]::Min(300, $resp.Content.Length)))"
-          $data = $resp.Content | ConvertFrom-Json
-          $id = $data.id
-          if (-not $id) { throw "No Gitee release id for tag $tag; response: $($resp.Content.Substring(0, [Math]::Min(300, $resp.Content.Length)))" }
+          # 3. Find the release id by listing releases and matching the tag
+          # (Gitee's releases/tags/{tag} returns null when called with a token)
+          Start-Sleep -Seconds 2
+          $releases = Invoke-RestMethod -Method Get -Uri "$base/releases?access_token=$token&per_page=100" -ErrorAction Stop
+          $match = $releases | Where-Object { $_.tag_name -eq $tag }
+          if (-not $match) { throw "No Gitee release for tag $tag in releases list" }
+          $id = $match.id
+          Write-Host "Found Gitee release id $id for $tag"
 
           # 4. Upload the zip asset
           $zip = "ToDo-$tag.zip"
