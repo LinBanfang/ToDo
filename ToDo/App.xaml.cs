@@ -25,6 +25,10 @@ public partial class App : Application
         mainWindow.Icon = new System.Windows.Media.Imaging.BitmapImage(
             new Uri("pack://application:,,,/Resources/app.ico"));
         mainWindow.Show();
+
+        UpdateService.Configure();
+        Dispatcher.BeginInvoke(() => UpdateService.CheckForUpdates(),
+            System.Windows.Threading.DispatcherPriority.ApplicationIdle);
     }
 
     protected override void OnExit(ExitEventArgs e)
