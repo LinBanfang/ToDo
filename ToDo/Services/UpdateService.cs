@@ -53,10 +53,13 @@ public static class UpdateService
         _sources = (configured is { Count: > 0 } ? configured : SettingsService.DefaultUpdateSources)
             .Select(s => new UpdateSource { Type = s.Type, Url = s.Url })
             .ToArray();
+        DiagnosticLog.Info("update",
+            "sources: " + string.Join(", ", _sources.Select(s => $"{s.Type} {Sanitize(s.Url)}")));
     }
 
     public static void CheckForUpdates()
     {
+        DiagnosticLog.Info("update", "checking updates (startup)");
         RefreshSources();
         AutoUpdater.Start();
     }
@@ -67,6 +70,7 @@ public static class UpdateService
     /// </summary>
     public static void CheckForUpdatesNow()
     {
+        DiagnosticLog.Info("update", "checking updates (manual)");
         AutoUpdater.CancelRemindLater();
         AutoUpdater.Running = false; // a lingering background check must not swallow this
         _manualCheck = true;
@@ -85,6 +89,8 @@ public static class UpdateService
                 {
                     _lastCheckError = null;
                     _latestReleaseBody = body;
+                    DiagnosticLog.Info("update",
+                        $"{source.Type} {Sanitize(source.Url)} -> version={version}, zip={Sanitize(downloadUrl)}");
                     args.UpdateInfo = new UpdateInfoEventArgs
                     {
                         CurrentVersion = version,
@@ -98,9 +104,12 @@ public static class UpdateService
             {
                 // remember the first real failure so a failed check can report it
                 _lastCheckError ??= ex;
+                DiagnosticLog.Warn("update",
+                    $"{source.Type} {Sanitize(source.Url)} -> {ex.GetType().Name}: {ex.Message}");
             }
         }
 
+        DiagnosticLog.Error("update", "check failed: all update sources unavailable");
         args.UpdateInfo = null;
     }
 
@@ -188,24 +197,53 @@ public static class UpdateService
                 // "attempted to access a non-existing field" text.
                 var detail = _lastCheckError != null ? ErrorDetail(_lastCheckError) : Loc.UpdateSourceNoInfo;
                 _lastCheckError = null;
+                DiagnosticLog.Error("update", $"manual check failed: {detail}");
                 MessageBox.Show(Loc.UpdateCheckFailed(detail),
                     Loc.Updates, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             if (!args.IsUpdateAvailable)
             {
+                DiagnosticLog.Info("update", $"manual check: up to date (latest {args.CurrentVersion})");
                 MessageBox.Show(Loc.UpdateUpToDate(args.CurrentVersion),
                     Loc.Updates, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
+            DiagnosticLog.Info("update", $"manual check: update available {args.CurrentVersion}");
         }
         else if (args.Error != null || !args.IsUpdateAvailable)
         {
+            // Background check stays silent in the UI but still logs the outcome
+            if (args.Error != null)
+                DiagnosticLog.Warn("update", $"startup check failed: {ErrorDetail(_lastCheckError ?? args.Error)}");
+            else
+                DiagnosticLog.Info("update", $"startup check: no update (latest {args.CurrentVersion})");
+            _lastCheckError = null;
             return;
+        }
+        else
+        {
+            DiagnosticLog.Info("update", $"startup check: update available {args.CurrentVersion}");
         }
 
         var dialog = new Views.Dialogs.UpdateDialog(args, _latestReleaseBody) { Owner = owner };
         dialog.ShowDialog();
+    }
+
+    /// <summary>Redacts credentials (userinfo / access_token=) from a URL before logging.</summary>
+    private static string Sanitize(string url)
+    {
+        if (string.IsNullOrEmpty(url)) return url;
+        var s = url;
+        var schemeEnd = s.IndexOf("://", StringComparison.Ordinal);
+        if (schemeEnd >= 0)
+        {
+            var at = s.IndexOf('@');
+            if (at > schemeEnd) s = s.Substring(0, schemeEnd + 3) + "***@" + s.Substring(at + 1);
+        }
+        s = System.Text.RegularExpressions.Regex.Replace(
+            s, "(access_token=)[^&\\s]+", "$1***", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        return s;
     }
 
     /// <summary>Unwraps to the innermost exception so the user sees the real cause
