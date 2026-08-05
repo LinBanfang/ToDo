@@ -165,5 +165,7 @@ public static class Loc
     public static string RemoveSource => Language == AppLanguage.Chinese ? "移除" : "Remove";
     public static string CheckUpdatesNow => Language == AppLanguage.Chinese ? "立即检查更新" : "Check for updates now";
     public static string EnableReminderNotifications => Language == AppLanguage.Chinese ? "启用提醒通知" : "Enable reminder notifications";
+    public static string Apply => Language == AppLanguage.Chinese ? "应用" : "Apply";
+    public static string MoreColors => Language == AppLanguage.Chinese ? "更多颜色…" : "More colors…";
     public static string PlayReminderSound => Language == AppLanguage.Chinese ? "播放提示音" : "Play reminder sound";
 }

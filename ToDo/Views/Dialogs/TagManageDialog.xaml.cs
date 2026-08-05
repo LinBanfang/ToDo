@@ -59,18 +59,19 @@ public partial class TagManageDialog : Window
             StaysOpen = false,
         };
 
-        var wrapPanel = new WrapPanel
+        var panel = new StackPanel
         {
-            Width = 200,
             Background = (Brush)Application.Current.FindResource("CardBackgroundBrush"),
         };
 
+        // Fixed palette
+        var wrapPanel = new WrapPanel { Width = 200, Margin = new Thickness(3, 3, 3, 0) };
         foreach (var color in _tagColors)
         {
             var colorBtn = new Button
             {
-                Width = 28,
-                Height = 28,
+                Width = 26,
+                Height = 26,
                 Margin = new Thickness(3),
                 Background = new SolidColorBrush(ColorParser.ParseColor(color)),
                 BorderThickness = new Thickness(0),
@@ -83,9 +84,106 @@ public partial class TagManageDialog : Window
             };
             wrapPanel.Children.Add(colorBtn);
         }
+        panel.Children.Add(wrapPanel);
 
-        popup.Child = wrapPanel;
+        // Custom color row: hex input + apply + full picker
+        var currentColor = anchor.Tag is Tag t ? t.Color : _newTagColor;
+        var row = new Grid { Margin = new Thickness(3, 6, 3, 0) };
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        var hexBox = new TextBox
+        {
+            Text = currentColor,
+            Style = (Style)FindResource("FluentTextBox"),
+            VerticalContentAlignment = VerticalAlignment.Center,
+            FontSize = 12,
+            Padding = new Thickness(6, 2, 6, 2),
+        };
+        Grid.SetColumn(hexBox, 0);
+        row.Children.Add(hexBox);
+
+        var applyBtn = new Button
+        {
+            Content = Loc.Apply,
+            Style = (Style)FindResource("FluentButton"),
+            FontSize = 12,
+            Padding = new Thickness(8, 4, 8, 4),
+            Margin = new Thickness(4, 0, 0, 0),
+        };
+        applyBtn.Click += (s, _) =>
+        {
+            try
+            {
+                var hex = NormalizeHex(hexBox.Text);
+                ColorParser.ParseColor(hex); // validate before applying
+                onColorSelected(hex);
+                popup.IsOpen = false;
+            }
+            catch
+            {
+                // ignore invalid hex input
+            }
+        };
+        Grid.SetColumn(applyBtn, 1);
+        row.Children.Add(applyBtn);
+
+        var moreBtn = new Button
+        {
+            Content = Loc.MoreColors,
+            Style = (Style)FindResource("FluentButton"),
+            FontSize = 12,
+            Padding = new Thickness(8, 4, 8, 4),
+            Margin = new Thickness(4, 0, 0, 0),
+        };
+        moreBtn.Click += (s, _) =>
+        {
+            popup.IsOpen = false;
+            ShowCustomColorDialog(currentColor, onColorSelected);
+        };
+        Grid.SetColumn(moreBtn, 2);
+        row.Children.Add(moreBtn);
+
+        panel.Children.Add(row);
+        popup.Child = panel;
         popup.IsOpen = true;
+    }
+
+    /// <summary>Opens the native color dialog (supports defining custom colors).</summary>
+    private void ShowCustomColorDialog(string currentHex, Action<string> onColorSelected)
+    {
+        var dialog = new System.Windows.Forms.ColorDialog { FullOpen = true };
+        try
+        {
+            dialog.Color = System.Drawing.ColorTranslator.FromHtml(currentHex);
+        }
+        catch
+        {
+            dialog.Color = System.Drawing.Color.FromArgb(0, 120, 212);
+        }
+
+        var owner = new Win32Window(new System.Windows.Interop.WindowInteropHelper(this).Handle);
+        if (dialog.ShowDialog(owner) == System.Windows.Forms.DialogResult.OK)
+        {
+            var hex = $"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}";
+            onColorSelected(hex);
+        }
+    }
+
+    /// <summary>Normalizes a user-typed color to "#RRGGBB" (drops an "#AARRGGBB" alpha).</summary>
+    private static string NormalizeHex(string hex)
+    {
+        hex = hex.Trim().TrimStart('#');
+        if (hex.Length == 8) hex = hex.Substring(2);
+        return "#" + hex;
+    }
+
+    /// <summary>Wraps a window handle so the native dialog can be owned by this WPF window.</summary>
+    private sealed class Win32Window : System.Windows.Forms.IWin32Window
+    {
+        public Win32Window(IntPtr handle) => Handle = handle;
+        public IntPtr Handle { get; }
     }
 
     private void AddTag_Click(object sender, RoutedEventArgs e)
