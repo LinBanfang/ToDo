@@ -34,3 +34,18 @@ jobs:
         with:
           files: ToDo-${{ github.ref_name }}.zip
           generate_release_notes: true
+
+      # 同步同一份 zip 到 Gitee（需先镜像仓库到 Gitee、配置 GITEE_TOKEN secret）
+      # 注意：把 gitee-owner 改成你的 Gitee 用户名；Gitee 默认分支若是 main，把
+      # gitee-target-commitish 改成 main
+      - name: Sync release to Gitee
+        uses: YuZhiYuanOrg/release-sync@v1
+        with:
+          platforms: 'gitee'
+          tag: ${{ github.ref_name }}
+          release-name: "Release ${{ github.ref_name }}"
+          gitee-token: ${{ secrets.GITEE_TOKEN }}
+          gitee-owner: 'YOUR_GITEE_USERNAME'
+          gitee-repo: 'ToDo'
+          gitee-target-commitish: 'master'
+          asset-files: 'ToDo-${{ github.ref_name }}.zip'
