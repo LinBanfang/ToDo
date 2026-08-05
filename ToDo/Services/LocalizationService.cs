@@ -136,6 +136,9 @@ public static class Loc
         Language == AppLanguage.Chinese
             ? $"已是最新版本（最新版本 {latest}）"
             : $"You're up to date (latest version {latest})";
+    public static string UpdateSourceNoInfo => Language == AppLanguage.Chinese
+        ? "无法从更新源获取版本信息，请检查网络或更新源配置"
+        : "Couldn't get version info from any update source; check your network or source configuration";
     public static string UpdateCheckFailed(string detail) =>
         Language == AppLanguage.Chinese ? $"检查更新失败：{detail}" : $"Update check failed: {detail}";
 

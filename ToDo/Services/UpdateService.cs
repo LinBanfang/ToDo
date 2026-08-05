@@ -130,7 +130,7 @@ public static class UpdateService
             }
 
             if (string.IsNullOrEmpty(info.CurrentVersion) || string.IsNullOrEmpty(info.DownloadURL))
-                return false;
+                throw new InvalidDataException($"Update source '{source.Url}' returned no version or download URL");
             version = info.CurrentVersion;
             downloadUrl = info.DownloadURL;
             changelogUrl = info.ChangelogURL ?? "";
@@ -147,7 +147,9 @@ public static class UpdateService
         version = (root.TryGetProperty("tag_name", out var tag) ? tag.GetString() : null)?.TrimStart('v') ?? "";
         body = root.TryGetProperty("body", out var b) ? b.GetString() : "";
         downloadUrl = FindZipUrl(root);
-        return !string.IsNullOrEmpty(version) && !string.IsNullOrEmpty(downloadUrl);
+        if (string.IsNullOrEmpty(version) || string.IsNullOrEmpty(downloadUrl))
+            throw new InvalidDataException($"Update source '{source.Url}' returned no version or download URL");
+        return true;
     }
 
     private static string FindZipUrl(JsonElement root)
@@ -181,7 +183,10 @@ public static class UpdateService
             {
                 // Report the first real source error rather than the generic
                 // MissingFieldException AutoUpdater throws for an all-sources failure.
-                var detail = ErrorDetail(_lastCheckError ?? args.Error);
+                // When even that is missing (sources answered 200 with unusable data),
+                // fall back to a friendly localized message instead of the cryptic
+                // "attempted to access a non-existing field" text.
+                var detail = _lastCheckError != null ? ErrorDetail(_lastCheckError) : Loc.UpdateSourceNoInfo;
                 _lastCheckError = null;
                 MessageBox.Show(Loc.UpdateCheckFailed(detail),
                     Loc.Updates, MessageBoxButton.OK, MessageBoxImage.Warning);
