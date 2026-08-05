@@ -52,6 +52,7 @@ public class DatabaseService : IDisposable
         Tasks.EnsureIndex(x => x.IsMyDay);
         Tasks.EnsureIndex(x => x.IsImportant);
         Tasks.EnsureIndex(x => x.DueDate);
+        Tasks.EnsureIndex(x => x.Reminder);
         ListGroups.EnsureIndex(x => x.Order);
         Tags.EnsureIndex(x => x.Name, unique: true);
 

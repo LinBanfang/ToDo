@@ -26,10 +26,9 @@ public class ReminderService : IDisposable
 
         // Pre-mark reminders that are already due so they don't all fire at startup
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        foreach (var t in db.Tasks.FindAll())
+        foreach (var t in db.Tasks.Find(t => t.Reminder != null && t.Reminder <= now))
         {
-            if (t.Reminder != null && t.Reminder <= now)
-                _fired.Add($"{t.Id}|{t.Reminder}");
+            _fired.Add($"{t.Id}|{t.Reminder}");
         }
 
         _trayIcon = new NotifyIcon
@@ -63,8 +62,8 @@ public class ReminderService : IDisposable
         List<TaskItem> due;
         try
         {
-            due = _db.Tasks.FindAll()
-                .Where(t => t.Reminder != null && t.Reminder <= now && t.CloseRecord == null)
+            // Uses the Reminder index, so it doesn't scan the whole table every 15s
+            due = _db.Tasks.Find(t => t.Reminder != null && t.Reminder <= now && t.CloseRecord == null)
                 .ToList();
         }
         catch { return; }
