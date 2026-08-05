@@ -130,7 +130,12 @@ public static class Loc
     public static string RemindLater => Language == AppLanguage.Chinese ? "以后再说" : "Remind me later";
     public static string SkipVersion => Language == AppLanguage.Chinese ? "跳过此版本" : "Skip this version";
     public static string UpdateDownloaded => Language == AppLanguage.Chinese ? "已下载到" : "Downloaded to";
-    public static string UpdateUpToDate => Language == AppLanguage.Chinese ? "已是最新版本" : "You're up to date";
+    // latest is guaranteed non-empty here: AutoUpdater throws MissingFieldException
+    // (→ the failure branch) before a "no update" result can reach the UI.
+    public static string UpdateUpToDate(string latest) =>
+        Language == AppLanguage.Chinese
+            ? $"已是最新版本（最新版本 {latest}）"
+            : $"You're up to date (latest version {latest})";
     public static string UpdateCheckFailed(string detail) =>
         Language == AppLanguage.Chinese ? $"检查更新失败：{detail}" : $"Update check failed: {detail}";
 
