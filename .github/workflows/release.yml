@@ -35,15 +35,33 @@ jobs:
           files: ToDo-${{ github.ref_name }}.zip
           generate_release_notes: true
 
-      # 同步同一份 zip 到 Gitee（需在仓库配置 GITEE_TOKEN secret，且 tag 已镜像到 Gitee）
+      # 同步同一份 zip 到 Gitee（需在仓库配置 GITEE_TOKEN secret，且 tag 已镜像到 Gitee）。
+      # 直接用 Gitee API 上传（release-sync 的资产上传有 bug：用原生 FormData 调 getHeaders() 会抛异常且被吞掉）
       - name: Sync release to Gitee
-        uses: YuZhiYuanOrg/release-sync@v1
-        with:
-          platforms: 'gitee'
-          tag: ${{ github.ref_name }}
-          release-name: "Release ${{ github.ref_name }}"
-          gitee-token: ${{ secrets.GITEE_TOKEN }}
-          gitee-owner: 'wu-bin-921'
-          gitee-repo: 'ToDo'
-          gitee-target-commitish: 'master'
-          asset-files: 'ToDo-${{ github.ref_name }}.zip'
+        shell: pwsh
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tag = "${{ github.ref_name }}"
+          $owner = 'wu-bin-921'
+          $repo = 'ToDo'
+          $base = "https://gitee.com/api/v5/repos/$owner/$repo"
+          $token = $env:GITEE_TOKEN
+
+          $body = @{ tag_name = $tag; name = "Release $tag"; target_commitish = 'master' } | ConvertTo-Json
+          try {
+            Invoke-RestMethod -Method Post -Uri "$base/releases?access_token=$token" -ContentType 'application/json' -Body $body -ErrorAction Stop | Out-Null
+            Write-Host "Created Gitee release $tag"
+          } catch {
+            Write-Host "Gitee release $tag already exists or create failed: $($_.Exception.Message)"
+          }
+
+          $rel = Invoke-RestMethod -Method Get -Uri "$base/releases/tags/$tag?access_token=$token"
+          if (-not $rel.id) { throw "No Gitee release id for tag $tag" }
+
+          $zip = "ToDo-$tag.zip"
+          $form = @{ file = Get-Item $zip }
+          $uploadUri = "$base/releases/$($rel.id)/attach_files?access_token=$token"
+          Invoke-RestMethod -Method Post -Uri $uploadUri -Form $form -ErrorAction Stop | Out-Null
+          Write-Host "Uploaded $zip to Gitee release $tag"
