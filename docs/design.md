@@ -314,3 +314,18 @@ MainViewModel
 - 先解压到临时目录再覆盖，下载损坏不会破坏当前安装；失败记录到 `%TEMP%\ToDoUpdateError.log`
 - 基于 **vendored AutoUpdater.NET**（`ToDo/Updater/`，保留 `AutoUpdaterDotNET` 命名空间与 MIT 许可，`LICENSE` 随附；去掉了 WinForms UI / WebView2 / resx，宿主用自己的 WPF 对话框）
 - 版本/跳过/稍后状态由 `JsonFilePersistenceProvider` 持久化到 `%LOCALAPPDATA%\ToDo\updater.json`
+- **首次启动自动创建** settings.json 并预置 GitHub + Gitee 两个源；已有安装未配置时同样回退到这两个源
+
+---
+
+## 12. 架构决策记录（ADR）
+
+| ADR | 决策 |
+|---|---|
+| [ADR-001](adr/0001-local-embedded-storage.md) | 本地嵌入式存储选型（LiteDB） |
+| [ADR-002](adr/0002-in-place-refresh-model.md) | 就地更新刷新模型（任务变更不重读 DB） |
+| [ADR-003](adr/0003-theme-dynamicresource.md) | 主题切换用 DynamicResource + 运行时字典替换 |
+| [ADR-004](adr/0004-drag-half-zone.md) | 拖放半区插入约定 |
+| [ADR-005](adr/0005-auto-release-ci.md) | GitHub Actions 自动发布 + Gitee 同步 |
+| [ADR-006](adr/0006-auto-update-vendored.md) | 应用自动更新（vendored AutoUpdater.NET + 多源） |
+| [ADR-007](adr/0007-reminder-notification.md) | 提醒到点通知（托盘 + 定时查询） |

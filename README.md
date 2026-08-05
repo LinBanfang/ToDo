@@ -47,4 +47,5 @@ ToDo/
 
 ## 设计文档
 
-详见 [docs/design.md](docs/design.md)
+- 详细设计方案：[docs/design.md](docs/design.md)
+- 架构决策记录（ADR）：[docs/adr/](docs/adr/)
