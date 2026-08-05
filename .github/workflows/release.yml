@@ -49,6 +49,16 @@ jobs:
           $base = "https://gitee.com/api/v5/repos/$owner/$repo"
           $token = $env:GITEE_TOKEN
 
+          # 1. Ensure the tag exists on Gitee (release creation requires it)
+          $tagBody = @{ tag_name = $tag; refs = 'master' } | ConvertTo-Json
+          try {
+            Invoke-RestMethod -Method Post -Uri "$base/tags?access_token=$token" -ContentType 'application/json' -Body $tagBody -ErrorAction Stop | Out-Null
+            Write-Host "Created Gitee tag $tag"
+          } catch {
+            Write-Host "Gitee tag $tag already exists or create failed: $($_.Exception.Message)"
+          }
+
+          # 2. Create the release
           $body = @{ tag_name = $tag; name = "Release $tag"; target_commitish = 'master' } | ConvertTo-Json
           try {
             Invoke-RestMethod -Method Post -Uri "$base/releases?access_token=$token" -ContentType 'application/json' -Body $body -ErrorAction Stop | Out-Null
@@ -57,9 +67,11 @@ jobs:
             Write-Host "Gitee release $tag already exists or create failed: $($_.Exception.Message)"
           }
 
+          # 3. Get the release id
           $rel = Invoke-RestMethod -Method Get -Uri "$base/releases/tags/$tag?access_token=$token"
           if (-not $rel.id) { throw "No Gitee release id for tag $tag" }
 
+          # 4. Upload the zip asset
           $zip = "ToDo-$tag.zip"
           $form = @{ file = Get-Item $zip }
           $uploadUri = "$base/releases/$($rel.id)/attach_files?access_token=$token"
