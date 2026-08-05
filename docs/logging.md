@@ -22,10 +22,12 @@
 
 | 项 | 值 |
 |---|---|
-| 位置 | `%LOCALAPPDATA%\ToDo\logs\app.log` |
+| 位置 | `<应用目录>\logs\app.log`（exe 同路径 `logs` 文件夹，`AppDomain.CurrentDomain.BaseDirectory`） |
 | 格式 | 纯文本，一行一条 |
 | 单文件上限 | 1 MB |
 | 轮转 | 超限 → 当前文件改名为 `app.log.1`，新建 `app.log`；只保留最近 2 份（`app.log` + `app.log.1`） |
+
+**权衡**：日志位于安装目录内，应用自动更新覆盖安装目录时旧日志可能被清除（诊断日志可接受，新版启动即重建）；若应用被放在不可写目录（如 `Program Files`），写日志会失败——按 5.1 静默降级，日志缺失不影响功能。
 
 ## 4. 日志格式
 
@@ -50,7 +52,7 @@
 ```csharp
 public static class DiagnosticLog
 {
-    // 目录 %LOCALAPPDATA%\ToDo\logs\app.log
+    // 目录 <应用目录>\logs\app.log
     public static void Info(string module, string message);
     public static void Warn(string module, string message);
     public static void Error(string module, string message);
