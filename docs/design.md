@@ -318,6 +318,8 @@ MainViewModel
 - 基于 **vendored AutoUpdater.NET**（`ToDo/Updater/`，保留 `AutoUpdaterDotNET` 命名空间与 MIT 许可，`LICENSE` 随附；去掉了 WinForms UI / WebView2 / resx，宿主用自己的 WPF 对话框）
 - 版本/跳过/稍后状态由 `JsonFilePersistenceProvider` 持久化到 `%LOCALAPPDATA%\ToDo\updater.json`
 - **首次启动自动创建** settings.json 并预置 GitHub + Gitee 两个源；已有安装未配置时同样回退到这两个源
+- **手动检查反馈**（设置页"立即检查更新"）：绕过"以后再说"定时器强制检查并反馈结果——有新版弹 `UpdateDialog`、无新版显示"已是最新版本（含源最新版本号）"、失败显示首个真实错误（`_lastCheckError` 记录逐源异常并取最内层消息）；源返回数据缺版本号/下载地址时抛描述性异常（`Update source '...' returned no version or download URL`），不再落入晦涩的 `MissingFieldException` 默认文案
+- **诊断日志**：`DiagnosticLog` 把每次检查的源列表（URL 脱敏）、逐源结果、检查结论写入 `<exe>\logs\app.log`（1 MB 轮转保留 2 份），供跨机器排查更新检查失败（防火墙/WFP 拦截、网络错误、源数据异常），详见 [logging.md](logging.md)
 
 ---
 
@@ -333,3 +335,4 @@ MainViewModel
 | [ADR-006](adr/0006-auto-update-vendored.md) | 应用自动更新（vendored AutoUpdater.NET + 多源） |
 | [ADR-007](adr/0007-reminder-notification.md) | 提醒到点通知（托盘 + 定时查询） |
 | [ADR-008](adr/0008-in-app-settings-page.md) | 内嵌设置页（主内容区页面切换 + settings.json 版本化） |
+| [ADR-009](adr/0009-diagnostic-logging.md) | 诊断日志（零依赖本地日志，更新检查接入） |

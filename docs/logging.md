@@ -91,14 +91,15 @@ public static class DiagnosticLog
 - 设置页"打开日志目录"入口（决策点 2）。
 - 若未来需要结构化，再评估是否引入第三方（当前不必要）。
 
-## 8. 实施计划
+## 8. 实施状态与计划
 
-### 阶段 1 — 日志设施 + 更新检查接入
-1. 新建 `Services/DiagnosticLog.cs`（静态类，线程安全 + 轮转 + 静默失败）。
-2. `UpdateService` 按 5.2 表格接入全部点位。
-3. `dotnet build` + 手动检查冒烟：验证 `logs/app.log` 内容完整（含真实失败原因）。
-4. 提交 + 视情况 bump 版本发布（携带 1.0.13 的描述性报错 + 日志，方便问题机器复现取证）。
+### 阶段 1 — 日志设施 + 更新检查接入 ✅ 已实施（随 1.0.13 发布）
 
-### 阶段 2 — 收尾
-5. 设置页"打开日志目录"按钮。
-6. 更新本设计文档为最终实现说明；可选补 ADR。
+- `Services/DiagnosticLog.cs`：静态类，写入 `<exe>\logs\app.log`，1 MB 轮转保留 2 份，`lock` 线程安全，全部 try/catch 静默（目录不可写时降级到 `%TEMP%`）。
+- `UpdateService` 已接入 5.2 全部点位：源列表（脱敏）、检查开始（启动/手动）、逐源结果（成功 `version/zip` 或真实异常）、检查结论。
+- **实测验证** `logs/app.log`：
+  - 成功：`github https://api.github.com/... -> version=1.0.12, zip=https://...ToDo-v1.0.12.zip` → `startup check: no update (latest 1.0.12)`
+  - 失败：`[WARN] github http://127.0.0.1:1/... -> AggregateException: ... 由于目标计算机积极拒绝` → `[ERROR] check failed: all update sources unavailable` → `[WARN] startup check failed: 由于目标计算机积极拒绝`
+
+### 阶段 2 — 收尾（待办）
+- 设置页"数据"节加"打开日志目录"按钮（`Process.Start` 打开 `logs` 文件夹）。

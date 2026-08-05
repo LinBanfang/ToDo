@@ -109,6 +109,8 @@
 ### 4.3 更新 UpdateService
 - 把 `Configure()` 中读取源的逻辑抽成 `RefreshSources()`，`Configure()` 与 `CheckForUpdates()` 都先调用它——保证设置页改完更新源后"立即检查"用的是新源。
 - 新增 `CheckForUpdatesNow()`（设置页"立即检查更新"专用）：先 `AutoUpdater.CancelRemindLater()` 清除"以后再说"的定时器与持久化日期（否则 `Start()` 会被 `Running || _remindLaterTimer != null` 守卫跳过、毫无反应），再置 `_manualCheck` 标记后检查；`OnUpdateChecked` 在手动检查时把结果反馈给用户（有新版弹 UpdateDialog、无新版弹"已是最新版本（含源最新版本号）"、失败弹首个真实网络错误——`_lastCheckError` 记录逐源 catch 的第一个异常并取最内层消息，避免显示通用的 `MissingFieldException`），后台启动检查保持静默。
+- **失败细分**：`TryGetLatest` 在响应缺版本号/下载地址时抛描述性异常（`Update source '...' returned no version or download URL`，指出具体源）；`OnUpdateChecked` 失败分支优先显示 `_lastCheckError` 的最内层消息，兜底显示友好本地化文案 `UpdateSourceNoInfo`——不再出现 `MissingFieldException` 的默认文本（如 "attempted to access a non-existing field"）。
+- **诊断日志**：`UpdateService` 各点位接入 `DiagnosticLog`（源列表脱敏、逐源结果、检查结论），写入 `<exe>\logs\app.log`，跨机器排查用，详见 [logging.md](logging.md)。
 
 ### 4.4 提醒 ReminderService
 - `Check()` 每次轮询读取 `SettingsService.Current.ReminderNotifications / ReminderSound`：通知关 → 不 `ShowBalloonTip`；声音关 → 不 `SystemSounds.Exclamation.Play()`。即时生效，无需重启。
