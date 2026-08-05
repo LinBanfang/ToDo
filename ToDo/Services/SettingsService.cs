@@ -8,6 +8,16 @@ public class AppSettings
     public string DbPath { get; set; } = "";
     public string Theme { get; set; } = "Light"; // Light, Dark
     public double SidebarWidth { get; set; } = 280;
+
+    /// <summary>Auto-update feeds, tried in order. Empty = default (GitHub).</summary>
+    public List<UpdateSourceSetting> UpdateSources { get; set; } = new();
+}
+
+public class UpdateSourceSetting
+{
+    /// <summary>"github" / "gitee" (JSON releases API) or "appcast" (AutoUpdater.NET XML).</summary>
+    public string Type { get; set; } = "github";
+    public string Url { get; set; } = "";
 }
 
 public static class SettingsService
