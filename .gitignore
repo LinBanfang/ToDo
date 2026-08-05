@@ -4,7 +4,8 @@ obj/
 *.db
 .vs/
 
-# Claude Code local (personal) overrides — project settings.json is shared
+# Claude Code local (personal) settings — not shared
+.claude/settings.json
 .claude/settings.local.json
 
 # Visual Studio per-user files
