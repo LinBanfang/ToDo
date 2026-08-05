@@ -31,9 +31,10 @@ public class UpdateSourceSetting
 
 public static class SettingsService
 {
-    private static readonly string SettingsDir = Path.Combine(
+    /// <summary>Settings directory; tests repoint this at a temp dir via <see cref="UseDirectory"/>.</summary>
+    internal static string SettingsDir { get; private set; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ToDo");
-    private static readonly string SettingsFile = Path.Combine(SettingsDir, "settings.json");
+    private static string SettingsFile => Path.Combine(SettingsDir, "settings.json");
 
     public static string DefaultDbPath => Path.Combine(SettingsDir, "todo.db");
 
@@ -58,6 +59,13 @@ public static class SettingsService
             if (_current == null) Load();
             return _current!;
         }
+    }
+
+    /// <summary>Test seam: point settings at an isolated directory and reset cached state.</summary>
+    internal static void UseDirectory(string dir)
+    {
+        _current = null;
+        SettingsDir = dir;
     }
 
     public static void Load()
