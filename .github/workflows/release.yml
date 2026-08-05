@@ -70,13 +70,16 @@ jobs:
             Write-Host "Gitee release $tag create failed: $($_.ErrorDetails.Message)"
           }
 
-          # 3. Get the release id
-          $rel = Invoke-RestMethod -Method Get -Uri "$base/releases/tags/$tag?access_token=$token"
-          if (-not $rel.id) { throw "No Gitee release id for tag $tag" }
+          # 3. Fetch the release id by tag (dump the response if it can't be read)
+          $resp = Invoke-WebRequest -Method Get -Uri "$base/releases/tags/$tag?access_token=$token" -ErrorAction Stop
+          Write-Host "GET /releases/tags response starts: $($resp.Content.Substring(0, [Math]::Min(300, $resp.Content.Length)))"
+          $data = $resp.Content | ConvertFrom-Json
+          $id = $data.id
+          if (-not $id) { throw "No Gitee release id for tag $tag; response: $($resp.Content.Substring(0, [Math]::Min(300, $resp.Content.Length)))" }
 
           # 4. Upload the zip asset
           $zip = "ToDo-$tag.zip"
           $form = @{ file = Get-Item $zip }
-          $uploadUri = "$base/releases/$($rel.id)/attach_files?access_token=$token"
+          $uploadUri = "$base/releases/$id/attach_files?access_token=$token"
           Invoke-RestMethod -Method Post -Uri $uploadUri -Form $form -ErrorAction Stop | Out-Null
           Write-Host "Uploaded $zip to Gitee release $tag"
