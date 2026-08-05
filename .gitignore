@@ -6,3 +6,6 @@ obj/
 
 # Claude Code local (personal) overrides — project settings.json is shared
 .claude/settings.local.json
+
+# Visual Studio per-user files
+*.csproj.user
