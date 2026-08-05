@@ -303,3 +303,12 @@ MainViewModel
 - `ReminderService`（Services）每 15 秒用 LiteDB `Reminder` 索引查询到期提醒，第一次到点时通过托盘 `NotifyIcon` 弹系统通知并播放提示音
 - 启动时已到期的旧提醒会被预标记，不在启动时轰炸用户
 - 应用退出后不推送（需保持运行才会触发提醒）
+
+---
+
+## 11. 自动更新
+
+- 应用启动空闲后查询 `https://api.github.com/repos/LinBanfang/ToDo/releases/latest`，比对最新 tag 与程序集版本（csproj `<Version>`）
+- 有新版时弹出主题化 `UpdateDialog`：显示版本与发布说明，支持**下载更新**（流式下载 zip 到 Downloads 并打开位置）、**以后再说**（2 天后重询）、**跳过此版本**
+- 基于 **vendored AutoUpdater.NET**（`ToDo/Updater/`，保留 `AutoUpdaterDotNET` 命名空间与 MIT 许可，`LICENSE` 随附；去掉了 WinForms UI / WebView2 / resx，宿主用自己的 WPF 对话框）
+- 版本/跳过/稍后状态由 `JsonFilePersistenceProvider` 持久化到 `%LOCALAPPDATA%\ToDo\updater.json`
