@@ -14,7 +14,7 @@
 - **中英文切换** — 侧边栏底部一键切换，全界面（含弹窗、转换器）本地化
 - **浅色 / 深色主题** — 侧边栏一键切换，即时生效并自动记忆
 - **本地存储** — LiteDB 嵌入式数据库，数据文件默认在 `%LOCALAPPDATA%\ToDo\todo.db`，路径可在设置中变更并自动迁移
-- **自动更新** — 启动时检查 GitHub 最新发布，发现新版本一键自动下载、替换并重启（基于 vendored AutoUpdater.NET，MIT）
+- **自动更新** — 启动时按序检查多个更新源（GitHub / Gitee / 私有 appcast），发现新版本一键自动下载、替换并重启（基于 vendored AutoUpdater.NET，MIT）
 
 ## 运行
 
