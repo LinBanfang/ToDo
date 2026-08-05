@@ -308,7 +308,8 @@ MainViewModel
 
 ## 11. 自动更新
 
-- 应用启动空闲后按顺序尝试多个更新源（`UpdateService.Sources`），第一个成功的生效：**GitHub**（`api.github.com` JSON）、**Gitee**（`api.gitee.com` JSON，需镜像仓库）、**私有服务器**（AutoUpdater.NET appcast XML，`<version>/<url>/<changelog>`，相对 url 按 appcast 地址解析）；比对最新版本与程序集版本（csproj `<Version>`）
+- 应用启动空闲后按顺序尝试更新源，第一个成功的生效：**GitHub**（`api.github.com` JSON）、**Gitee**（`api.gitee.com` JSON，需镜像仓库）、**私有服务器**（AutoUpdater.NET appcast XML，`<version>/<url>/<changelog>`，相对 url 按 appcast 地址解析）；比对最新版本与程序集版本（csproj `<Version>`）
+- **更新源可配置**：读 `%LOCALAPPDATA%\ToDo\settings.json` 的 `UpdateSources` 数组（`{"Type","Url"}` 列表，按序尝试）；为空时回退到默认 GitHub 源。Type 取值：`github` / `gitee`（JSON）、`appcast`（XML）
 - 有新版时弹出主题化 `UpdateDialog`：显示版本与发布说明，支持**立即更新**（全自动：下载 zip 到临时目录 → 写隐藏 PowerShell 更新脚本（路径 base64 编码）→ 应用退出 → 脚本等待进程结束、解压到临时目录、覆盖安装目录、重启应用）、**以后再说**（2 天后重询）、**跳过此版本**
 - 先解压到临时目录再覆盖，下载损坏不会破坏当前安装；失败记录到 `%TEMP%\ToDoUpdateError.log`
 - 基于 **vendored AutoUpdater.NET**（`ToDo/Updater/`，保留 `AutoUpdaterDotNET` 命名空间与 MIT 许可，`LICENSE` 随附；去掉了 WinForms UI / WebView2 / resx，宿主用自己的 WPF 对话框）
