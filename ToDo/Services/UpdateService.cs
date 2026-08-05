@@ -28,6 +28,10 @@ public static class UpdateService
     private static string? _latestReleaseBody;
     private static bool _manualCheck;
 
+    /// <summary>First real failure from the last check, so a failed check can report
+    /// the actual network error instead of the generic MissingFieldException.</summary>
+    private static Exception? _lastCheckError;
+
     public static void Configure()
     {
         RefreshSources();
@@ -72,12 +76,14 @@ public static class UpdateService
 
     private static void ParseUpdateInfo(ParseUpdateInfoEventArgs args)
     {
+        _lastCheckError = null;
         foreach (var source in _sources)
         {
             try
             {
                 if (TryGetLatest(source, out var version, out var downloadUrl, out var body, out var changelogUrl))
                 {
+                    _lastCheckError = null;
                     _latestReleaseBody = body;
                     args.UpdateInfo = new UpdateInfoEventArgs
                     {
@@ -88,9 +94,10 @@ public static class UpdateService
                     return;
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // try the next source
+                // remember the first real failure so a failed check can report it
+                _lastCheckError ??= ex;
             }
         }
 
@@ -172,14 +179,18 @@ public static class UpdateService
             _manualCheck = false;
             if (args.Error != null)
             {
-                MessageBox.Show(Loc.UpdateCheckFailed(args.Error.Message),
+                // Report the first real source error rather than the generic
+                // MissingFieldException AutoUpdater throws for an all-sources failure.
+                var detail = ErrorDetail(_lastCheckError ?? args.Error);
+                _lastCheckError = null;
+                MessageBox.Show(Loc.UpdateCheckFailed(detail),
                     Loc.Updates, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             if (!args.IsUpdateAvailable)
             {
-                MessageBox.Show(Loc.UpdateUpToDate, Loc.Updates,
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.UpdateUpToDate(args.CurrentVersion),
+                    Loc.Updates, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
         }
@@ -190,5 +201,14 @@ public static class UpdateService
 
         var dialog = new Views.Dialogs.UpdateDialog(args, _latestReleaseBody) { Owner = owner };
         dialog.ShowDialog();
+    }
+
+    /// <summary>Unwraps to the innermost exception so the user sees the real cause
+    /// (e.g. "connection refused") instead of the HttpRequestException wrapper.</summary>
+    private static string ErrorDetail(Exception ex)
+    {
+        var current = ex;
+        while (current.InnerException != null) current = current.InnerException;
+        return current.Message;
     }
 }
