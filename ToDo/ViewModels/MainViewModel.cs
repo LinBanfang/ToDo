@@ -208,7 +208,7 @@ public partial class MainViewModel : ObservableObject
         UngroupedCustomLists.Clear();
         GroupedCustomLists.Clear();
 
-        var ungrouped = CustomLists.Where(l => l.GroupId == null).ToList();
+        var ungrouped = CustomLists.Where(l => l.GroupId == null).OrderBy(l => l.Order).ToList();
         foreach (var l in ungrouped) UngroupedCustomLists.Add(l);
 
         foreach (var g in ListGroups.OrderBy(g => g.Order))
