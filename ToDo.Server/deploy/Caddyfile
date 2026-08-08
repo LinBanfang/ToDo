@@ -1,0 +1,5 @@
+# Include this snippet in /etc/caddy/Caddyfile, or run the whole file.
+# Replace YOUR_DOMAIN with your actual domain. Let's Encrypt is handled automatically.
+YOUR_DOMAIN {
+    reverse_proxy 127.0.0.1:5080
+}

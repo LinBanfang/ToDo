@@ -2,4 +2,6 @@
   <Project Path="ToDo.Core/ToDo.Core.csproj" />
   <Project Path="ToDo.Tests/ToDo.Tests.csproj" />
   <Project Path="ToDo/ToDo.csproj" />
+  <Project Path="ToDo.Server/ToDo.Server.csproj" />
+  <Project Path="ToDo.Server.Tests/ToDo.Server.Tests.csproj" />
 </Solution>
