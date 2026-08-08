@@ -1,0 +1,20 @@
+[Unit]
+Description=To Do sync server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/todo-sync
+ExecStart=/opt/todo-sync/ToDo.Server
+Restart=always
+RestartSec=3
+# EnvironmentFile is written by deploy.sh with a freshly generated SYNC_KEY.
+EnvironmentFile=/etc/todo-sync.env
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5080
+Environment=ConnectionStrings__Default=Data Source=/var/lib/todo-sync/sync.db
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
