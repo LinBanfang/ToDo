@@ -10,6 +10,7 @@ public partial class App : Application
     public static DatabaseService? Database { get; private set; }
     public static MainViewModel? ViewModel { get; private set; }
     public static ReminderService? Reminders { get; private set; }
+    public static SyncService? Sync { get; private set; }
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -19,8 +20,13 @@ public partial class App : Application
         RestorePendingDatabase();
 
         Database = new DatabaseService(ResolveDbPath());
+
+        // Sync is created before the ViewModel so the settings SyncSection can subscribe
+        // to its StatusChanged; the refresh hook + timer start once the VM exists.
+        Sync = new SyncService(Database, Dispatcher);
         ViewModel = new MainViewModel(Database);
         Reminders = new ReminderService(Database);
+        Sync.SetRefreshAction(() => { ViewModel.LoadAll(); ViewModel.RefreshActiveTasks(); });
 
         // Apply the persisted language + theme before the first window loads
         Loc.SetLanguage(SettingsService.Current.Language == "English"
@@ -31,6 +37,8 @@ public partial class App : Application
         mainWindow.Icon = new System.Windows.Media.Imaging.BitmapImage(
             new Uri("pack://application:,,,/Resources/app.ico"));
         mainWindow.Show();
+
+        Sync.Start();
 
         UpdateService.Configure();
         if (SettingsService.Current.CheckForUpdatesOnStartup)
@@ -80,6 +88,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        Sync?.Dispose();
         Reminders?.Dispose();
         Database?.Dispose();
         base.OnExit(e);

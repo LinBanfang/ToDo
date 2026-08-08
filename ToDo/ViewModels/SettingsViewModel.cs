@@ -26,6 +26,7 @@ public partial class SettingsViewModel : ObservableObject
         Sections.Add(new GeneralSection { Key = "general", Title = Loc.General });
         Sections.Add(new AppearanceSection { Key = "appearance", Title = Loc.Appearance });
         Sections.Add(new DataSection { Key = "data", Title = Loc.Data });
+        Sections.Add(new SyncSection { Key = "sync", Title = Loc.SyncSectionTitle });
         Sections.Add(new UpdateSection { Key = "update", Title = Loc.Updates });
         Sections.Add(new ReminderSection { Key = "reminder", Title = Loc.RemindersSection });
         Sections.Add(new AboutSection { Key = "about", Title = Loc.About });

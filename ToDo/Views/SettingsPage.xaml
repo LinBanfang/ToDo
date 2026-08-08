@@ -98,6 +98,45 @@
             </StackPanel>
         </DataTemplate>
 
+        <!-- ═════ 同步 ═════ -->
+        <DataTemplate DataType="{x:Type vm:SyncSection}">
+            <StackPanel Margin="0,4">
+                <TextBlock Style="{StaticResource SettingSectionTitle}" Text="{Binding Title}"/>
+                <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,0,0,16"/>
+                <CheckBox Style="{StaticResource FluentCheckBox}" Content="{x:Static services:Loc.SyncEnabledLabel}"
+                          IsChecked="{Binding SyncEnabled}"/>
+                <TextBlock Style="{StaticResource SettingSectionHeader}" Margin="0,20,0,8"
+                           Text="{x:Static services:Loc.SyncServerUrlLabel}"/>
+                <TextBox Style="{StaticResource FluentTextBox}"
+                         Text="{Binding SyncServerUrl, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Style="{StaticResource SettingSectionHeader}" Margin="0,16,0,8"
+                           Text="{x:Static services:Loc.SyncKeyLabel}"/>
+                <TextBox Style="{StaticResource FluentTextBox}"
+                         Text="{Binding SyncKey, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Style="{StaticResource SettingSectionHeader}" Margin="0,16,0,8"
+                           Text="{x:Static services:Loc.SyncDeviceId}"/>
+                <TextBlock FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                           Text="{Binding DeviceId}" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Style="{StaticResource SettingSectionHeader}" Margin="0,20,0,8"
+                           Text="{x:Static services:Loc.SyncStatusLabel}"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontSize="13" VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Text="{Binding StatusText}"/>
+                    <TextBlock FontSize="12" VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextDisabledBrush}" Margin="12,0,0,0"
+                               Text="{Binding LastSyncText}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                    <Button Content="{x:Static services:Loc.SyncNow}" Style="{StaticResource FluentAccentButton}"
+                            Command="{Binding SyncNowCommand}" Padding="14,6"
+                            AutomationProperties.AutomationId="SyncNow"/>
+                </StackPanel>
+                <TextBlock FontSize="12" Foreground="{DynamicResource TextDisabledBrush}"
+                           Margin="0,20,0,0" TextWrapping="Wrap"
+                           Text="{x:Static services:Loc.SyncMyDayLocalHint}"/>
+            </StackPanel>
+        </DataTemplate>
+
         <!-- ═════ 更新 ═════ -->
         <DataTemplate DataType="{x:Type vm:UpdateSection}">
             <StackPanel Margin="0,4">

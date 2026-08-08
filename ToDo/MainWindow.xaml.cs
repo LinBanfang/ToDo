@@ -1657,6 +1657,13 @@ public partial class MainWindow : Window
         }
     }
 
+    /// <summary>Window focus triggers a sync — the main "check for remote changes" moment.</summary>
+    protected override void OnActivated(EventArgs e)
+    {
+        base.OnActivated(e);
+        App.Sync?.Trigger();
+    }
+
     protected override void OnClosing(CancelEventArgs e)
     {
         // Flush any pending detail-pane title/note edits before exiting

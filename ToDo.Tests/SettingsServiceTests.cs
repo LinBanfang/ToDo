@@ -9,6 +9,7 @@ namespace ToDo.Tests;
 /// Exercises the settings persistence and db-path migration logic (the user-data-critical
 /// parts) in an isolated temp directory via SettingsService.UseDirectory.
 /// </summary>
+[Collection("settings-shared")]   // serialized with SyncServiceTests — SettingsService is a shared static
 public sealed class SettingsServiceTests : IDisposable
 {
     private readonly string _dir = Path.Combine(Path.GetTempPath(), "todo-tests-" + Guid.NewGuid().ToString("N"));
@@ -100,7 +101,7 @@ public sealed class SettingsServiceTests : IDisposable
 
         SettingsService.Load();
 
-        Assert.Equal(1, SettingsService.Current.SchemaVersion);
+        Assert.Equal(2, SettingsService.Current.SchemaVersion);
         Assert.Equal("Dark", SettingsService.Current.Theme);
         Assert.Equal("English", SettingsService.Current.Language);
         Assert.Equal(SettingsService.DefaultDbPath, SettingsService.Current.DbPath);
