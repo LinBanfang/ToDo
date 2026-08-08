@@ -407,9 +407,12 @@
                                 AutomationProperties.AutomationId="OpenSettings"
                                 AutomationProperties.Name="{x:Static services:Loc.Settings}"
                                 ToolTip="{x:Static services:Loc.Settings}"/>
-                        <!-- Sync indicator: MDL2 sync glyph (E895), colored by state, spins
-                             while a round-trip is in flight. Click = sync now; hover shows
-                             the full status text. -->
+                        <!-- Sync indicator: hand-drawn two-arrow sync glyph. Segoe MDL2's
+                             E895 is a hairline monoline glyph that can't be thickened, so
+                             this Path draws the same two chasing circular arrows with a
+                             thick stroke (2/16 units ≈ 2x the MDL2 stroke) at the same
+                             on-screen size. Colored by state, spins while a round-trip is
+                             in flight. Click = sync now; hover shows the full status text. -->
                         <Button Grid.Column="1" Style="{StaticResource FluentSubtleButton}"
                                 Command="{Binding SyncNowCommand}"
                                 HorizontalAlignment="Right" VerticalAlignment="Center"
@@ -417,14 +420,22 @@
                                 ToolTip="{Binding SyncStatusText}"
                                 AutomationProperties.AutomationId="SyncStatus"
                                 AutomationProperties.Name="{x:Static services:Loc.SyncNow}">
-                            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE895;" FontSize="14"
-                                       Foreground="{Binding SyncStatusBrush}"
-                                       RenderTransformOrigin="0.5,0.5">
-                                <TextBlock.RenderTransform>
+                            <Viewbox Width="15" Height="15" RenderTransformOrigin="0.5,0.5">
+                                <Grid Width="16" Height="16">
+                                    <Path Stroke="{Binding SyncStatusBrush}" StrokeThickness="2"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                          Data="M 14.01,10.49 A 6.5,6.5 0 0 1 1.99,10.49
+                                                M 1.99,5.51 A 6.5,6.5 0 0 1 14.01,5.51
+                                                M 1.99,10.49 L 1.77,12.96
+                                                M 1.99,10.49 L 3.9,12.08
+                                                M 14.01,5.51 L 14.23,3.04
+                                                M 14.01,5.51 L 12.1,3.92"/>
+                                </Grid>
+                                <Viewbox.RenderTransform>
                                     <RotateTransform/>
-                                </TextBlock.RenderTransform>
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
+                                </Viewbox.RenderTransform>
+                                <Viewbox.Style>
+                                    <Style TargetType="Viewbox">
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding SyncIsSyncing}" Value="True">
                                                 <DataTrigger.EnterActions>
@@ -442,8 +453,8 @@
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
+                                </Viewbox.Style>
+                            </Viewbox>
                         </Button>
                     </Grid>
                 </Border>
