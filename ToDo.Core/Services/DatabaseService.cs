@@ -1,5 +1,6 @@
 using LiteDB;
 using ToDo.Models;
+using ToDo.Sync;
 using System.IO;
 
 namespace ToDo.Services;
@@ -8,6 +9,14 @@ public class DatabaseService : IDisposable
 {
     private readonly LiteDatabase _db;
     private readonly string _dbPath;
+    private readonly SyncTracker _tracker;
+
+    // Raw collections: ApplySync writes here directly, bypassing outbox tracking.
+    private readonly ILiteCollection<TaskList> _rawLists;
+    private readonly ILiteCollection<TaskGroup> _rawGroups;
+    private readonly ILiteCollection<TaskItem> _rawTasks;
+    private readonly ILiteCollection<Tag> _rawTags;
+    private readonly ILiteCollection<ListGroup> _rawListGroups;
 
     public ILiteCollection<TaskList> Lists { get; }
     public ILiteCollection<TaskGroup> Groups { get; }
@@ -15,6 +24,7 @@ public class DatabaseService : IDisposable
     public ILiteCollection<Tag> Tags { get; }
     public ILiteCollection<ListGroup> ListGroups { get; }
 
+    public SyncTracker Tracker => _tracker;
     public string StoragePath => _dbPath;
 
     public DatabaseService(string dbPath)
@@ -37,11 +47,25 @@ public class DatabaseService : IDisposable
             }
         );
 
-        Lists = _db.GetCollection<TaskList>("lists");
-        Groups = _db.GetCollection<TaskGroup>("groups");
-        Tasks = _db.GetCollection<TaskItem>("tasks");
-        Tags = _db.GetCollection<Tag>("tags");
-        ListGroups = _db.GetCollection<ListGroup>("listgroups");
+        _rawLists = _db.GetCollection<TaskList>("lists");
+        _rawGroups = _db.GetCollection<TaskGroup>("groups");
+        _rawTasks = _db.GetCollection<TaskItem>("tasks");
+        _rawTags = _db.GetCollection<Tag>("tags");
+        _rawListGroups = _db.GetCollection<ListGroup>("listgroups");
+
+        _tracker = new SyncTracker(_db.GetCollection<SyncEvent>("sync_events"));
+
+        // Tracked wrappers: every mutation stamps ModifiedAt and fills the outbox.
+        Lists = new TrackedCollection<TaskList>(_rawLists, _tracker, SyncEntityTypes.List,
+            l => l.Id, l => l.ModifiedAt = Now(), skip: l => l.IsSystem);
+        Groups = new TrackedCollection<TaskGroup>(_rawGroups, _tracker, SyncEntityTypes.Group,
+            g => g.Id, g => g.ModifiedAt = Now());
+        Tasks = new TrackedCollection<TaskItem>(_rawTasks, _tracker, SyncEntityTypes.Task,
+            t => t.Id, t => t.ModifiedAt = Now());
+        Tags = new TrackedCollection<Tag>(_rawTags, _tracker, SyncEntityTypes.Tag,
+            t => t.Id, t => t.ModifiedAt = Now());
+        ListGroups = new TrackedCollection<ListGroup>(_rawListGroups, _tracker, SyncEntityTypes.ListGroup,
+            lg => lg.Id, lg => lg.ModifiedAt = Now());
 
         // Ensure indexes
         Lists.EnsureIndex(x => x.Type);
@@ -59,9 +83,11 @@ public class DatabaseService : IDisposable
         SeedDefaultData();
     }
 
+    private static long Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
     private void SeedDefaultData()
     {
-        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var now = Now();
         var systemDefaults = new Dictionary<string, (string Name, string Icon, ListType Type)>
         {
             ["list-myday"]     = ("My Day",    "☀️", ListType.MyDay),
@@ -91,6 +117,148 @@ public class DatabaseService : IDisposable
                     Lists.Update(existing);
                 }
             }
+        }
+    }
+
+    // ─── Sync entry points ────────────────────────────────────
+
+    /// <summary>Seeds the outbox with the current state of every syncable entity so the
+    /// first sync uploads pre-existing data. Call once when the device has never synced.</summary>
+    public void BootstrapSync()
+    {
+        foreach (var l in _rawLists.FindAll()) RecordIfSyncable(l);
+        foreach (var g in _rawGroups.FindAll()) RecordIfSyncable(g);
+        foreach (var t in _rawTasks.FindAll()) RecordIfSyncable(t);
+        foreach (var t in _rawTags.FindAll()) RecordIfSyncable(t);
+        foreach (var lg in _rawListGroups.FindAll()) RecordIfSyncable(lg);
+    }
+
+    private void RecordIfSyncable(object entity) => _tracker.Record(SyncEntitySerializer.ToChange(entity));
+
+    /// <summary>
+    /// Applies server changes to the raw collections, bypassing outbox tracking.
+    /// Client-side LWW: a change is skipped when the local copy is newer. My Day
+    /// (IsMyDay/MyDayOrder) is never overwritten — it stays per-device.
+    /// </summary>
+    public void ApplySync(IEnumerable<SyncChange> changes)
+    {
+        foreach (var change in changes.OrderBy(c => c.ModifiedAt))
+        {
+            try { ApplyOne(change); }
+            catch (Exception ex) { SyncDiagnostics.Info($"ApplySync {change.Type}:{change.Id} failed: {ex.Message}"); }
+        }
+    }
+
+    private void ApplyOne(SyncChange change)
+    {
+        if (change.Deleted)
+        {
+            ApplyTombstone(change);
+            return;
+        }
+        if (string.IsNullOrEmpty(change.Payload)) return;
+
+        switch (change.Type)
+        {
+            case SyncEntityTypes.Task:
+            {
+                var incoming = (TaskItem)SyncEntitySerializer.FromChange(change)!;
+                var local = _rawTasks.FindById(incoming.Id);
+                if (local != null && local.ModifiedAt > incoming.ModifiedAt) return;
+                if (local != null) { incoming.IsMyDay = local.IsMyDay; incoming.MyDayOrder = local.MyDayOrder; }
+                _rawTasks.Upsert(incoming);
+                break;
+            }
+            case SyncEntityTypes.List:
+            {
+                var incoming = (TaskList)SyncEntitySerializer.FromChange(change)!;
+                var local = _rawLists.FindById(incoming.Id);
+                if (local != null && local.ModifiedAt > incoming.ModifiedAt) return;
+                _rawLists.Upsert(incoming);
+                break;
+            }
+            case SyncEntityTypes.Group:
+            {
+                var incoming = (TaskGroup)SyncEntitySerializer.FromChange(change)!;
+                var local = _rawGroups.FindById(incoming.Id);
+                if (local != null && local.ModifiedAt > incoming.ModifiedAt) return;
+                _rawGroups.Upsert(incoming);
+                break;
+            }
+            case SyncEntityTypes.ListGroup:
+            {
+                var incoming = (ListGroup)SyncEntitySerializer.FromChange(change)!;
+                var local = _rawListGroups.FindById(incoming.Id);
+                if (local != null && local.ModifiedAt > incoming.ModifiedAt) return;
+                _rawListGroups.Upsert(incoming);
+                break;
+            }
+            case SyncEntityTypes.Tag:
+            {
+                var incoming = (Tag)SyncEntitySerializer.FromChange(change)!;
+                var local = _rawTags.FindById(incoming.Id);
+                if (local != null && local.ModifiedAt > incoming.ModifiedAt) return;
+                _rawTags.Upsert(incoming);
+                break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Applies a remote tombstone, mirroring the app's own delete cascades so remote
+    /// deletes don't strand orphaned tasks. A local edit that is newer than the
+    /// tombstone wins (the entity is kept and its newer state re-pushed later).
+    /// </summary>
+    private void ApplyTombstone(SyncChange change)
+    {
+        switch (change.Type)
+        {
+            case SyncEntityTypes.Task:
+                var task = _rawTasks.FindById(change.Id);
+                if (task != null && task.ModifiedAt > change.ModifiedAt) return;
+                _rawTasks.Delete(change.Id);
+                break;
+            case SyncEntityTypes.List:
+                var list = _rawLists.FindById(change.Id);
+                if (list != null && list.ModifiedAt > change.ModifiedAt) return;
+                foreach (var t in _rawTasks.Find(t => t.ListId == change.Id))
+                {
+                    t.ListId = "list-tasks";   // orphaned tasks → inbox, like the app's DeleteList
+                    t.GroupId = null;
+                    _rawTasks.Update(t);
+                }
+                _rawGroups.DeleteMany(g => g.ListId == change.Id);
+                _rawLists.Delete(change.Id);
+                break;
+            case SyncEntityTypes.Group:
+                var group = _rawGroups.FindById(change.Id);
+                if (group != null && group.ModifiedAt > change.ModifiedAt) return;
+                foreach (var t in _rawTasks.Find(t => t.GroupId == change.Id))
+                {
+                    t.GroupId = null;
+                    _rawTasks.Update(t);
+                }
+                _rawGroups.Delete(change.Id);
+                break;
+            case SyncEntityTypes.ListGroup:
+                var listGroup = _rawListGroups.FindById(change.Id);
+                if (listGroup != null && listGroup.ModifiedAt > change.ModifiedAt) return;
+                foreach (var l in _rawLists.Find(l => l.GroupId == change.Id))
+                {
+                    l.GroupId = null;
+                    _rawLists.Update(l);
+                }
+                _rawListGroups.Delete(change.Id);
+                break;
+            case SyncEntityTypes.Tag:
+                var tag = _rawTags.FindById(change.Id);
+                if (tag != null && tag.ModifiedAt > change.ModifiedAt) return;
+                foreach (var t in _rawTasks.FindAll())
+                {
+                    if (t.TagIds.Remove(change.Id)) _rawTasks.Update(t);
+                }
+                _rawTags.Delete(change.Id);
+                break;
         }
     }
 

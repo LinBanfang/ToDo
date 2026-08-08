@@ -38,6 +38,9 @@ public partial class TaskList : ObservableObject
     [ObservableProperty]
     private long _createdAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
+    [ObservableProperty]
+    private long _modifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
     /// <summary>
     /// Unclosed task count for this list (observable for real-time sidebar updates)
     /// </summary>

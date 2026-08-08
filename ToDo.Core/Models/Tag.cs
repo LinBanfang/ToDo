@@ -15,4 +15,7 @@ public partial class Tag : ObservableObject
 
     [ObservableProperty]
     private long _createdAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+    [ObservableProperty]
+    private long _modifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 }
