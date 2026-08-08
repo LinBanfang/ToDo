@@ -1,17 +1,19 @@
 ﻿# capture-screenshots.ps1
-# Regenerate the README feature screenshots (work-list / my-day / settings).
+# Regenerate the README feature screenshots (work-list / my-day / sticky-note / settings).
 #
 # What it does:
 #   1. Builds ToDo + ToDo.Demo (skip with -SkipBuild).
 #   2. Seeds a throwaway demo DB from ToDo.Demo (temporary file, never your real one).
 #   3. Launches the app pointed at that DB via a temporary settings.json.
 #   4. Drives the UI with UIAutomation: clicks sidebar 工作 / 我的一天, opens the
-#      settings page, and captures the window for each.
+#      sticky note via the footer button (captures the separate sticky window, then
+#      clicks its back-to-main button), opens the settings page — one shot each.
 #   5. Captures with DwmGetWindowAttribute(DWMWA_EXTENDED_FRAME_BOUNDS) so the
 #      Windows window shadow (left/right/bottom ~7px, top 0) is NOT included and
 #      the borders stay symmetric — see docs/screenshots.md.
 #   6. Self-checks every screenshot: the outer 12px strips must contain no dark
-#      shadow pixels, and the four edges must share one color.
+#      shadow pixels, and the four edges must share one color (the small sticky
+#      note uses a 3px strip — content-dense, a real edge shadow would still show).
 #
 # Your real %LOCALAPPDATA%\ToDo\settings.json is backed up first and restored in
 # a finally block; your real DB is never opened. Safe to run at any time.
@@ -61,6 +63,45 @@ public static class NativeCap
     [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
     [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
     [DllImport("user32.dll")] public static extern void mouse_event(uint flags, uint dx, uint dy, uint data, UIntPtr extra);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr FindWindow(string className, string windowName);
+    public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+    [DllImport("user32.dll")] public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+    [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder text, int count);
+    [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hWnd);
+    public static string DumpWindows(uint pid)
+    {
+        var sb = new System.Text.StringBuilder();
+        EnumWindows((h, l) =>
+        {
+            uint wpid;
+            GetWindowThreadProcessId(h, out wpid);
+            if (wpid == pid)
+            {
+                var t = new System.Text.StringBuilder(256);
+                GetWindowText(h, t, 256);
+                sb.AppendLine(h.ToString("X") + " visible=" + IsWindowVisible(h) + " title=" + t.ToString());
+            }
+            return true;
+        }, IntPtr.Zero);
+        return sb.ToString();
+    }
+    // FindWindow(IntPtr.Zero, title) is awkward from PowerShell ($null marshals to
+    // "" and no class name matches), so find by title via EnumWindows instead.
+    public static IntPtr FindWindowByTitle(string title)
+    {
+        IntPtr found = IntPtr.Zero;
+        EnumWindows((h, l) =>
+        {
+            if (found != IntPtr.Zero) return false;
+            if (!IsWindowVisible(h)) return true;
+            var t = new System.Text.StringBuilder(256);
+            GetWindowText(h, t, 256);
+            if (t.ToString() == title) { found = h; return false; }
+            return true;
+        }, IntPtr.Zero);
+        return found;
+    }
     [DllImport("dwmapi.dll")] public static extern int DwmGetWindowAttribute(IntPtr hwnd, int attr, out RECT rect, int size);
     [DllImport("dwmapi.dll")] public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
     [StructLayout(LayoutKind.Sequential)]
@@ -115,17 +156,19 @@ function Save-WindowShot($hwnd, [string]$path) {
     return $path
 }
 
-# Self-check: outer 12px strips of each side must be free of dark shadow pixels and
-# the edge colors must match, so the four borders render symmetrically.
-function Assert-SymmetricEdges([string]$path) {
+# Self-check: outer strips of each side must be free of dark shadow pixels and the
+# edge colors must match, so the four borders render symmetrically.
+# $strip: how many outer pixels to scan for shadow (12 = full DWM shadow ~7px; the
+# small sticky note is content-dense, so 3px still catches a real shadow at the edge).
+function Assert-SymmetricEdges([string]$path, [int]$strip = 12) {
     $bmp = New-Object System.Drawing.Bitmap($path)
     $w = $bmp.Width; $h = $bmp.Height
     $midX = [int]($w / 2); $midY = [int]($h / 2)
     $dark = 0
-    foreach ($x in 0..11) { $c = $bmp.GetPixel($x, $midY);    if ($c.R -lt 40) { $dark++ } }
-    foreach ($x in ($w-12)..($w-1)) { $c = $bmp.GetPixel($x, $midY);    if ($c.R -lt 40) { $dark++ } }
-    foreach ($y in 0..11) { $c = $bmp.GetPixel($midX, $y);    if ($c.R -lt 40) { $dark++ } }
-    foreach ($y in ($h-12)..($h-1)) { $c = $bmp.GetPixel($midX, $y);    if ($c.R -lt 40) { $dark++ } }
+    foreach ($x in 0..($strip-1)) { $c = $bmp.GetPixel($x, $midY);    if ($c.R -lt 40) { $dark++ } }
+    foreach ($x in ($w-$strip)..($w-1)) { $c = $bmp.GetPixel($x, $midY);    if ($c.R -lt 40) { $dark++ } }
+    foreach ($y in 0..($strip-1)) { $c = $bmp.GetPixel($midX, $y);    if ($c.R -lt 40) { $dark++ } }
+    foreach ($y in ($h-$strip)..($h-1)) { $c = $bmp.GetPixel($midX, $y);    if ($c.R -lt 40) { $dark++ } }
     $hex = @{}
     foreach ($key in @('left','right','top','bottom')) {
         switch ($key) {
@@ -163,7 +206,7 @@ try {
     # 3) temporary settings pointing at the demo DB (backup the real file first)
     Copy-Item $settingsPath $settingsBak -Force
     $demoSettings = @{
-        SchemaVersion = 2; DbPath = $DbPath; Theme = $Theme; SidebarWidth = 280
+        SchemaVersion = 4; DbPath = $DbPath; Theme = $Theme; SidebarWidth = 280
         Language = 'Chinese'; CheckForUpdatesOnStartup = $false; ReminderNotifications = $false
         ReminderSound = $false; SyncEnabled = $false; SyncServerUrl = ''; SyncKey = ''
         DeviceId = ''; LastSyncServerSeq = 0; LastSyncTime = 0; UpdateSources = @(); PendingRestorePath = $null
@@ -199,6 +242,43 @@ try {
     $p = Join-Path $OutputDir 'work-list.png'
     Save-WindowShot $hwnd $p | Out-Null
     Assert-SymmetricEdges $p
+
+    # Sticky note: the footer button opens a separate always-on-top window titled
+    # Loc.StickyNote ("迷你便笺") and hides the main window. ActiveList is still 工作
+    # here, so the sticky shows 工作's tagged tasks (the tag pills). Capture it, then
+    # click its back-to-main button to restore the main window.
+    $stickyCond = New-Object System.Windows.Automation.PropertyCondition(
+        [System.Windows.Automation.AutomationElement]::AutomationIdProperty, 'StickyNote')
+    $stickyBtn = $root.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $stickyCond)
+    if (-not $stickyBtn) { throw 'StickyNote footer button not found' }
+    $stickyBtn.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    Start-Sleep -Seconds 2
+    $shwnd = [IntPtr]::Zero
+    for ($i = 0; $i -lt 20; $i++) {
+        $shwnd = [NativeCap]::FindWindowByTitle('迷你便笺')
+        if ($shwnd -ne [IntPtr]::Zero) { break }
+        Start-Sleep -Milliseconds 300
+    }
+    if ($shwnd -eq [IntPtr]::Zero) {
+        $log.AppendLine("    process windows after sticky click:") | Out-Null
+        $log.AppendLine(([NativeCap]::DumpWindows([uint32]$proc.Id))) | Out-Null
+        throw 'sticky note window not found'
+    }
+    $cp = 1
+    [NativeCap]::DwmSetWindowAttribute($shwnd, 33, [ref]$cp, 4) | Out-Null
+    Start-Sleep -Milliseconds 600
+    $p = Join-Path $OutputDir 'sticky-note.png'
+    Save-WindowShot $shwnd $p | Out-Null
+    Assert-SymmetricEdges $p 3   # 3px: the sticky is small & content-dense; a real edge shadow would still be caught
+    # Restore the main window via the sticky's back-to-main button (AutomationId
+    # StickyBackToMain), then keep capturing the remaining shots.
+    $stickyRoot = [System.Windows.Automation.AutomationElement]::FromHandle($shwnd)
+    $backCond = New-Object System.Windows.Automation.PropertyCondition(
+        [System.Windows.Automation.AutomationElement]::AutomationIdProperty, 'StickyBackToMain')
+    $backBtn = $stickyRoot.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $backCond)
+    if (-not $backBtn) { throw 'StickyBackToMain button not found' }
+    $backBtn.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    Start-Sleep -Seconds 2
 
     $myday = Find-SidebarText $root '我的一天'
     if (-not $myday) { throw 'sidebar "我的一天" not found' }

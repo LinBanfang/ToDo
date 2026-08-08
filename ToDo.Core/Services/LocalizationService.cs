@@ -210,4 +210,16 @@ public static class Loc
     public static string SyncMyDayLocalHint => Language == AppLanguage.Chinese
         ? "「我的一天」仅保存在本设备，不同步。重要标记与其他内容会跨设备同步。"
         : "My Day stays on this device. Important markers and everything else sync across devices.";
+
+    // Behavior + tray
+    public static string Behavior => Language == AppLanguage.Chinese ? "行为" : "Behavior";
+    public static string MinimizeToTrayOnClose => Language == AppLanguage.Chinese
+        ? "关闭主窗口时最小化到托盘" : "Minimize to tray on close";
+    public static string StickyShowTags => Language == AppLanguage.Chinese
+        ? "在便笺中显示标签" : "Show tags in sticky note";
+    public static string StickyNote => Language == AppLanguage.Chinese ? "迷你便笺" : "Sticky note";
+    public static string OpenMainWindow => Language == AppLanguage.Chinese ? "打开主界面" : "Open main window";
+    public static string ExitApp => Language == AppLanguage.Chinese ? "退出" : "Exit";
+    public static string StickyCloseNote => Language == AppLanguage.Chinese ? "关闭便笺" : "Close note";
+    public static string BackToMain => Language == AppLanguage.Chinese ? "返回主界面" : "Back to main";
 }

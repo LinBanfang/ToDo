@@ -15,6 +15,17 @@ public class AppSettings
     public bool ReminderNotifications { get; set; } = true;
     public bool ReminderSound { get; set; } = true;
 
+    // ─── Behavior (tray / sticky note) ───────────────────
+    /// <summary>Main window X hides to the tray instead of exiting the app.</summary>
+    public bool MinimizeToTrayOnClose { get; set; } = true;
+    /// <summary>Show colored tag pills on sticky-note task rows (default on).</summary>
+    public bool StickyShowTags { get; set; } = true;
+    /// <summary>Sticky window geometry (DIPs); null = center on first open.</summary>
+    public double? StickyLeft { get; set; }
+    public double? StickyTop { get; set; }
+    public double StickyWidth { get; set; } = 340;
+    public double StickyHeight { get; set; } = 520;
+
     // ─── Sync (multi-device, self-hosted server) ───────────
     public bool SyncEnabled { get; set; }
     public string SyncServerUrl { get; set; } = "";
@@ -51,7 +62,7 @@ public static class SettingsService
     /// <summary>Where a chosen backup is staged before it replaces the live DB on restart.</summary>
     public static string PendingRestoreFilePath => Path.Combine(SettingsDir, "pending-restore.db");
 
-    private const int CurrentSchemaVersion = 2;   // v2 adds the sync block (SyncEnabled/ServerUrl/Key/DeviceId/seq/time)
+    private const int CurrentSchemaVersion = 4;   // v4 adds StickyShowTags; v3 added the Behavior block + sticky geometry
 
     private static AppSettings? _current;
 

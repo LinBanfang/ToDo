@@ -1,5 +1,3 @@
-using System.Drawing;
-using System.IO;
 using System.Media;
 using System.Windows.Forms;
 using System.Windows.Threading;
@@ -11,6 +9,7 @@ namespace ToDo.Services;
 /// Periodically checks tasks for due reminders and raises a system notification
 /// (tray balloon) plus a sound, once per reminder. Reminders that were already due
 /// before this session started are skipped so the app doesn't nag on launch.
+/// The tray icon is owned by <see cref="TrayService"/> and shared with this service.
 /// </summary>
 public class ReminderService : IDisposable
 {
@@ -20,9 +19,10 @@ public class ReminderService : IDisposable
     private readonly HashSet<string> _fired = new();
     private bool _disposed;
 
-    public ReminderService(DatabaseService db)
+    public ReminderService(DatabaseService db, NotifyIcon trayIcon)
     {
         _db = db;
+        _trayIcon = trayIcon;
 
         // Pre-mark reminders that are already due so they don't all fire at startup
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -31,28 +31,9 @@ public class ReminderService : IDisposable
             _fired.Add($"{t.Id}|{t.Reminder}");
         }
 
-        _trayIcon = new NotifyIcon
-        {
-            Icon = LoadAppIcon(),
-            Visible = true,
-            Text = "To Do",
-        };
-
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(15) };
         _timer.Tick += (_, _) => Check();
         _timer.Start();
-    }
-
-    private static Icon LoadAppIcon()
-    {
-        try
-        {
-            var exe = System.Reflection.Assembly.GetEntryAssembly()?.Location;
-            if (!string.IsNullOrEmpty(exe) && File.Exists(exe))
-                return Icon.ExtractAssociatedIcon(exe) ?? SystemIcons.Application;
-        }
-        catch { }
-        return SystemIcons.Application;
     }
 
     private void Check()
@@ -84,8 +65,9 @@ public class ReminderService : IDisposable
 
     public void Dispose()
     {
+        // The tray icon is owned and disposed by TrayService; we only stop the timer
+        // so no balloon fires against a disposed icon during shutdown.
         _disposed = true;
         _timer.Stop();
-        _trayIcon.Dispose();
     }
 }

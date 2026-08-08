@@ -1,6 +1,6 @@
 # README 功能截图：生成与验证
 
-README 顶部三张功能截图（[work-list.png](../screenshots/work-list.png) / [my-day.png](../screenshots/my-day.png) / [settings.png](../screenshots/settings.png)）由**演示数据**驱动生成，保证内容可复现、可重新截取。
+README 顶部四张功能截图（[work-list.png](../screenshots/work-list.png) / [my-day.png](../screenshots/my-day.png) / [sticky-note.png](../screenshots/sticky-note.png) / [settings.png](../screenshots/settings.png)）由**演示数据**驱动生成，保证内容可复现、可重新截取。
 
 ## 数据来源
 
@@ -26,8 +26,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/screenshots/capture-sc
 1. `dotnet build ToDo.slnx`（可 `-SkipBuild` 跳过）。
 2. 运行 ToDo.Demo 生成临时演示 DB（`%TEMP%\todo-screenshot-<Theme>.db`）。
 3. 备份真实 `settings.json`，写入临时设置（指向演示 DB、指定主题、关闭更新 / 同步 / 提醒）——**结束必恢复**，真实数据全程不被修改。
-4. 启动应用，UIAutomation 驱动界面：点击侧边栏「工作」→ 截图；点击「我的一天」→ 截图；打开设置页 → 截图。
-5. 每张截图自动做边缘自检，失败即抛错并退出（退出码 1）。
+4. 启动应用，UIAutomation 驱动界面：点击侧边栏「工作」→ 截图；点击 footer 便笺按钮 → 便笺弹出，按标题（迷你便笺）定位独立置顶窗口 → 截图；便笺「返回主界面」恢复主窗 → 点击「我的一天」→ 截图；打开设置页 → 截图。
+5. 每张截图自动做边缘自检，失败即抛错并退出（退出码 1）。便笺是独立窗口（无标题栏、无投影），边缘采样条带用 3px（而非主窗的 12px），以免把贴边的任务文字误判为阴影。
 
 ## 两个关键细节（踩过的坑）
 

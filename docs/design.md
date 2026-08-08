@@ -339,3 +339,4 @@ MainViewModel
 | [ADR-009](adr/0009-diagnostic-logging.md) | 诊断日志（零依赖本地日志，更新检查接入） |
 | [ADR-010](adr/0010-self-hosted-sync.md) | 自托管多端同步（可选后端，outbox + ServerSeq LWW） |
 | [ADR-011](adr/0011-titlebar-theme.md) | 标题栏 / 边框跟随应用主题（DWM 着色） |
+| [ADR-012](adr/0012-sticky-note-tray.md) | 迷你便笺 + 系统托盘常驻（模式切换 / 托盘菜单 / 生命周期） |

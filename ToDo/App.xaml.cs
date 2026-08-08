@@ -11,6 +11,7 @@ public partial class App : Application
     public static MainViewModel? ViewModel { get; private set; }
     public static ReminderService? Reminders { get; private set; }
     public static SyncService? Sync { get; private set; }
+    public static TrayService? Tray { get; private set; }
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -25,8 +26,17 @@ public partial class App : Application
         // to its StatusChanged; the refresh hook + timer start once the VM exists.
         Sync = new SyncService(Database, Dispatcher);
         ViewModel = new MainViewModel(Database);
-        Reminders = new ReminderService(Database);
+        // Tray comes before Reminders so the reminder service shares the same icon.
+        Tray = new TrayService();
+        Reminders = new ReminderService(Database, Tray.Icon);
         Sync.SetRefreshAction(() => { ViewModel.LoadAll(); ViewModel.RefreshActiveTasks(); });
+
+        // With ShutdownMode=OnExplicitShutdown the app keeps running in the tray until
+        // told to exit; a Windows logout/shutdown must still terminate it cleanly.
+        SessionEnding += (s, se) =>
+        {
+            if (!WindowManager.IsQuitting) WindowManager.Quit();
+        };
 
         // Apply the persisted language + theme before the first window loads
         Loc.SetLanguage(SettingsService.Current.Language == "English"
@@ -36,6 +46,7 @@ public partial class App : Application
         var mainWindow = new MainWindow { DataContext = ViewModel };
         mainWindow.Icon = new System.Windows.Media.Imaging.BitmapImage(
             new Uri("pack://application:,,,/Resources/app.ico"));
+        WindowManager.Init(mainWindow);
         mainWindow.Show();
 
         Sync.Start();
@@ -90,6 +101,7 @@ public partial class App : Application
     {
         Sync?.Dispose();
         Reminders?.Dispose();
+        Tray?.Dispose();
         Database?.Dispose();
         base.OnExit(e);
     }

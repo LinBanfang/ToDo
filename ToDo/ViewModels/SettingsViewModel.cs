@@ -30,6 +30,7 @@ public partial class SettingsViewModel : ObservableObject
         Sections.Add(new SyncSection { Key = "sync", Title = Loc.SyncSectionTitle });
         Sections.Add(new UpdateSection { Key = "update", Title = Loc.Updates });
         Sections.Add(new ReminderSection { Key = "reminder", Title = Loc.RemindersSection });
+        Sections.Add(new BehaviorSection { Key = "behavior", Title = Loc.Behavior });
         Sections.Add(new AboutSection { Key = "about", Title = Loc.About });
         SelectedSection = Sections[0];
     }
