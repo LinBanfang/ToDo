@@ -20,6 +20,8 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 HOST="${HOST:-user@your-vps}"              # SSH target (overridden by deploy.local)
 DOMAIN="${DOMAIN:-sync.example.com}"       # A record already points it at the VPS
+SYNC_PORT="${SYNC_PORT:-8443}"             # HTTPS port; 443 is often taken by other
+                                           # services (e.g. a proxy), so default to 8443
 REMOTE_APP_DIR="/opt/todo-sync"
 REMOTE_DATA_DIR="/var/lib/todo-sync"
 
@@ -71,8 +73,12 @@ else
 fi
 cp /tmp/current-manifest.md5 "$MANIFEST"
 
+# Git Bash's tar doesn't reliably carry the Unix exec bit for the native apphost,
+# so make sure the launcher is executable or systemd fails with status 203/EXEC.
+ssh "$HOST" "chmod +x $REMOTE_APP_DIR/ToDo.Server"
+
 scp ToDo.Server/deploy/todo-sync.service "$HOST:/tmp/todo-sync.service"
-scp ToDo.Server/deploy/Caddyfile "$HOST:/tmp/todo-sync-caddy"
+scp ToDo.Server/deploy/caddy-setup.sh "$HOST:/tmp/todo-sync-caddy-setup.sh"
 
 echo "==> 3/5 generate shared sync key (kept if it already exists)"
 ssh "$HOST" "if [ ! -f /etc/todo-sync.env ]; then
@@ -87,12 +93,11 @@ ssh "$HOST" "mkdir -p $REMOTE_APP_DIR $REMOTE_DATA_DIR &&
   systemctl enable todo-sync &&
   systemctl restart todo-sync"
 
-echo "==> 5/5 wire up Caddy"
-ssh "$HOST" "sed 's|YOUR_DOMAIN|$DOMAIN|' /tmp/todo-sync-caddy |
-  (grep -q '$DOMAIN' /etc/caddy/Caddyfile || tee -a /etc/caddy/Caddyfile) &&
-  systemctl reload caddy"
+echo "==> 5/5 wire up Caddy ($DOMAIN:$SYNC_PORT)"
+ssh "$HOST" "bash /tmp/todo-sync-caddy-setup.sh '$DOMAIN' '$SYNC_PORT' &&
+  rm -f /tmp/todo-sync-caddy-setup.sh"
 
 echo "==> done. Health check:"
-curl -fsS "https://$DOMAIN/healthz"
+curl -fsS "https://$DOMAIN:$SYNC_PORT/healthz"
 echo
 echo "The client sync key lives in $HOST:/etc/todo-sync.env (SYNC_KEY=...)."

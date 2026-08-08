@@ -7,7 +7,7 @@
 
 ```
 WPF 客户端 (Windows)                    VPS (Ubuntu/Debian)
-┌────────────────────┐   HTTPS 443    ┌──────────────────────────────┐
+┌────────────────────┐  HTTPS 8443   ┌──────────────────────────────┐
 │  设置→同步 填地址密钥 │ ────────────▶ │ Caddy (Let's Encrypt 自动证书) │
 │  POST /api/sync     │                │      │  reverse_proxy        │
 └────────────────────┘                │      ▼  http://127.0.0.1:5080 │
@@ -19,6 +19,7 @@ WPF 客户端 (Windows)                    VPS (Ubuntu/Debian)
 ```
 
 - 服务只监听 `127.0.0.1:5080`,**公网不暴露**,所有流量走 Caddy HTTPS
+- **HTTPS 端口默认 8443**:VPS 的 443 常被其他服务占用(如 Shadowsocks/v2ray 代理隧道),Caddy 就把同步站点放在 8443,证书照样走 :80 的 HTTP-01 自动签发。想换端口在 `deploy.local` 设 `SYNC_PORT=...`
 - 认证 = 共享同步密钥 `X-Sync-Key` 头(固定时间比较);无账号系统,单用户
 - 数据库文件在 `/var/lib/todo-sync/sync.db`,WAL 模式
 
@@ -42,6 +43,7 @@ WPF 客户端 (Windows)                    VPS (Ubuntu/Debian)
 ```bash
 HOST="root@1.2.3.4"             # VPS 的 SSH 目标
 DOMAIN="sync.your-domain.com"   # 指向 VPS 的子域名
+SYNC_PORT="8443"                # Caddy HTTPS 端口(443 被占时用 8443)
 ```
 
 `deploy.sh` 启动时会自动读取它;没有这个文件就用占位符默认值并报错让流程失败而不是误传。
@@ -85,19 +87,19 @@ cd d:\Dev\Code\ToDo
 ## 4. 验证
 
 ```bash
-# ① 存活检查
-curl https://<你的域名>/healthz
+# ① 存活检查(端口 8443,443 被代理占着)
+curl https://<你的域名>:8443/healthz
 #   期望: {"status":"ok","protocolVersion":1}   (protocolVersion 由客户端用于"版本不符"检测)
 
 # ② 认证:错误密钥必须 401
-curl -i -X POST https://<你的域名>/api/sync \
+curl -i -X POST https://<你的域名>:8443/api/sync \
   -H "X-Sync-Key: wrong-key" \
   -H "Content-Type: application/json" \
   -d '{"deviceId":"t","since":0,"changes":[]}'
 #   期望: HTTP/1.1 401 Unauthorized
 
 # ③ 推送一条真实数据(正确密钥)
-curl -i -X POST https://<你的域名>/api/sync \
+curl -i -X POST https://<你的域名>:8443/api/sync \
   -H "X-Sync-Key: $(ssh root@<IP> 'sudo cat /etc/todo-sync.env | cut -d= -f2')" \
   -H "Content-Type: application/json" \
   -d '{"deviceId":"t1","since":0,"changes":[{"type":"task","id":"smoke-test","modifiedAt":1,"deleted":false,"payload":"{\"Id\":\"smoke-test\",\"Title\":\"ok\"}"}]}'
@@ -120,7 +122,7 @@ ssh root@<IP> "sudo cat /etc/todo-sync.env"
 
 1. 打开应用 → 设置 → **同步**
 2. 打开「启用多设备同步」开关
-3. **服务器地址**填:`https://<你的域名>`(不带路径、不带斜杠)
+3. **服务器地址**填:`https://<你的域名>:8443`(带端口、不带路径、不带斜杠)
 4. **同步密钥**填:第 5 步的值
 5. **设备 ID** 自动生成,不用填(每台设备一个)
 6. 点「立即同步」→ 状态变「已同步 · 上次同步 …」即成功
@@ -146,7 +148,8 @@ ssh root@<IP> "sudo cat /etc/todo-sync.env"
 
 | 症状 | 排查 |
 |---|---|
-| `curl https://域名/healthz` 连不上/超时 | 防火墙没放行 80/443;或证书还没签好(等 1 分钟再试) |
+| `curl https://域名:8443/healthz` 连不上/超时 | 防火墙没放行 80/8443;或证书还没签好(等 1 分钟再试) |
+| reload caddy 报 `bind: address already in use`(端口 443) | VPS 的 443 被别的服务占用(常见:Shadowsocks/v2ray-plugin)。**别硬抢 443**——在 `deploy.local` 设 `SYNC_PORT=8443`(或任意空闲端口)重跑 deploy.sh;Caddy 证书照常走 :80 自动签发 |
 | 返回 `502 Bad Gateway` | Caddy 在但后端没起来:`systemctl status todo-sync`;或 Caddyfile 没追加成功(见下) |
 | 客户端同步状态「同步失败」 | 服务器地址/密钥填错;或服务端日志 `journalctl -u todo-sync -n 50` 看报错 |
 | 客户端「同步密钥被拒绝(401)」 | 密钥与 `/etc/todo-sync.env` 不一致(复制时别带 `SYNC_KEY=` 前缀,别带空格) |

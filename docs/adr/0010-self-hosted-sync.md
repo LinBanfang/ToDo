@@ -36,7 +36,7 @@
 - 服务端：`BEGIN IMMEDIATE` 事务串行化写入者。
 
 ### 部署
-- 自包含 `linux-x64` 发布（VPS 无需 .NET），systemd 单元 + Caddy 反向代理，增量上传。见 [ToDo.Server/deploy/DEPLOY.md](../../ToDo.Server/deploy/DEPLOY.md)。
+- 自包含 `linux-x64` 发布（VPS 无需 .NET），systemd 单元 + Caddy 反向代理，增量上传。HTTPS 端口默认 `8443`（VPS 的 443 常被其他服务占用，如代理隧道；Caddy 证书照常走 :80 的 HTTP-01 自动签发），可用 `SYNC_PORT` 覆盖。见 [ToDo.Server/deploy/DEPLOY.md](../../ToDo.Server/deploy/DEPLOY.md)。
 
 ## 后果
 - **优点**：数据跨设备可用；服务器极简（无业务逻辑，纯合并）；MAUI 直接复用 Core。
