@@ -5,6 +5,7 @@ using System.Windows;
 using System.Xml;
 using System.Xml.Serialization;
 using AutoUpdaterDotNET;
+using ToDo.Views.Dialogs;
 
 namespace ToDo.Services;
 
@@ -198,15 +199,15 @@ public static class UpdateService
                 var detail = _lastCheckError != null ? ErrorDetail(_lastCheckError) : Loc.UpdateSourceNoInfo;
                 _lastCheckError = null;
                 DiagnosticLog.Error("update", $"manual check failed: {detail}");
-                MessageBox.Show(Loc.UpdateCheckFailed(detail),
-                    Loc.Updates, MessageBoxButton.OK, MessageBoxImage.Warning);
+                FluentDialog.Show(Application.Current?.MainWindow, Loc.UpdateCheckFailed(detail),
+                    Loc.Updates, MsgKind.Warning);
                 return;
             }
             if (!args.IsUpdateAvailable)
             {
                 DiagnosticLog.Info("update", $"manual check: up to date (latest {args.CurrentVersion})");
-                MessageBox.Show(Loc.UpdateUpToDate(args.CurrentVersion),
-                    Loc.Updates, MessageBoxButton.OK, MessageBoxImage.Information);
+                FluentDialog.Show(Application.Current?.MainWindow, Loc.UpdateUpToDate(args.CurrentVersion),
+                    Loc.Updates, MsgKind.Info);
                 return;
             }
             DiagnosticLog.Info("update", $"manual check: update available {args.CurrentVersion}");

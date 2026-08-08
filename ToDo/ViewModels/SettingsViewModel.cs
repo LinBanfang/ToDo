@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using ToDo.Services;
+using ToDo.Views.Dialogs;
 
 namespace ToDo.ViewModels;
 
@@ -105,12 +106,12 @@ public partial class DataSection : SettingsSection
             try
             {
                 SettingsService.SetDbPath(dialog.ResultPath);
-                MessageBox.Show(Loc.DbPathChanged, "To Do", MessageBoxButton.OK, MessageBoxImage.Information);
+                FluentDialog.Show(Application.Current.MainWindow, Loc.DbPathChanged, "To Do", MsgKind.Info);
                 OnPropertyChanged(nameof(DbPath));
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, Loc.Error, MessageBoxButton.OK, MessageBoxImage.Error);
+                FluentDialog.Show(Application.Current.MainWindow, ex.Message, Loc.Error, MsgKind.Error);
             }
         }
     }
@@ -131,12 +132,11 @@ public partial class DataSection : SettingsSection
             try
             {
                 App.Database.ExportTo(dialog.FileName);
-                MessageBox.Show(Loc.BackupSaved(dialog.FileName), Loc.ExportBackup,
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                FluentDialog.Show(Application.Current.MainWindow, Loc.BackupSaved(dialog.FileName), Loc.ExportBackup, MsgKind.Info);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, Loc.Error, MessageBoxButton.OK, MessageBoxImage.Error);
+                FluentDialog.Show(Application.Current.MainWindow, ex.Message, Loc.Error, MsgKind.Error);
             }
         }
     }
@@ -157,12 +157,11 @@ public partial class DataSection : SettingsSection
                 File.Copy(dialog.FileName, SettingsService.PendingRestoreFilePath, overwrite: true);
                 SettingsService.Current.PendingRestorePath = SettingsService.PendingRestoreFilePath;
                 SettingsService.Save();
-                MessageBox.Show(Loc.RestoreStaged, Loc.RestoreBackup,
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                FluentDialog.Show(Application.Current.MainWindow, Loc.RestoreStaged, Loc.RestoreBackup, MsgKind.Info);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, Loc.Error, MessageBoxButton.OK, MessageBoxImage.Error);
+                FluentDialog.Show(Application.Current.MainWindow, ex.Message, Loc.Error, MsgKind.Error);
             }
         }
     }

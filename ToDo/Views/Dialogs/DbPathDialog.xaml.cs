@@ -35,7 +35,7 @@ public partial class DbPathDialog : Window
         var path = PathBox.Text.Trim();
         if (string.IsNullOrEmpty(path))
         {
-            MessageBox.Show(Loc.InvalidPathMsg, Loc.Error, MessageBoxButton.OK, MessageBoxImage.Warning);
+            FluentDialog.Show(this, Loc.InvalidPathMsg, Loc.Error, MsgKind.Warning);
             return;
         }
         ResultPath = path;
