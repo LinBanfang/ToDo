@@ -63,11 +63,15 @@ public sealed class SyncServiceTests : IDisposable
         }
     }
 
-    private static HttpResponseMessage JsonResponse(HttpStatusCode code, SyncResponse body) =>
-        new(code)
+    private static HttpResponseMessage JsonResponse(HttpStatusCode code, SyncResponse body)
+    {
+        // Tests that don't care about the protocol version get a matching one by default.
+        if (body.ProtocolVersion == 0) body.ProtocolVersion = SyncProtocol.Version;
+        return new(code)
         {
             Content = new StringContent(JsonSerializer.Serialize(body, WebJson), System.Text.Encoding.UTF8, "application/json"),
         };
+    }
 
     [Fact]
     public async Task Disabled_SkipsNetwork_AndSetsDisabled()
@@ -210,5 +214,30 @@ public sealed class SyncServiceTests : IDisposable
 
         Assert.Null(_db.Tasks.FindById("t-rm"));
         Assert.Empty(_db.Tracker.AllPending());   // tombstone push cleared after apply
+    }
+
+    [Fact]
+    public async Task VersionMismatch_SetsVersionMismatch_DoesNotApplyOrMoveCursor()
+    {
+        _db.Tracker.Clear();
+        _db.Tasks.Insert(new TaskItem { Id = "t-keep", Title = "keep", ListId = "list-tasks" });
+        SettingsService.Current.LastSyncServerSeq = 2;
+
+        var handler = new StubHandler(_ => JsonResponse(HttpStatusCode.OK, new SyncResponse
+        {
+            ServerSeq = 99,
+            ProtocolVersion = SyncProtocol.Version + 1,   // an incompatible server
+            Changes = new() { new SyncChange { Type = SyncEntityTypes.Task, Id = "t-remote", ModifiedAt = 1, Deleted = false, Payload = "{\"Id\":\"t-remote\",\"Title\":\"x\",\"ListId\":\"list-tasks\"}" } },
+        }));
+
+        var svc = new SyncService(_db, null, handler);
+        await svc.SyncOnceAsync();
+
+        Assert.Equal(SyncStatus.VersionMismatch, svc.Status);
+        Assert.Equal(Loc.SyncStatusVersionMismatch, svc.StatusText);
+        Assert.Equal(2, SettingsService.Current.LastSyncServerSeq);          // cursor untouched
+        Assert.Equal(0, SettingsService.Current.LastSyncTime);               // never "synced"
+        Assert.Null(_db.Tasks.FindById("t-remote"));                         // reply refused
+        Assert.Single(_db.Tracker.AllPending());                             // outbox still pending
     }
 }

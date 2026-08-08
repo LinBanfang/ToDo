@@ -7,4 +7,9 @@ public class SyncResponse
 {
     public long ServerSeq { get; set; }
     public List<SyncChange>? Changes { get; set; }
+
+    /// <summary>Wire-protocol version the server is speaking. The client refuses to apply
+    /// a reply when this differs from <see cref="SyncProtocol.Version"/>, surfacing a
+    /// "server out of date" status instead of corrupting local data.</summary>
+    public int ProtocolVersion { get; set; }
 }

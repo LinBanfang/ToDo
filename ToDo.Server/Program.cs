@@ -36,7 +36,7 @@ using (var scope = app.Services.CreateScope())
     db.Database.EnsureCreated();
 }
 
-app.MapGet("/healthz", () => Results.Ok(new { status = "ok" }));
+app.MapGet("/healthz", () => Results.Ok(new { status = "ok", protocolVersion = SyncProtocol.Version }));
 
 app.MapPost("/api/sync", async (HttpRequest request, SyncStore store, IConfiguration config) =>
 {
@@ -49,7 +49,7 @@ app.MapPost("/api/sync", async (HttpRequest request, SyncStore store, IConfigura
     if (body == null) return Results.BadRequest();
 
     var result = store.Merge(body.Changes ?? new List<SyncChange>(), body.Since);
-    return Results.Ok(new SyncResponse { ServerSeq = result.ServerSeq, Changes = result.Changes });
+    return Results.Ok(new SyncResponse { ServerSeq = result.ServerSeq, Changes = result.Changes, ProtocolVersion = SyncProtocol.Version });
 });
 
 app.Run();

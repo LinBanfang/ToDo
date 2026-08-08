@@ -1,5 +1,6 @@
 using System.Net.Http;
 using System.Threading;
+using System.Windows.Media;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ToDo.Sync;
@@ -14,6 +15,7 @@ public enum SyncStatus
     Syncing,         // a round-trip is in flight
     Online,          // last round-trip succeeded
     Offline,         // last round-trip failed (network/server) or key rejected
+    VersionMismatch, // server answered but speaks an incompatible protocol version
 }
 
 /// <summary>
@@ -129,6 +131,14 @@ public partial class SyncService : ObservableObject, IDisposable
 
             var response = await BuildClient().SyncAsync(request);
 
+            // Server answered but speaks an incompatible protocol: refuse to apply its
+            // reply (it may serialize entities differently) and flag the mismatch instead.
+            if (response.ProtocolVersion != SyncProtocol.Version)
+            {
+                SetStatus(SyncStatus.VersionMismatch);
+                return;
+            }
+
             // Apply the reply (LWW, My Day preserved), clear what was pushed, persist the
             // new cursor — all on the DB thread, then let the app rebuild its UI.
             await RunOnDbThread(() =>
@@ -157,15 +167,34 @@ public partial class SyncService : ObservableObject, IDisposable
         }
     }
 
-    // ─── Status text for the settings page ────────────────
+    // ─── Status text & colour for the settings page ────────────────
+    // Mirrors FluentColors.xaml semantic brushes (theme-neutral hex values, kept in sync
+    // by hand): Online = AccentGreen, Syncing = AccentBlue, error = AccentRed, idle = TextDisabled.
+    private static readonly Brush OnlineBrush = new SolidColorBrush(Color.FromRgb(0x10, 0x7C, 0x10));
+    private static readonly Brush SyncingBrush = new SolidColorBrush(Color.FromRgb(0x00, 0x78, 0xD4));
+    private static readonly Brush ErrorBrush = new SolidColorBrush(Color.FromRgb(0xC4, 0x2B, 0x1C));
+    private static readonly Brush IdleBrush = new SolidColorBrush(Color.FromRgb(0xA1, 0x9F, 0x9D));
+
     public string StatusText => Status switch
     {
         SyncStatus.Syncing => Loc.SyncStatusSyncing,
         SyncStatus.Online => $"{Loc.SyncStatusOnline} · {LastSyncText}",
         SyncStatus.Offline when _authFailed => Loc.SyncStatusAuthFailed,
         SyncStatus.Offline => Loc.SyncStatusOffline,
+        SyncStatus.VersionMismatch => Loc.SyncStatusVersionMismatch,
         SyncStatus.NotConfigured => Loc.SyncStatusNotConfigured,
         _ => Loc.SyncStatusDisabled,
+    };
+
+    /// <summary>Colour the status line by state: green online, blue syncing, red on
+    /// version mismatch / rejected key, gray when offline or sync is off.</summary>
+    public Brush StatusBrush => Status switch
+    {
+        SyncStatus.Online => OnlineBrush,
+        SyncStatus.Syncing => SyncingBrush,
+        SyncStatus.VersionMismatch => ErrorBrush,
+        SyncStatus.Offline when _authFailed => ErrorBrush,
+        _ => IdleBrush,
     };
 
     public string LastSyncText
@@ -183,6 +212,7 @@ public partial class SyncService : ObservableObject, IDisposable
         _authFailed = authFailed;
         Status = status;
         OnPropertyChanged(nameof(StatusText));
+        OnPropertyChanged(nameof(StatusBrush));
         StatusChanged?.Invoke();
     }
 

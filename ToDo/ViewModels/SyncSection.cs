@@ -1,3 +1,4 @@
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.Input;
 using ToDo.Services;
 
@@ -58,8 +59,12 @@ public sealed partial class SyncSection : SettingsSection
 
     public string DeviceId => SettingsService.Current.DeviceId;
 
+    // Same neutral gray as FluentColors' TextDisabledBrush — only used before App.Sync exists.
+    private static readonly Brush _idleBrush = new SolidColorBrush(Color.FromRgb(0xA1, 0x9F, 0x9D));
+
     public string StatusText => App.Sync?.StatusText ?? Loc.SyncStatusDisabled;
     public string LastSyncText => App.Sync?.LastSyncText ?? "";
+    public Brush StatusBrush => App.Sync?.StatusBrush ?? _idleBrush;
 
     public SyncSection()
     {
@@ -73,6 +78,7 @@ public sealed partial class SyncSection : SettingsSection
     {
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(LastSyncText));
+        OnPropertyChanged(nameof(StatusBrush));
     }
 
     [RelayCommand]
