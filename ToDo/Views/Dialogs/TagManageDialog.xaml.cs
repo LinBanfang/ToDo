@@ -187,16 +187,47 @@ public partial class TagManageDialog : Window
         public IntPtr Handle { get; }
     }
 
+    /// <summary>Persists an inline rename. The Name binding only mutates the in-memory
+    /// object, so without this the edit is lost on reload — and a rename that collides
+    /// with another tag would hit the unique index and crash. Reject duplicates here
+    /// (with a message) and push every other change through UpdateTag.</summary>
+    private void TagName_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is not TextBox box || box.Tag is not Tag tag) return;
+        var name = box.Text.Trim();
+        if (string.IsNullOrEmpty(name))
+        {
+            box.Text = tag.Name; // reject empty names
+            return;
+        }
+        if (ViewModel.Tags.Any(t => t.Id != tag.Id && string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase)))
+        {
+            box.Text = tag.Name; // revert to the persisted name
+            FluentDialog.Show(this, Loc.TagNameExists(name), Loc.ManageTags, MsgKind.Warning);
+            return;
+        }
+        if (name != tag.Name)
+        {
+            tag.Name = name;
+            ViewModel.UpdateTagCommand.Execute(tag);
+        }
+    }
+
     private void AddTag_Click(object sender, RoutedEventArgs e)
     {
         var name = NewTagNameBox.Text.Trim();
-        if (!string.IsNullOrEmpty(name))
+        if (string.IsNullOrEmpty(name)) return;
+
+        if (ViewModel.Tags.Any(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase)))
         {
-            ViewModel.CreateTagCommand.Execute((name, _newTagColor));
-            NewTagNameBox.Text = "";
-            _newTagColor = "#0078D4";
-            NewTagColorBtn.Background = new SolidColorBrush(ColorParser.ParseColor("#0078D4"));
+            FluentDialog.Show(this, Loc.TagNameExists(name), Loc.ManageTags, MsgKind.Warning);
+            return;
         }
+
+        ViewModel.CreateTagCommand.Execute((name, _newTagColor));
+        NewTagNameBox.Text = "";
+        _newTagColor = "#0078D4";
+        NewTagColorBtn.Background = new SolidColorBrush(ColorParser.ParseColor("#0078D4"));
     }
 
     private void DeleteTag_Click(object sender, RoutedEventArgs e)

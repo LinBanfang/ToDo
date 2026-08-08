@@ -72,6 +72,8 @@ public static class Loc
     public static string ConfirmDelete => Language == AppLanguage.Chinese ? "确认删除" : "Delete";
     public static string ConfirmDeleteMsg(string name) =>
         Language == AppLanguage.Chinese ? $"确定删除 \"{name}\" 吗？" : $"Delete \"{name}\"?";
+    public static string TagNameExists(string name) =>
+        Language == AppLanguage.Chinese ? $"标签名 \"{name}\" 已存在" : $"A tag named \"{name}\" already exists";
     public static string ConfirmDeleteGroupMsg(string name) =>
         Language == AppLanguage.Chinese ? $"确定删除分组 \"{name}\" 吗？任务将变为未分组。" : $"Delete group \"{name}\"? Tasks will become ungrouped.";
     public static string CompletedSection => Language == AppLanguage.Chinese ? "已完成" : "Completed";
@@ -180,6 +182,22 @@ public static class Loc
     public static string Apply => Language == AppLanguage.Chinese ? "应用" : "Apply";
     public static string MoreColors => Language == AppLanguage.Chinese ? "更多颜色…" : "More colors…";
     public static string PlayReminderSound => Language == AppLanguage.Chinese ? "播放提示音" : "Play reminder sound";
+    public static string ReminderRingtone => Language == AppLanguage.Chinese ? "提醒铃声" : "Reminder ringtone";
+    public static string DefaultRingtone => Language == AppLanguage.Chinese ? "默认铃声" : "Default ringtone";
+    public static string TestSound => Language == AppLanguage.Chinese ? "试听" : "Test";
+    public static string ChooseSound => Language == AppLanguage.Chinese ? "选择铃声…" : "Choose ringtone…";
+    public static string ResetSound => Language == AppLanguage.Chinese ? "重置" : "Reset";
+    public static string SoundMissing => Language == AppLanguage.Chinese ? "文件不存在" : "file missing";
+    public static string ChooseReminderSound => Language == AppLanguage.Chinese ? "选择提醒铃声" : "Choose reminder ringtone";
+    public static string SoundFileFilter => Language == AppLanguage.Chinese
+        ? "音频文件 (*.wav)|*.wav|所有文件 (*.*)|*.*"
+        : "Audio files (*.wav)|*.wav|All files (*.*)|*.*";
+    public static string SoundFileHint => Language == AppLanguage.Chinese
+        ? "支持 .wav 音频文件；未设置时使用内置铃声（不依赖 Windows 系统音效方案）。"
+        : "WAV audio files. Uses the built-in chime when unset (independent of the Windows sound scheme).";
+    public static string InvalidTime => Language == AppLanguage.Chinese
+        ? "请输入有效时间（小时 0-23，分钟 0-59）"
+        : "Enter a valid time (hour 0-23, minute 0-59)";
     public static string About => Language == AppLanguage.Chinese ? "关于" : "About";
     public static string VersionLabel => Language == AppLanguage.Chinese ? "版本" : "Version";
     public static string AppDescription => Language == AppLanguage.Chinese

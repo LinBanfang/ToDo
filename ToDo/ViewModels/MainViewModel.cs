@@ -826,7 +826,15 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void CreateTag((string name, string color) param)
     {
-        var tag = new Tag { Name = param.name, Color = param.color };
+        var name = param.name.Trim();
+        // The tags collection has a unique index on Name: inserting a duplicate throws
+        // a LiteException that would crash the app. Reject it up front instead.
+        if (Tags.Any(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase)))
+        {
+            DiagnosticLog.Warn("tags", $"ignoring duplicate tag name '{name}'");
+            return;
+        }
+        var tag = new Tag { Name = name, Color = param.color };
         _db.Tags.Insert(tag);
         LoadTags();
     }
@@ -834,6 +842,12 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void UpdateTag(Tag tag)
     {
+        // Same unique-index guard as CreateTag, for a rename that collides with another tag.
+        if (Tags.Any(t => t.Id != tag.Id && string.Equals(t.Name, tag.Name, StringComparison.OrdinalIgnoreCase)))
+        {
+            DiagnosticLog.Warn("tags", $"ignoring rename of '{tag.Id}' to duplicate name '{tag.Name}'");
+            return;
+        }
         _db.Tags.Update(tag);
         LoadTags();
     }
