@@ -186,4 +186,25 @@ public static class Loc
         : "A Fluent Design-style todo desktop app";
     public static string Homepage => Language == AppLanguage.Chinese ? "项目主页" : "Homepage";
     public static string ThirdPartyLicenses => Language == AppLanguage.Chinese ? "第三方组件许可" : "Third-party licenses";
+
+    // Sync settings
+    public static string SyncSectionTitle => Language == AppLanguage.Chinese ? "同步" : "Sync";
+    public static string SyncEnabledLabel => Language == AppLanguage.Chinese ? "启用多设备同步" : "Enable multi-device sync";
+    public static string SyncServerUrlLabel => Language == AppLanguage.Chinese ? "服务器地址" : "Server URL";
+    public static string SyncKeyLabel => Language == AppLanguage.Chinese ? "同步密钥" : "Sync key";
+    public static string SyncDeviceId => Language == AppLanguage.Chinese ? "设备 ID" : "Device ID";
+    public static string SyncStatusLabel => Language == AppLanguage.Chinese ? "状态" : "Status";
+    public static string SyncNow => Language == AppLanguage.Chinese ? "立即同步" : "Sync now";
+    public static string SyncStatusDisabled => Language == AppLanguage.Chinese ? "同步已禁用" : "Sync disabled";
+    public static string SyncStatusNotConfigured => Language == AppLanguage.Chinese
+        ? "未配置服务器地址或同步密钥" : "Server URL or sync key not set";
+    public static string SyncStatusSyncing => Language == AppLanguage.Chinese ? "同步中…" : "Syncing…";
+    public static string SyncStatusOnline => Language == AppLanguage.Chinese ? "已同步" : "Synced";
+    public static string SyncStatusOffline => Language == AppLanguage.Chinese ? "同步失败" : "Sync failed";
+    public static string SyncStatusAuthFailed => Language == AppLanguage.Chinese ? "同步密钥被拒绝（401）" : "Sync key rejected (401)";
+    public static string SyncNever => Language == AppLanguage.Chinese ? "从未同步" : "Never synced";
+    public static string SyncLastSynced => Language == AppLanguage.Chinese ? "上次同步" : "Last synced";
+    public static string SyncMyDayLocalHint => Language == AppLanguage.Chinese
+        ? "「我的一天」仅保存在本设备，不同步。重要标记与其他内容会跨设备同步。"
+        : "My Day stays on this device. Important markers and everything else sync across devices.";
 }

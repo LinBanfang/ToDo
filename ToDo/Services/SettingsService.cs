@@ -15,6 +15,16 @@ public class AppSettings
     public bool ReminderNotifications { get; set; } = true;
     public bool ReminderSound { get; set; } = true;
 
+    // ─── Sync (multi-device, self-hosted server) ───────────
+    public bool SyncEnabled { get; set; }
+    public string SyncServerUrl { get; set; } = "";
+    public string SyncKey { get; set; } = "";
+    /// <summary>Per-device id, auto-generated on first run (the server treats each device independently).</summary>
+    public string DeviceId { get; set; } = "";
+    /// <summary>High-water mark of server changes applied on this device; 0 = never synced.</summary>
+    public long LastSyncServerSeq { get; set; }
+    public long LastSyncTime { get; set; }
+
     /// <summary>Auto-update feeds, tried in order. Empty = default (GitHub).</summary>
     public List<UpdateSourceSetting> UpdateSources { get; set; } = new();
 
@@ -41,7 +51,7 @@ public static class SettingsService
     /// <summary>Where a chosen backup is staged before it replaces the live DB on restart.</summary>
     public static string PendingRestoreFilePath => Path.Combine(SettingsDir, "pending-restore.db");
 
-    private const int CurrentSchemaVersion = 1;
+    private const int CurrentSchemaVersion = 2;   // v2 adds the sync block (SyncEnabled/ServerUrl/Key/DeviceId/seq/time)
 
     private static AppSettings? _current;
 
