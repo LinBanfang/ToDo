@@ -202,6 +202,8 @@ public static class Loc
     public static string SyncStatusOnline => Language == AppLanguage.Chinese ? "已同步" : "Synced";
     public static string SyncStatusOffline => Language == AppLanguage.Chinese ? "同步失败" : "Sync failed";
     public static string SyncStatusAuthFailed => Language == AppLanguage.Chinese ? "同步密钥被拒绝（401）" : "Sync key rejected (401)";
+    public static string SyncStatusVersionMismatch => Language == AppLanguage.Chinese
+        ? "服务器版本不符，请更新同步服务器" : "Server version mismatch — update the server";
     public static string SyncNever => Language == AppLanguage.Chinese ? "从未同步" : "Never synced";
     public static string SyncLastSynced => Language == AppLanguage.Chinese ? "上次同步" : "Last synced";
     public static string SyncMyDayLocalHint => Language == AppLanguage.Chinese

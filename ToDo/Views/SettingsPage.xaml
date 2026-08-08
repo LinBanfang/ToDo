@@ -121,7 +121,7 @@
                            Text="{x:Static services:Loc.SyncStatusLabel}"/>
                 <StackPanel Orientation="Horizontal">
                     <TextBlock FontSize="13" VerticalAlignment="Center"
-                               Foreground="{DynamicResource TextSecondaryBrush}" Text="{Binding StatusText}"/>
+                               Foreground="{Binding StatusBrush}" Text="{Binding StatusText}"/>
                     <TextBlock FontSize="12" VerticalAlignment="Center"
                                Foreground="{DynamicResource TextDisabledBrush}" Margin="12,0,0,0"
                                Text="{Binding LastSyncText}"/>
