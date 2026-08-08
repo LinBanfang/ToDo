@@ -95,7 +95,22 @@ public sealed class AppearanceSection : SettingsSection
 /// <summary>数据：数据库路径、备份导出/恢复。</summary>
 public partial class DataSection : SettingsSection
 {
-    public string DbPath => App.Database?.StoragePath ?? SettingsService.Current.DbPath;
+    /// <summary>Display the DB path with the user-specific prefix replaced by its
+    /// environment-variable form (C:\Users\Alice\AppData\Local → %LOCALAPPDATA%),
+    /// so the path shown in the UI (and README screenshots) never leaks a username.
+    /// Display only — the change-dialog and storage always use the real path.</summary>
+    public string DbPath => MaskPath(App.Database?.StoragePath ?? SettingsService.Current.DbPath);
+
+    private static string MaskPath(string path)
+    {
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        if (localAppData.Length > 0 && path.StartsWith(localAppData, StringComparison.OrdinalIgnoreCase))
+            return "%LOCALAPPDATA%" + path.Substring(localAppData.Length);
+        var profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        if (profile.Length > 0 && path.StartsWith(profile, StringComparison.OrdinalIgnoreCase))
+            return "%USERPROFILE%" + path.Substring(profile.Length);
+        return path;
+    }
 
     [RelayCommand]
     private void ChangeDbPath()
