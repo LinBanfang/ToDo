@@ -584,7 +584,7 @@
             </Border>
 
             <!-- Task area -->
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,0,20">
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,15,0,20">
                 <StackPanel>
                     <!-- ═══ CUSTOM LIST: Groups (first entry = ungrouped tasks) ═══ -->
                     <ItemsControl ItemsSource="{Binding GroupedTaskList}"
