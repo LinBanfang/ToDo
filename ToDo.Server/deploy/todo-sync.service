@@ -12,7 +12,9 @@ RestartSec=3
 # EnvironmentFile is written by deploy.sh with a freshly generated SYNC_KEY.
 EnvironmentFile=/etc/todo-sync.env
 Environment=ASPNETCORE_URLS=http://127.0.0.1:5080
-Environment=ConnectionStrings__Default=Data Source=/var/lib/todo-sync/sync.db
+# Quoted: systemd splits unquoted Environment= values on spaces, which would
+# truncate the value to just "Data" and make the connection string unparsable.
+Environment=ConnectionStrings__Default="Data Source=/var/lib/todo-sync/sync.db"
 NoNewPrivileges=true
 PrivateTmp=true
 

@@ -24,7 +24,9 @@ public sealed class ApiTests : IDisposable
             .WithWebHostBuilder(b =>
             {
                 b.UseSetting("ConnectionStrings:Default", $"Data Source={_dbPath}");
-                b.UseSetting("SyncKey", "test-key");
+                // SCREAMING_SNAKE spelling to exercise the env-var config path that
+                // production uses (SYNC_KEY=... via systemd EnvironmentFile).
+                b.UseSetting("SYNC_KEY", "test-key");
             });
     }
 

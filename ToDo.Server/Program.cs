@@ -55,13 +55,17 @@ app.MapPost("/api/sync", async (HttpRequest request, SyncStore store, IConfigura
 app.Run();
 
 // Config keys in appsettings.json are PascalCase ("SyncKey"), while the deployed
-// environment conventionally exports them in SCREAMING_SNAKE ("SYNC_KEY"). Hosts
-// can match keys case-sensitively, so resolve by a case-insensitive scan and
-// treat empty values as unset (appsettings ships "SyncKey": "").
+// environment conventionally exports them as SCREAMING_SNAKE ("SYNC_KEY") env vars.
+// .NET's env provider keeps the underscore, so a plain case-insensitive scan misses
+// the match ("SYNC_KEY" != "SyncKey"); compare with underscores stripped on both
+// sides to bridge the two spellings. Empty values count as unset (appsettings ships
+// "SyncKey": "").
 static string? ResolveConfig(IConfiguration config, string name)
 {
+    var normalized = name.Replace("_", "");
     foreach (var kv in config.AsEnumerable())
-        if (string.Equals(kv.Key, name, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(kv.Value))
+        if (string.Equals(kv.Key.Replace("_", ""), normalized, StringComparison.OrdinalIgnoreCase)
+            && !string.IsNullOrEmpty(kv.Value))
             return kv.Value;
     return null;
 }

@@ -1,5 +1,7 @@
-# Include this snippet in /etc/caddy/Caddyfile, or run the whole file.
-# Replace YOUR_DOMAIN with your actual domain. Let's Encrypt is handled automatically.
-YOUR_DOMAIN {
+# Reference snippet — deploy.sh installs this via caddy-setup.sh (which replaces any
+# existing block for YOUR_DOMAIN, so re-runs are idempotent). Use a non-443 port
+# (YOUR_PORT) when 443 is already taken by another service; Let's Encrypt still
+# issues the cert automatically through the :80 HTTP-01 challenge.
+YOUR_DOMAIN:YOUR_PORT {
     reverse_proxy 127.0.0.1:5080
 }
