@@ -309,7 +309,9 @@
                                                                  KeyDown="SidebarRename_KeyDown"
                                                                  LostFocus="SidebarRename_LostFocus"
                                                                  IsVisibleChanged="SidebarRename_IsVisibleChanged"/>
-                                                        <TextBlock Grid.Column="2" Text="{Binding TaskCount}" FontSize="11" Foreground="{DynamicResource TextDisabledBrush}" Margin="4,0,0,0"/>
+                                                        <TextBlock Grid.Column="2" Text="{Binding TaskCount}" FontSize="11" Foreground="{DynamicResource TextDisabledBrush}" Margin="4,0,0,0"
+                                                                   VerticalAlignment="Center"
+                                                                   Visibility="{Binding TaskCount, Converter={StaticResource CountToVis}}"/>
                                                     </Grid>
                                                 </DataTemplate>
                                             </ListBox.ItemTemplate>
