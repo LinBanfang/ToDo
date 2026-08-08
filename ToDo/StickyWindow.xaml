@@ -95,42 +95,45 @@
                         <TextBlock Text="{Binding Title}" FontSize="13.5"
                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                    TextTrimming="CharacterEllipsis"/>
-                        <!-- Due-date tinted chip -->
-                        <Grid Margin="0,3,0,0" HorizontalAlignment="Left"
-                              Visibility="{Binding DueDate, Converter={StaticResource NullToVis}}">
-                            <Border CornerRadius="4"
-                                    Background="{Binding DueDate, Converter={StaticResource DueDateToBrush}}"
-                                    Opacity="0.15"/>
-                            <TextBlock Text="{Binding DueDate, Converter={StaticResource DueDateToString}}"
-                                       FontSize="11" Margin="6,1"
-                                       Foreground="{Binding DueDate, Converter={StaticResource DueDateToBrush}}"/>
-                        </Grid>
-                        <!-- Tag pills (small): a compact colored row that reuses the
-                             TagIdsToTags converter; hidden by the StickyShowTags setting -->
-                        <ItemsControl Margin="0,3,0,0"
-                                      Visibility="{Binding DataContext.StickyShowTags,
-                                                          RelativeSource={RelativeSource AncestorType=Window},
-                                                          Converter={StaticResource BoolToVis}}">
-                            <ItemsControl.ItemsSource>
-                                <MultiBinding Converter="{StaticResource TagIdsToTags}">
-                                    <Binding Path="TagIds"/>
-                                    <Binding Path="DataContext.Tags"
-                                             RelativeSource="{RelativeSource AncestorType=Window}"/>
-                                </MultiBinding>
-                            </ItemsControl.ItemsSource>
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate DataType="{x:Type models:Tag}">
-                                    <Border Padding="5,1" Margin="0,0,4,2" CornerRadius="8"
-                                            Background="{Binding Color, Converter={StaticResource StringToAlphaBrush}}">
-                                        <TextBlock Text="{Binding Name}" FontSize="10.5"
-                                                   Foreground="{Binding Color, Converter={StaticResource StringToBrush}}"/>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <!-- Due-date chip + tag pills share one row -->
+                        <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                            <!-- Due-date tinted chip -->
+                            <Grid Margin="0,0,6,0" VerticalAlignment="Center"
+                                  Visibility="{Binding DueDate, Converter={StaticResource NullToVis}}">
+                                <Border CornerRadius="4"
+                                        Background="{Binding DueDate, Converter={StaticResource DueDateToBrush}}"
+                                        Opacity="0.15"/>
+                                <TextBlock Text="{Binding DueDate, Converter={StaticResource DueDateToString}}"
+                                           FontSize="11" Margin="6,1"
+                                           Foreground="{Binding DueDate, Converter={StaticResource DueDateToBrush}}"/>
+                            </Grid>
+                            <!-- Tag pills (small): a compact colored row that reuses the
+                                 TagIdsToTags converter; hidden by the StickyShowTags setting -->
+                            <ItemsControl VerticalAlignment="Center"
+                                          Visibility="{Binding DataContext.StickyShowTags,
+                                                              RelativeSource={RelativeSource AncestorType=Window},
+                                                              Converter={StaticResource BoolToVis}}">
+                                <ItemsControl.ItemsSource>
+                                    <MultiBinding Converter="{StaticResource TagIdsToTags}">
+                                        <Binding Path="TagIds"/>
+                                        <Binding Path="DataContext.Tags"
+                                                 RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    </MultiBinding>
+                                </ItemsControl.ItemsSource>
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type models:Tag}">
+                                        <Border Padding="5,1" Margin="0,0,4,2" CornerRadius="8"
+                                                Background="{Binding Color, Converter={StaticResource StringToAlphaBrush}}">
+                                            <TextBlock Text="{Binding Name}" FontSize="10.5"
+                                                       Foreground="{Binding Color, Converter={StaticResource StringToBrush}}"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
                     </StackPanel>
                 </Grid>
             </Border>
