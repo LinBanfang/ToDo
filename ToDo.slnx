@@ -4,4 +4,5 @@
   <Project Path="ToDo/ToDo.csproj" />
   <Project Path="ToDo.Server/ToDo.Server.csproj" />
   <Project Path="ToDo.Server.Tests/ToDo.Server.Tests.csproj" />
+  <Project Path="ToDo.Demo/ToDo.Demo.csproj" />
 </Solution>
