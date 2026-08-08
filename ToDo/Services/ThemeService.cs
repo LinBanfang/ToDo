@@ -23,20 +23,27 @@ public static class ThemeService
 
         // Replace the active theme dictionary in place: the light one is found by
         // Source URI, the code-built dark one by reference (its Source is null).
+        int index = merged.Count;
         for (int i = 0; i < merged.Count; i++)
         {
             bool isThemeDict = (merged[i].Source != null && merged[i].Source.OriginalString.Contains("FluentColors"))
                 || ReferenceEquals(merged[i], _darkDictionary);
             if (isThemeDict)
             {
-                merged.RemoveAt(i);
-                merged.Insert(i, target);
-                _darkDictionary = theme == "Dark" ? target : null;
-                return;
+                index = i;
+                break;
             }
         }
 
-        merged.Insert(0, target);
+        if (index < merged.Count)
+        {
+            merged.RemoveAt(index);
+            merged.Insert(index, target);
+        }
+        else
+        {
+            merged.Insert(0, target);
+        }
         _darkDictionary = theme == "Dark" ? target : null;
 
         // The OS-drawn title bar doesn't follow DynamicResource; recolor every
