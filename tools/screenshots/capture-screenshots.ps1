@@ -206,9 +206,9 @@ try {
     # 3) temporary settings pointing at the demo DB (backup the real file first)
     Copy-Item $settingsPath $settingsBak -Force
     $demoSettings = @{
-        SchemaVersion = 4; DbPath = $DbPath; Theme = $Theme; SidebarWidth = 280
+        SchemaVersion = 5; DbPath = $DbPath; Theme = $Theme; SidebarWidth = 280
         Language = 'Chinese'; CheckForUpdatesOnStartup = $false; ReminderNotifications = $false
-        ReminderSound = $false; SyncEnabled = $false; SyncServerUrl = ''; SyncKey = ''
+        ReminderSound = $false; ReminderSoundPath = ''; SyncEnabled = $false; SyncServerUrl = ''; SyncKey = ''
         DeviceId = ''; LastSyncServerSeq = 0; LastSyncTime = 0; UpdateSources = @(); PendingRestorePath = $null
     }
     $demoSettings | ConvertTo-Json -Depth 4 | Set-Content $settingsPath -Encoding utf8

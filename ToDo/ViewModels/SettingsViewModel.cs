@@ -271,8 +271,8 @@ public sealed class UpdateSourceRow : ObservableObject
     public event Action? Changed;
 }
 
-/// <summary>提醒：通知 + 提示音开关（轮询即时生效）。</summary>
-public sealed class ReminderSection : SettingsSection
+/// <summary>提醒：通知 + 提示音开关 + 铃声试听/选择（轮询即时生效）。</summary>
+public sealed partial class ReminderSection : SettingsSection
 {
     private bool _notifications;
     private bool _sound;
@@ -301,6 +301,52 @@ public sealed class ReminderSection : SettingsSection
                 SettingsService.Save();
             }
         }
+    }
+
+    /// <summary>当前铃声的显示名：自定义文件的文件名，未设置时显示系统提示音。</summary>
+    public string SoundLabel
+    {
+        get
+        {
+            var path = SettingsService.Current.ReminderSoundPath;
+            if (string.IsNullOrWhiteSpace(path)) return Loc.DefaultRingtone;
+            var name = Path.GetFileName(path);
+            return File.Exists(path) ? name : $"{name} ({Loc.SoundMissing})";
+        }
+    }
+
+    /// <summary>是否已配置自定义铃声（控制"重置"按钮是否显示）。</summary>
+    public bool HasCustomSound => !string.IsNullOrWhiteSpace(SettingsService.Current.ReminderSoundPath);
+
+    [RelayCommand]
+    private void TestSound() => ReminderSoundPlayer.Play();
+
+    [RelayCommand]
+    private void ChooseSound()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = Loc.ChooseReminderSound,
+            Filter = Loc.SoundFileFilter,
+            DefaultExt = "wav",
+            CheckFileExists = true
+        };
+        if (dialog.ShowDialog() == true)
+        {
+            SettingsService.Current.ReminderSoundPath = dialog.FileName;
+            SettingsService.Save();
+            OnPropertyChanged(nameof(SoundLabel));
+            OnPropertyChanged(nameof(HasCustomSound));
+        }
+    }
+
+    [RelayCommand]
+    private void ResetSound()
+    {
+        SettingsService.Current.ReminderSoundPath = "";
+        SettingsService.Save();
+        OnPropertyChanged(nameof(SoundLabel));
+        OnPropertyChanged(nameof(HasCustomSound));
     }
 
     public ReminderSection()

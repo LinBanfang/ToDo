@@ -192,6 +192,47 @@
                           IsChecked="{Binding ReminderNotifications}" Margin="0,0,0,10"/>
                 <CheckBox Style="{StaticResource FluentCheckBox}" Content="{x:Static services:Loc.PlayReminderSound}"
                           IsChecked="{Binding ReminderSound}"/>
+
+                <TextBlock Style="{StaticResource SettingSectionHeader}" Margin="0,20,0,8"
+                           Text="{x:Static services:Loc.ReminderRingtone}"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" FontSize="13" VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"
+                               Text="{Binding SoundLabel}"/>
+                    <Button Grid.Column="1" Content="{x:Static services:Loc.TestSound}"
+                            Style="{StaticResource FluentButton}" Padding="14,6" Margin="8,0,0,0"
+                            Command="{Binding TestSoundCommand}"
+                            AutomationProperties.AutomationId="TestSound"/>
+                    <Button Grid.Column="2" Content="{x:Static services:Loc.ChooseSound}"
+                            Style="{StaticResource FluentButton}" Padding="14,6" Margin="8,0,0,0"
+                            Command="{Binding ChooseSoundCommand}"
+                            AutomationProperties.AutomationId="ChooseSound"/>
+                    <!-- Only shown once a custom ringtone is configured -->
+                    <Button Grid.Column="3" Content="{x:Static services:Loc.ResetSound}"
+                            Padding="14,6" Margin="8,0,0,0"
+                            Command="{Binding ResetSoundCommand}"
+                            AutomationProperties.AutomationId="ResetSound">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource FluentButton}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasCustomSound}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+                <TextBlock FontSize="12" Foreground="{DynamicResource TextDisabledBrush}"
+                           Margin="0,6,0,0" TextWrapping="Wrap"
+                           Text="{x:Static services:Loc.SoundFileHint}"/>
             </StackPanel>
         </DataTemplate>
 

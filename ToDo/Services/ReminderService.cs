@@ -1,32 +1,31 @@
-using System.Media;
-using System.Windows.Forms;
 using System.Windows.Threading;
 using ToDo.Models;
+using ToDo.Views;
 
 namespace ToDo.Services;
 
 /// <summary>
-/// Periodically checks tasks for due reminders and raises a system notification
-/// (tray balloon) plus a sound, once per reminder. Reminders that were already due
-/// before this session started are skipped so the app doesn't nag on launch.
-/// The tray icon is owned by <see cref="TrayService"/> and shared with this service.
+/// Periodically checks tasks for due reminders and raises an in-app Fluent toast
+/// (bottom-right card, replaces the WinForms balloon that Windows 11 no longer shows)
+/// plus a sound, once per reminder. Reminders that were already due before this session
+/// started are skipped so the app doesn't nag on launch.
 /// </summary>
 public class ReminderService : IDisposable
 {
     private readonly DatabaseService _db;
-    private readonly NotifyIcon _trayIcon;
     private readonly DispatcherTimer _timer;
     private readonly HashSet<string> _fired = new();
     private bool _disposed;
 
-    public ReminderService(DatabaseService db, NotifyIcon trayIcon)
+    public ReminderService(DatabaseService db)
     {
         _db = db;
-        _trayIcon = trayIcon;
 
-        // Pre-mark reminders that are already due so they don't all fire at startup
+        // Pre-mark reminders that are already due so they don't all fire at startup.
+        // Only open tasks are marked (mirroring the poll filter): a task completed before
+        // shutdown must be able to fire again when the user reopens it this session.
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        foreach (var t in db.Tasks.Find(t => t.Reminder != null && t.Reminder <= now))
+        foreach (var t in db.Tasks.Find(t => t.Reminder != null && t.Reminder <= now && t.CloseRecord == null))
         {
             _fired.Add($"{t.Id}|{t.Reminder}");
         }
@@ -47,7 +46,18 @@ public class ReminderService : IDisposable
             due = _db.Tasks.Find(t => t.Reminder != null && t.Reminder <= now && t.CloseRecord == null)
                 .ToList();
         }
-        catch { return; }
+        catch (Exception ex)
+        {
+            // Never let a query failure silently kill the reminder feature.
+            DiagnosticLog.Error("reminder", $"poll failed: {ex}");
+            return;
+        }
+
+        // "Fired" markers only apply to tasks that are still open-and-due. Prune markers
+        // of completed / deleted / rescheduled tasks so completing and reopening a task
+        // lets its reminder fire again in this session, instead of a stale key blocking it.
+        var eligible = new HashSet<string>(due.Select(t => $"{t.Id}|{t.Reminder}"));
+        _fired.RemoveWhere(key => !eligible.Contains(key));
 
         foreach (var t in due)
         {
@@ -56,17 +66,28 @@ public class ReminderService : IDisposable
             {
                 // Respect the settings toggles on each poll so changes apply live
                 if (SettingsService.Current.ReminderNotifications)
-                    _trayIcon.ShowBalloonTip(5000, Loc.Reminder, t.Title, ToolTipIcon.Info);
+                    ReminderToast.Show(t.Title, ResolveListIcon(t));
                 if (SettingsService.Current.ReminderSound)
-                    SystemSounds.Exclamation.Play();
+                    ReminderSoundPlayer.Play();
             }
         }
     }
 
+    /// <summary>
+    /// Emoji of the list the task belongs to (the same icon shown in the sidebar and
+    /// list header), so a toast is recognizable at a glance. Falls back to a generic
+    /// task glyph when the list can't be resolved or carries no icon.
+    /// </summary>
+    private string ResolveListIcon(TaskItem t)
+    {
+        var list = _db.Lists.FindById(t.ListId);
+        return list is { Icon.Length: > 0 } ? list.Icon : DefaultTaskIcon;
+    }
+
+    private const string DefaultTaskIcon = "📝";
+
     public void Dispose()
     {
-        // The tray icon is owned and disposed by TrayService; we only stop the timer
-        // so no balloon fires against a disposed icon during shutdown.
         _disposed = true;
         _timer.Stop();
     }

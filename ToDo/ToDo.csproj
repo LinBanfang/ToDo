@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <Resource Include="Resources\app.ico" />
+    <Resource Include="Resources\reminder-chime.wav" />
   </ItemGroup>
 
   <ItemGroup>

@@ -14,6 +14,8 @@ public class AppSettings
     public bool CheckForUpdatesOnStartup { get; set; } = true;
     public bool ReminderNotifications { get; set; } = true;
     public bool ReminderSound { get; set; } = true;
+    /// <summary>Optional WAV played for reminders; empty = system Exclamation sound.</summary>
+    public string ReminderSoundPath { get; set; } = "";
 
     // ─── Behavior (tray / sticky note) ───────────────────
     /// <summary>Main window X hides to the tray instead of exiting the app.</summary>
@@ -62,7 +64,7 @@ public static class SettingsService
     /// <summary>Where a chosen backup is staged before it replaces the live DB on restart.</summary>
     public static string PendingRestoreFilePath => Path.Combine(SettingsDir, "pending-restore.db");
 
-    private const int CurrentSchemaVersion = 4;   // v4 adds StickyShowTags; v3 added the Behavior block + sticky geometry
+    private const int CurrentSchemaVersion = 5;   // v5 adds ReminderSoundPath; v4 adds StickyShowTags; v3 added the Behavior block + sticky geometry
 
     private static AppSettings? _current;
 
