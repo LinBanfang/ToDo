@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ToDo.Models;
@@ -57,6 +58,15 @@ public partial class MainViewModel : ObservableObject
         SettingsService.Save();
     }
 
+    // ─── Sync indicator (sidebar footer dot) ────────────────
+    // Mirrors FluentColors' TextDisabledBrush — only a fallback before App.Sync exists.
+    private static readonly Brush _idleSyncBrush = new SolidColorBrush(Color.FromRgb(0xA1, 0x9F, 0x9D));
+
+    public Brush SyncStatusBrush => App.Sync?.StatusBrush ?? _idleSyncBrush;
+    public string SyncStatusText => App.Sync?.StatusText ?? Loc.SyncStatusDisabled;
+    /// <summary>True while a round-trip is in flight — drives the sync icon's spin.</summary>
+    public bool SyncIsSyncing => App.Sync?.Status == SyncStatus.Syncing;
+
     // ─── Dialog state ─────────────────────────────────────
     [ObservableProperty]
     private bool _isTagDialogOpen;
@@ -104,7 +114,20 @@ public partial class MainViewModel : ObservableObject
         Settings = new SettingsViewModel();
         LoadAll();
         DailyMyDayReset();
+        if (App.Sync != null) App.Sync.StatusChanged += OnSyncStatusChanged;
     }
+
+    private void OnSyncStatusChanged()
+    {
+        OnPropertyChanged(nameof(SyncStatusBrush));
+        OnPropertyChanged(nameof(SyncStatusText));
+        OnPropertyChanged(nameof(SyncIsSyncing));
+    }
+
+    /// <summary>Clicking the sidebar sync icon kicks an immediate round-trip
+    /// (same action as the settings page's "Sync now").</summary>
+    [RelayCommand]
+    private void SyncNow() => App.Sync?.Trigger();
 
     /// <summary>Remove undone yesterday tasks from My Day</summary>
     private void DailyMyDayReset()

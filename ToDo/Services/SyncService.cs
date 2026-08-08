@@ -95,6 +95,7 @@ public partial class SyncService : ObservableObject, IDisposable
         { SetStatus(SyncStatus.NotConfigured); return; }
 
         if (Interlocked.Exchange(ref _inFlight, 1) != 0) return;
+        var startedAt = Environment.TickCount64;
         try
         {
             SetStatus(SyncStatus.Syncing);
@@ -135,7 +136,7 @@ public partial class SyncService : ObservableObject, IDisposable
             // reply (it may serialize entities differently) and flag the mismatch instead.
             if (response.ProtocolVersion != SyncProtocol.Version)
             {
-                SetStatus(SyncStatus.VersionMismatch);
+                await SetStatusAfterSpin(SyncStatus.VersionMismatch, startedAt);
                 return;
             }
 
@@ -151,15 +152,15 @@ public partial class SyncService : ObservableObject, IDisposable
                 _onSynced?.Invoke();
             });
 
-            SetStatus(SyncStatus.Online);
+            await SetStatusAfterSpin(SyncStatus.Online, startedAt);
         }
         catch (SyncAuthException)
         {
-            SetStatus(SyncStatus.Offline, authFailed: true);
+            await SetStatusAfterSpin(SyncStatus.Offline, startedAt, authFailed: true);
         }
         catch (Exception)
         {
-            SetStatus(SyncStatus.Offline);
+            await SetStatusAfterSpin(SyncStatus.Offline, startedAt);
         }
         finally
         {
@@ -214,6 +215,24 @@ public partial class SyncService : ObservableObject, IDisposable
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(StatusBrush));
         StatusChanged?.Invoke();
+    }
+
+    /// <summary>Longest time the "syncing" indicator is allowed to stay up on a fast
+    /// round-trip, so the spinner is actually visible even when the request fails or
+    /// completes in milliseconds (e.g. connection refused or version mismatch).</summary>
+    private const long MinSpinMs = 700;
+
+    /// <summary>Sets the terminal status, but only after the syncing indicator has been
+    /// visible for at least <see cref="MinSpinMs"/>. Skipped headless (no dispatcher) —
+    /// there is no UI to show it, and tests call SyncOnceAsync directly.</summary>
+    private async Task SetStatusAfterSpin(SyncStatus status, long startedAt, bool authFailed = false)
+    {
+        if (_dispatcher != null)
+        {
+            var remaining = MinSpinMs - (Environment.TickCount64 - startedAt);
+            if (remaining > 0) await Task.Delay(TimeSpan.FromMilliseconds(remaining));
+        }
+        SetStatus(status, authFailed);
     }
 
     /// <summary>The server URL/key can be edited in settings between syncs, so the client
