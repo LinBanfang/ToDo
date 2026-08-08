@@ -21,7 +21,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 HOST="${HOST:-user@your-vps}"              # SSH target (overridden by deploy.local)
 DOMAIN="${DOMAIN:-sync.example.com}"       # A record already points it at the VPS
 SYNC_PORT="${SYNC_PORT:-8443}"             # HTTPS port; 443 is often taken by other
-                                           # services (e.g. a proxy), so default to 8443
+                                           # services, so default to a spare port
 REMOTE_APP_DIR="/opt/todo-sync"
 REMOTE_DATA_DIR="/var/lib/todo-sync"
 
