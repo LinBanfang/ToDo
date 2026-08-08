@@ -15,6 +15,7 @@ public partial class UpdateDialog : Window
     public UpdateDialog(UpdateInfoEventArgs args, string? releaseBody)
     {
         InitializeComponent();
+        SourceInitialized += (_, _) => TitleBarService.Apply(this);
         _args = args;
         VersionText.Text = $"{Loc.UpdateAvailable} v{args.CurrentVersion}";
         BodyText.Text = string.IsNullOrWhiteSpace(releaseBody) ? "" : releaseBody.Trim();

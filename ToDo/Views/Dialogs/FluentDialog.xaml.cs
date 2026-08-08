@@ -28,6 +28,7 @@ public partial class FluentDialog : Window
     public FluentDialog(string message, string title, MsgKind kind = MsgKind.Info)
     {
         InitializeComponent();
+        SourceInitialized += (_, _) => TitleBarService.Apply(this);
         Title = title;
         TitleText.Text = title;
         MessageText.Text = message;

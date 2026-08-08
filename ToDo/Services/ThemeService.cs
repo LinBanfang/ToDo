@@ -38,6 +38,10 @@ public static class ThemeService
 
         merged.Insert(0, target);
         _darkDictionary = theme == "Dark" ? target : null;
+
+        // The OS-drawn title bar doesn't follow DynamicResource; recolor every
+        // open window via DWM so it matches the just-swapped palette.
+        TitleBarService.ApplyAll();
     }
 
     private static ResourceDictionary LoadLightDictionary() => new() { Source = LightUri };
