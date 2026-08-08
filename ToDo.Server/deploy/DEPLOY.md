@@ -19,7 +19,7 @@ WPF 客户端 (Windows)                    VPS (Ubuntu/Debian)
 ```
 
 - 服务只监听 `127.0.0.1:5080`,**公网不暴露**,所有流量走 Caddy HTTPS
-- **HTTPS 端口默认 8443**:VPS 的 443 常被其他服务占用(如 Shadowsocks/v2ray 代理隧道),Caddy 就把同步站点放在 8443,证书照样走 :80 的 HTTP-01 自动签发。想换端口在 `deploy.local` 设 `SYNC_PORT=...`
+- **HTTPS 端口默认 8443**:VPS 的 443 常被其他服务占用,Caddy 就把同步站点放在 8443,证书照样走 :80 的 HTTP-01 自动签发。想换端口在 `deploy.local` 设 `SYNC_PORT=...`
 - 认证 = 共享同步密钥 `X-Sync-Key` 头(固定时间比较);无账号系统,单用户
 - 数据库文件在 `/var/lib/todo-sync/sync.db`,WAL 模式
 
@@ -29,7 +29,7 @@ WPF 客户端 (Windows)                    VPS (Ubuntu/Debian)
 
 1. **域名已解析**:`ping <你的域名>` 返回 VPS 公网 IP。
 2. **Windows 本机有**:.NET SDK(9+)、SSH 客户端(Win11 自带 OpenSSH)。**不需要 rsync** —— `deploy.sh` 自己打包 + 增量传输。
-3. **VPS 能连**:`ssh root@<IP>` 能登录;已把域名加进 Caddy 的站点会更好(不是必须,deploy.sh 会自动追加)。
+3. **VPS 能连**:`ssh root@<IP>` 能登录;已把域名加进 Caddy 的站点会更好(不是必须,deploy.sh 会自动写入)。
 5. **SSH 免密(强烈建议)**:`deploy.sh` 会调用多次 ssh,没配密钥要输好几遍密码。配一次:
    ```bash
    ssh-keygen -t ed25519          # 没有密钥就生成(一路回车)
@@ -59,9 +59,9 @@ curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --d
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
 sudo apt update && sudo apt install -y caddy rsync openssl
 
-# 开防火墙(80/443 给 Caddy,SSH 别锁死自己)
+# 开防火墙(80 用于证书签发 + 同步站点的 HTTPS 端口;SSH 别锁死自己)
 sudo ufw allow OpenSSH
-sudo ufw allow 80,443/tcp
+sudo ufw allow 80,8443/tcp
 sudo ufw enable
 ```
 
@@ -80,14 +80,14 @@ cd d:\Dev\Code\ToDo
 2. 二进制打成**一个 tar.gz** 传 `/opt/todo-sync/`(**增量**:只传 md5 变化的文件,重部署通常几个 KB);服务单元、Caddyfile 拷到 `/tmp`
 3. 生成同步密钥,写入 `/etc/todo-sync.env`(**已存在则不覆盖**,密钥永久稳定)
 4. 安装 systemd 单元并启动 `todo-sync`
-5. 把 Caddy 反向代理块追加进 `/etc/caddy/Caddyfile` 并 reload
+5. 把 Caddy 反向代理块**幂等写入** `/etc/caddy/Caddyfile`(已有同名块会先替换,不会累积重复)并 reload
 
 结束后脚本会打 health check,看到 `{"status":"ok"}` 即成功。
 
 ## 4. 验证
 
 ```bash
-# ① 存活检查(端口 8443,443 被代理占着)
+# ① 存活检查(HTTPS 端口 8443)
 curl https://<你的域名>:8443/healthz
 #   期望: {"status":"ok","protocolVersion":1}   (protocolVersion 由客户端用于"版本不符"检测)
 
@@ -149,13 +149,16 @@ ssh root@<IP> "sudo cat /etc/todo-sync.env"
 | 症状 | 排查 |
 |---|---|
 | `curl https://域名:8443/healthz` 连不上/超时 | 防火墙没放行 80/8443;或证书还没签好(等 1 分钟再试) |
-| reload caddy 报 `bind: address already in use`(端口 443) | VPS 的 443 被别的服务占用(常见:Shadowsocks/v2ray-plugin)。**别硬抢 443**——在 `deploy.local` 设 `SYNC_PORT=8443`(或任意空闲端口)重跑 deploy.sh;Caddy 证书照常走 :80 自动签发 |
-| 返回 `502 Bad Gateway` | Caddy 在但后端没起来:`systemctl status todo-sync`;或 Caddyfile 没追加成功(见下) |
+| reload caddy 报 `bind: address already in use`(端口 443) | VPS 的 443 已被别的服务占用。**别硬抢 443**——在 `deploy.local` 设 `SYNC_PORT=8443`(或任意空闲端口)重跑 deploy.sh;Caddy 证书照常走 :80 自动签发。注意 reload 失败时 Caddy 会保持旧配置继续跑,用 `systemctl status caddy` 确认 |
+| 返回 `502 Bad Gateway` | Caddy 在但后端没起来:`systemctl status todo-sync`;或 Caddyfile 站点块没生效(见下) |
 | 客户端同步状态「同步失败」 | 服务器地址/密钥填错;或服务端日志 `journalctl -u todo-sync -n 50` 看报错 |
-| 客户端「同步密钥被拒绝(401)」 | 密钥与 `/etc/todo-sync.env` 不一致(复制时别带 `SYNC_KEY=` 前缀,别带空格) |
-| 客户端状态**红色「服务器版本不符」** | 服务器跑的协议版本比客户端旧(或新)。在 VPS 上确认 `curl https://域名/healthz` 的 `protocolVersion` 是否等于客户端期望值;重跑 `deploy.sh` 部署最新版(增量上传,只传变化的文件) |
-| 域名已经有网站 | `deploy.sh` 只在 Caddyfile 里**没出现过该域名**时才追加。若你已有该域名的 site 块,需手动把 `reverse_proxy 127.0.0.1:5080` 加进去,再 `systemctl reload caddy` |
-| Caddyfile 被追加了重复块 | 每个 site 块只能有一个域名头,检查 `/etc/caddy/Caddyfile` 有无重复的 `你的域名 {`,删掉旧的再 reload |
+| 客户端「同步密钥被拒绝(401)」 | 密钥与 `/etc/todo-sync.env` 不一致(复制时别带 `SYNC_KEY=` 前缀,别带空格)。**若密钥确实一致仍恒 401**,说明服务器跑的是修复前的老版本——重跑 `deploy.sh` 部署最新版即可 |
+| 客户端状态**红色「服务器版本不符」** | 服务器跑的协议版本比客户端旧(或新)。在 VPS 上确认 `curl https://域名:8443/healthz` 的 `protocolVersion` 是否等于客户端期望值;重跑 `deploy.sh` 部署最新版(增量上传,只传变化的文件) |
+| todo-sync 一直重启/起不来,`systemctl status` 显示 `203/EXEC` | 可执行位或文件缺失(Git Bash 的 tar 不保留 Unix 执行位)。直接重跑 `deploy.sh`(会自动 `chmod +x`);若仍未解决,删本机 `~/.todo-sync-publish-manifest.md5` 强制全量重传 |
+| todo-sync 启动即崩溃,日志报 `Format of the initialization string...` | 连接串被截断。unit 里 `Environment=ConnectionStrings__Default=Data Source=...` 的值含空格,**必须加引号**(deploy.sh 部署的版本已带引号;手动编辑过 unit 才可能出现) |
+| 部署脚本报 `bash: syntax error near unexpected token` | 脚本被存成了 CRLF(Windows 编辑器常见)。仓库已用 `.gitattributes` 强制 LF——从仓库重新拉取这些文件,或手动 `sed -i 's/\r$//' <文件>` 再跑 |
+| 域名已经有网站 | deploy.sh 的 caddy-setup.sh 会把该域名的站点块**替换**成反向代理块(幂等),不会叠加;若你原本的站点业务还在,需自行把业务和 `reverse_proxy` 合并进同一个块 |
+| Caddyfile 有重复/残留的域名块 | 重跑 `deploy.sh` 会自动清除旧块(以 `DOMAIN` 或 `DOMAIN:端口` 开头的块只留最新一个);也可以手动删掉多余的 `你的域名 { ... }` 再 `systemctl reload caddy` |
 
 ---
 
@@ -181,4 +184,4 @@ curl http://localhost:5080/healthz
 ```
 
 然后在应用设置里填 `http://localhost:5080` + 密钥 `test`,开两台实例(复制一份 exe 目录)互相同步。
-本地通后再部署到 VPS,客户端把地址改成 `https://<域名>` 即可。
+本地通后再部署到 VPS,客户端把地址改成 `https://<域名>:8443` 即可(和你实际配置的 `SYNC_PORT` 一致)。
