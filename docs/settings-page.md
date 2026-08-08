@@ -73,7 +73,7 @@
 
 ```json
 {
-  "SchemaVersion": 1,
+  "SchemaVersion": 2,
   "DbPath": "%LOCALAPPDATA%\\ToDo\\todo.db",
   "Theme": "Light",
   "SidebarWidth": 280,
@@ -81,19 +81,25 @@
   "CheckForUpdatesOnStartup": true,
   "ReminderNotifications": true,
   "ReminderSound": true,
-  "UpdateSources": [ { "Type": "github", "Url": "..." }, { "Type": "gitee", "Url": "..." } ]
+  "UpdateSources": [ { "Type": "github", "Url": "..." }, { "Type": "gitee", "Url": "..." } ],
+  "SyncEnabled": false,
+  "SyncServerUrl": "",
+  "SyncKey": "",
+  "DeviceId": "",
+  "LastSyncServerSeq": 0,
+  "LastSyncTime": 0
 }
 ```
 
 | 字段 | 类型 | 默认 | 生效策略 |
 |---|---|---|---|
-| `SchemaVersion` | int | 1 | 迁移用 |
+| `SchemaVersion` | int | 2 | 迁移用 |
 | `Language` | string | `"Chinese"` | 重启 |
 | `CheckForUpdatesOnStartup` | bool | true | 下次启动 |
 | `ReminderNotifications` | bool | true | 即时（15s 轮询读取） |
 | `ReminderSound` | bool | true | 即时（15s 轮询读取） |
 
-**迁移**：`SettingsService.Load()` 中若文件无 `SchemaVersion`（旧版）→ 补默认值、写 `SchemaVersion=1` 并 `Save()`，旧字段全部保留。无破坏性变更。
+**迁移**：`SettingsService.Load()` 中若文件无 `SchemaVersion` 或版本低于 `CurrentSchemaVersion` → 补默认值并盖章为当前版本（当前为 2，v2 补同步块字段）后 `Save()`，旧字段全部保留。无破坏性变更。
 
 ## 4. 各服务改动
 
@@ -164,7 +170,7 @@
 8. `MainWindow.xaml`：主内容区宿主 + 可见性切换；详情面板隐藏；footer 收敛为齿轮按钮；删除旧入口处理。
 
 ### 阶段 3 — 各设置项接入
-9. 外观：主题 ComboBox → `ThemeService.Apply` + 保存（即时）。
+9. 外观：主题 ComboBox → `ThemeService.Apply` + 保存（即时）。主题切换时窗口标题栏 / 边框由 `TitleBarService.ApplyAll()`（DWM 着色）同步跟随，即时生效。
 10. 常规：语言 ComboBox → 保存 + 重启提示。
 11. 数据：当前路径展示 + "更改"（复用 DbPathDialog）+ 导出 + 恢复。
 12. 更新：启动检查开关；更新源列表编辑（增删/类型/URL）；"立即检查更新"。

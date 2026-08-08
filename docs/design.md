@@ -245,7 +245,8 @@ MainViewModel
 - 圆角、阴影、悬停效果
 - Segoe MDL2 Assets 图标字体 + Segoe UI Emoji 彩色表情
 - ComboBox、ContextMenu、MenuItem 均有自定义 Fluent 模板
-- 浅色/深色主题：`FluentColors.xaml` 以 SolidColorBrush 定义浅色色板，深色色板由 `ThemeService` 在代码中构建（键一致）；所有主题刷引用均为 `{DynamicResource}`，侧边栏主题按钮运行时替换 `FluentColors` 字典即时生效，选择持久化到 settings.json，启动时恢复
+- 浅色/深色主题：`FluentColors.xaml` 以 SolidColorBrush 定义浅色色板，深色色板由 `ThemeService` 在代码中构建（键一致）；所有主题刷引用均为 `{DynamicResource}`，设置页主题选择运行时替换 `FluentColors` 字典即时生效，选择持久化到 settings.json，启动时恢复
+- **标题栏跟随主题**：窗口标题栏 / 边框是 OS 绘制的，`TitleBarService` 用 DWM `DwmSetWindowAttribute` 着色使其与应用主题一致——Win10 1809+ 设沉浸式暗色标志（attr 20），Win11 22000+ 额外设 `DWMWA_CAPTION_COLOR`（35）/ `TEXT_COLOR`（36）/ `BORDER_COLOR`（34），颜色从当前主题字典取 `AppBackgroundBrush` / `TextPrimaryBrush`（单一事实来源，不硬编码副本）；`ThemeService.Apply` 末尾调用 `TitleBarService.ApplyAll()` 覆盖运行时切换，各窗口在 `SourceInitialized` 时着色一次（对话框为模态，打开期间主题不可切换）。详见 [ADR-011](adr/0011-titlebar-theme.md)
 
 ---
 
@@ -265,7 +266,7 @@ MainViewModel
 - 5 张集合：lists / groups / tasks / tags / listgroups
 - 索引：ListId、GroupId、IsMyDay、IsImportant、DueDate、tagIds（多值索引）
 - 数据库路径可配置：`SettingsService` 持久化到 `%LOCALAPPDATA%\ToDo\settings.json`，默认数据库在 `%LOCALAPPDATA%\ToDo\todo.db`；`DbPathDialog` 可更改路径并自动迁移数据；旧版程序目录下的 `todo.db` 会自动迁移到新位置
-- settings.json 持久化：`SchemaVersion`（当前 1，旧文件加载时补默认值并盖章）、`Theme`（Light / Dark，启动时由 `App.OnStartup` 恢复）、`Language`、`CheckForUpdatesOnStartup`、`ReminderNotifications`、`ReminderSound`、`SidebarWidth`、`UpdateSources`、`PendingRestorePath`（待恢复备份暂存，启动替换后清除）
+- settings.json 持久化：`SchemaVersion`（当前 2，v2 新增同步块 `SyncEnabled` / `SyncServerUrl` / `SyncKey` / `DeviceId` / `LastSyncServerSeq` / `LastSyncTime`；旧文件加载时补默认值并盖章）、`Theme`（Light / Dark，启动时由 `App.OnStartup` 恢复）、`Language`、`CheckForUpdatesOnStartup`、`ReminderNotifications`、`ReminderSound`、`SidebarWidth`、`UpdateSources`、`PendingRestorePath`（待恢复备份暂存，启动替换后清除）
 
 ### 8.1 种子数据
 
@@ -336,3 +337,5 @@ MainViewModel
 | [ADR-007](adr/0007-reminder-notification.md) | 提醒到点通知（托盘 + 定时查询） |
 | [ADR-008](adr/0008-in-app-settings-page.md) | 内嵌设置页（主内容区页面切换 + settings.json 版本化） |
 | [ADR-009](adr/0009-diagnostic-logging.md) | 诊断日志（零依赖本地日志，更新检查接入） |
+| [ADR-010](adr/0010-self-hosted-sync.md) | 自托管多端同步（可选后端，outbox + ServerSeq LWW） |
+| [ADR-011](adr/0011-titlebar-theme.md) | 标题栏 / 边框跟随应用主题（DWM 着色） |
