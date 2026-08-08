@@ -95,8 +95,7 @@ public partial class MainWindow : Window
             var delete = new MenuItem { Header = Loc.DeleteGroup };
             delete.Click += (s, _) =>
             {
-                if (MessageBox.Show(Loc.ConfirmDeleteGroupMsg(lgd.Group.Name), Loc.DeleteGroup,
-                        MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                if (FluentDialog.Confirm(this, Loc.ConfirmDeleteGroupMsg(lgd.Group.Name), Loc.DeleteGroup))
                     ViewModel.DeleteListGroupCommand.Execute(lgd.Group);
             };
             menu.Items.Add(delete);
@@ -152,7 +151,7 @@ public partial class MainWindow : Window
         menu.Items.Add(r);
         menu.Items.Add(new Separator());
         var d = new MenuItem { Header = Loc.Delete, Tag = list };
-        d.Click += (_, _) => { if (MessageBox.Show(Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes) ViewModel.DeleteListCommand.Execute(list); };
+        d.Click += (_, _) => { if (FluentDialog.Confirm(this, Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete)) ViewModel.DeleteListCommand.Execute(list); };
         menu.Items.Add(d);
     }
 
@@ -205,8 +204,7 @@ public partial class MainWindow : Window
     {
         if ((sender as MenuItem)?.DataContext is TaskList list)
         {
-            if (MessageBox.Show(Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete,
-                    MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+            if (FluentDialog.Confirm(this, Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete))
                 ViewModel.DeleteListCommand.Execute(list);
         }
     }
@@ -508,8 +506,7 @@ public partial class MainWindow : Window
             var deleteGItem = new MenuItem { Header = Loc.DeleteGroup };
             deleteGItem.Click += (s, _) =>
             {
-                if (MessageBox.Show(Loc.ConfirmDeleteGroupMsg(gt.Group!.Name),
-                        Loc.DeleteGroup, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                if (FluentDialog.Confirm(this, Loc.ConfirmDeleteGroupMsg(gt.Group!.Name), Loc.DeleteGroup))
                     ViewModel.DeleteGroupCommand.Execute(gt.Group);
             };
             menu.Items.Add(deleteGItem);
@@ -1136,8 +1133,7 @@ public partial class MainWindow : Window
             var deleteItem = new MenuItem { Header = Loc.DeleteTask };
             deleteItem.Click += (s, _) =>
             {
-                if (MessageBox.Show(Loc.ConfirmDeleteMsg(task.Title), Loc.ConfirmDelete,
-                        MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                if (FluentDialog.Confirm(this, Loc.ConfirmDeleteMsg(task.Title), Loc.ConfirmDelete))
                     ViewModel.DeleteTaskCommand.Execute(task);
             };
             menu.Items.Add(deleteItem);
@@ -1202,8 +1198,7 @@ public partial class MainWindow : Window
     private void DetailPane_Delete(object sender, RoutedEventArgs e)
     {
         if (ViewModel.SelectedTask == null) return;
-        if (MessageBox.Show(Loc.ConfirmDeleteMsg(ViewModel.SelectedTask.Title), Loc.ConfirmDelete,
-                MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+        if (FluentDialog.Confirm(this, Loc.ConfirmDeleteMsg(ViewModel.SelectedTask.Title), Loc.ConfirmDelete))
         {
             ViewModel.DeleteTaskCommand.Execute(ViewModel.SelectedTask);
         }

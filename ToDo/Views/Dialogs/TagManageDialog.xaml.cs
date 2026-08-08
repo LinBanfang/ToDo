@@ -202,8 +202,7 @@ public partial class TagManageDialog : Window
     {
         if (sender is Button btn && btn.Tag is Tag tag)
         {
-            if (MessageBox.Show(Loc.ConfirmDeleteMsg(tag.Name), Loc.ConfirmDelete,
-                    MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+            if (FluentDialog.Confirm(this, Loc.ConfirmDeleteMsg(tag.Name), Loc.ConfirmDelete))
                 ViewModel.DeleteTagCommand.Execute(tag);
         }
     }

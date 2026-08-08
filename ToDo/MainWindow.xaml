@@ -207,12 +207,12 @@
                                 <DataTemplate DataType="{x:Type models:TaskList}">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="26"/>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="16" Margin="0,-2,8,0"
-                                                   FontFamily="Segoe UI Emoji" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="16" FontFamily="Segoe UI Emoji"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="14"
                                                    VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                                                    MouseLeftButtonDown="SidebarListName_DoubleClick"
@@ -293,11 +293,12 @@
                                                 <DataTemplate DataType="{x:Type models:TaskList}">
                                                     <Grid ContextMenuOpening="SidebarGrid_ContextMenuOpening"><Grid.ContextMenu><ContextMenu Loaded="SidebarGrid_MenuLoaded"/></Grid.ContextMenu>
                                                         <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="26"/>
                                                             <ColumnDefinition Width="*"/>
                                                             <ColumnDefinition Width="Auto"/>
                                                         </Grid.ColumnDefinitions>
-                                                        <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="14" FontFamily="Segoe UI Emoji" VerticalAlignment="Center" Margin="0,-2,6,0"/>
+                                                        <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="16" FontFamily="Segoe UI Emoji"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                         <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="14" VerticalAlignment="Center"
                                                                    MouseLeftButtonDown="SidebarListName_DoubleClick"
                                                                    Visibility="{Binding IsRenaming, Converter={StaticResource InverseBoolToVis}}"/>
@@ -331,13 +332,12 @@
                                 <DataTemplate DataType="{x:Type models:TaskList}">
                                     <Grid ContextMenuOpening="SidebarGrid_ContextMenuOpening"><Grid.ContextMenu><ContextMenu Loaded="SidebarGrid_MenuLoaded"/></Grid.ContextMenu>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="26"/>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="16"
-                                                   FontFamily="Segoe UI Emoji"
-                                                   VerticalAlignment="Center" Margin="0,-2,8,0">
+                                        <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="16" FontFamily="Segoe UI Emoji"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
                                                     <Style.Triggers>

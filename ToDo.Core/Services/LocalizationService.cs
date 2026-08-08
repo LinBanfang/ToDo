@@ -50,6 +50,7 @@ public static class Loc
     public static string Delete => Language == AppLanguage.Chinese ? "删除" : "Delete";
     public static string Complete => Language == AppLanguage.Chinese ? "完成" : "Complete";
     public static string Cancel => Language == AppLanguage.Chinese ? "取消" : "Cancel";
+    public static string OK => Language == AppLanguage.Chinese ? "确定" : "OK";
     public static string AddToMyDay => Language == AppLanguage.Chinese ? "添加到我的一天" : "Add to My Day";
     public static string RemoveFromMyDay => Language == AppLanguage.Chinese ? "从我的一天移除" : "Remove from My Day";
     public static string MarkImportant => Language == AppLanguage.Chinese ? "标记为重要" : "Mark as important";
