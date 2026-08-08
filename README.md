@@ -16,7 +16,7 @@
 
 ![设置页](screenshots/settings.png)
 
-> 截图由演示数据生成，运行 `dotnet run --project ToDo.Demo -- <db-path>` 可复现，见下文项目结构。
+> 截图由演示数据生成，可用脚本一键复现：`powershell -ExecutionPolicy Bypass -File tools/screenshots/capture-screenshots.ps1`，详见 [docs/screenshots.md](docs/screenshots.md)。
 
 ## 功能
 
@@ -71,6 +71,7 @@ ToDo.Demo/           演示数据生成工具（灌入展示各功能示例的�
 - 详细设计方案：[docs/design.md](docs/design.md)
 - 设置页设计：[docs/settings-page.md](docs/settings-page.md)
 - 诊断日志设计：[docs/logging.md](docs/logging.md)
+- 截图生成与验证：[docs/screenshots.md](docs/screenshots.md)
 - 同步服务器部署：[ToDo.Server/deploy/DEPLOY.md](ToDo.Server/deploy/DEPLOY.md)
 - 架构决策记录（ADR）：[docs/adr/](docs/adr/)
 
