@@ -207,7 +207,7 @@
                                 <DataTemplate DataType="{x:Type models:TaskList}">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="26"/>
+                                            <ColumnDefinition Width="36"/>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
@@ -293,7 +293,7 @@
                                                 <DataTemplate DataType="{x:Type models:TaskList}">
                                                     <Grid ContextMenuOpening="SidebarGrid_ContextMenuOpening"><Grid.ContextMenu><ContextMenu Loaded="SidebarGrid_MenuLoaded"/></Grid.ContextMenu>
                                                         <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="26"/>
+                                                            <ColumnDefinition Width="36"/>
                                                             <ColumnDefinition Width="*"/>
                                                             <ColumnDefinition Width="Auto"/>
                                                         </Grid.ColumnDefinitions>
@@ -332,7 +332,7 @@
                                 <DataTemplate DataType="{x:Type models:TaskList}">
                                     <Grid ContextMenuOpening="SidebarGrid_ContextMenuOpening"><Grid.ContextMenu><ContextMenu Loaded="SidebarGrid_MenuLoaded"/></Grid.ContextMenu>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="26"/>
+                                            <ColumnDefinition Width="36"/>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
