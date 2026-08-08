@@ -1,6 +1,6 @@
 # To Do
 
-仿 Microsoft To Do 的 Fluent Design 风格待办事项桌面应用，基于 WPF (.NET 9) 开发。
+Fluent Design 风格的待办事项桌面应用，基于 WPF (.NET 9) 开发，本地 LiteDB 存储，中英双语。
 
 ## 截图
 
@@ -73,6 +73,7 @@ ToDo.Demo/           演示数据生成工具（灌入展示各功能示例的�
 ## 设计文档
 
 - 变更日志：[CHANGELOG.md](CHANGELOG.md)
+- 路线图：[docs/ROADMAP.md](docs/ROADMAP.md)
 - 详细设计方案：[docs/design.md](docs/design.md)
 - 设置页设计：[docs/settings-page.md](docs/settings-page.md)
 - 诊断日志设计：[docs/logging.md](docs/logging.md)
