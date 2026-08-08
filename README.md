@@ -15,6 +15,7 @@
 - **中英文切换** — 设置页切换语言，全界面（含弹窗、转换器）本地化，重启生效并自动记忆
 - **浅色 / 深色主题** — 设置页切换主题，即时生效并自动记忆
 - **本地存储** — LiteDB 嵌入式数据库，数据文件默认在 `%LOCALAPPDATA%\ToDo\todo.db`，路径可在设置页变更并自动迁移，支持导出备份 / 恢复
+- **多端同步（可选）** — 自建轻量同步服务器（ToDo.Server），多设备间同步任务 / 列表 / 分组 / 标签 / 步骤 / 重要标记；「我的一天」保留在本设备、不同步。设置页填服务器地址 + 同步密钥即可开启，部署见 [ToDo.Server/deploy/DEPLOY.md](ToDo.Server/deploy/DEPLOY.md)
 - **自动更新** — 启动时按序检查多个更新源（GitHub / Gitee / 私有 appcast），发现新版本一键自动下载、替换并重启（基于 vendored AutoUpdater.NET，MIT）；更新源可在设置页编辑，启动检查可关闭；手动检查失败会显示真实原因，诊断日志写入 exe 同路径 `logs` 文件夹
 
 ## 运行
@@ -30,21 +31,20 @@ dotnet run
 |---|---|
 | 框架 | WPF (.NET 9) |
 | MVVM | CommunityToolkit.Mvvm |
-| 数据库 | LiteDB |
+| 数据库 | LiteDB（客户端） / SQLite（同步服务器） |
+| 共享库 | ToDo.Core（net9.0，WPF 与未来 MAUI 复用） |
+| 同步服务器 | ToDo.Server（.NET 9 Minimal API + EF Core，自建部署） |
 | 样式 | 原生 WPF Fluent Design 自定义模板 |
 | 本地化 | 静态字符串 + 窗口重建 |
 
 ## 项目结构
 
 ```
-ToDo/
-├── Models/          数据模型（TaskItem / TaskList / TaskGroup / ListGroup / Tag / TaskStep / CloseRecord）
-├── ViewModels/      MVVM 视图模型
-├── Views/           内嵌页面（SettingsPage 设置页）
-├── Views/Dialogs/   对话框窗口（TagManageDialog / DateTimeDialog / DbPathDialog）
-├── Services/        数据库 & 本地化 & 设置
-├── Converters/      值转换器
-└── Styles/          Fluent 主题样式
+ToDo.Core/           共享库（模型 / DatabaseService / 本地化 / 同步引擎，net9.0）
+ToDo/                WPF 客户端（Views / ViewModels / Services / Styles / Converters）
+ToDo.Server/         同步服务器（Minimal API + SQLite，含 deploy/ 部署脚本与指南）
+ToDo.Tests/          WPF 客户端与 Core 测试
+ToDo.Server.Tests/   同步服务器测试
 ```
 
 ## 设计文档
@@ -52,6 +52,7 @@ ToDo/
 - 详细设计方案：[docs/design.md](docs/design.md)
 - 设置页设计：[docs/settings-page.md](docs/settings-page.md)
 - 诊断日志设计：[docs/logging.md](docs/logging.md)
+- 同步服务器部署：[ToDo.Server/deploy/DEPLOY.md](ToDo.Server/deploy/DEPLOY.md)
 - 架构决策记录（ADR）：[docs/adr/](docs/adr/)
 
 ## 许可
