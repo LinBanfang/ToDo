@@ -10,3 +10,6 @@ obj/
 
 # Visual Studio per-user files
 *.csproj.user
+
+# Deploy local config (real server IP/domain) — never committed
+ToDo.Server/deploy/deploy.local
