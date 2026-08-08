@@ -23,6 +23,7 @@ public partial class TagManageDialog : Window
     public TagManageDialog()
     {
         InitializeComponent();
+        SourceInitialized += (_, _) => TitleBarService.Apply(this);
         TagListControl.ItemsSource = ViewModel.Tags;
     }
 

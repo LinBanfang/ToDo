@@ -1,4 +1,5 @@
 using System.Windows;
+using ToDo.Services;
 
 namespace ToDo.Views.Dialogs;
 
@@ -10,6 +11,7 @@ public partial class DateTimeDialog : Window
     public DateTimeDialog(long initialTimestamp)
     {
         InitializeComponent();
+        SourceInitialized += (_, _) => TitleBarService.Apply(this);
 
         var dt = DateTimeOffset.FromUnixTimeMilliseconds(initialTimestamp).LocalDateTime;
 

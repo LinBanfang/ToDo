@@ -11,6 +11,7 @@ public partial class DbPathDialog : Window
     public DbPathDialog(string currentPath)
     {
         InitializeComponent();
+        SourceInitialized += (_, _) => TitleBarService.Apply(this);
         PathBox.Text = currentPath;
         PathBox.Focus();
     }

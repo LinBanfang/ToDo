@@ -22,6 +22,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContext = App.ViewModel;
+        SourceInitialized += (_, _) => TitleBarService.Apply(this);
         App.ViewModel!.PropertyChanged += (s, e) =>
         {
             if (e.PropertyName == nameof(MainViewModel.SelectedTask))
