@@ -17,9 +17,9 @@ public class DatabaseService : IDisposable
 
     public string StoragePath => _dbPath;
 
-    public DatabaseService(string? dbPath = null)
+    public DatabaseService(string dbPath)
     {
-        _dbPath = dbPath ?? ResolveDbPath();
+        _dbPath = dbPath;
         _db = new LiteDatabase($"Filename={_dbPath};Connection=direct");
 
         // Map ObservableCollection types to List for serialization
@@ -92,23 +92,6 @@ public class DatabaseService : IDisposable
                 }
             }
         }
-    }
-
-    private static string ResolveDbPath()
-    {
-        SettingsService.Load();
-        var configured = SettingsService.Current.DbPath;
-        var defaultPath = SettingsService.DefaultDbPath;
-
-        // Check for old DB at exe location and migrate
-        var legacyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "todo.db");
-        if (File.Exists(legacyPath) && !File.Exists(configured))
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(configured)!);
-            File.Copy(legacyPath, configured);
-        }
-
-        return configured;
     }
 
     /// <summary>Flushes LiteDB's journal then copies the database file to <paramref name="destPath"/>.</summary>
