@@ -148,6 +148,43 @@ public sealed class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task ServerReset_DetectsSeqRollback_ReBootstrapsAndReUploads()
+    {
+        // A fully-synced device: cursor is ahead of an empty outbox.
+        SettingsService.Current.LastSyncServerSeq = 5;
+        var local = new TaskItem { Id = "t-keep", Title = "mine", ListId = "list-tasks" };
+        _db.Tasks.Insert(local);
+        _db.Tracker.Clear();
+
+        SyncRequest? first = null;
+        var handler = new StubHandler(req =>
+        {
+            var body = JsonSerializer.Deserialize<SyncRequest>(
+                req.Content!.ReadAsStringAsync().GetAwaiter().GetResult(), WebJson);
+            if (first == null)
+            {
+                first = body; // a wiped server answers with seq 0 and no data
+                return JsonResponse(HttpStatusCode.OK, new SyncResponse { ServerSeq = 0 });
+            }
+            // The restored server echoes the re-uploaded entities.
+            var changes = body!.Changes ?? new List<SyncChange>();
+            return JsonResponse(HttpStatusCode.OK, new SyncResponse { ServerSeq = changes.Count, Changes = changes });
+        });
+
+        var svc = new SyncService(_db, null, handler);
+        await svc.SyncOnceAsync();
+
+        Assert.Equal(SyncStatus.Online, svc.Status);
+        Assert.Equal(2, handler.Calls);                          // reset caused a second round-trip
+        Assert.Equal(5, first!.Since);                           // first attempt used the stale cursor
+        Assert.Equal(0, handler.LastRequest!.Since);             // re-upload pulled from seq 0
+        Assert.Contains(handler.LastRequest.Changes!, c => c.Id == "t-keep"); // local data re-uploaded
+
+        Assert.Empty(_db.Tracker.AllPending());                  // outbox drained again
+        Assert.Equal(1, SettingsService.Current.LastSyncServerSeq); // cursor = seq after re-upload
+    }
+
+    [Fact]
     public async Task KeyRejected_SetsOffline_WithAuthStatusText()
     {
         SettingsService.Current.LastSyncServerSeq = 3;

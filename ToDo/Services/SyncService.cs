@@ -116,21 +116,7 @@ public partial class SyncService : ObservableObject, IDisposable
                 return (evs, SettingsService.Current.LastSyncServerSeq);
             });
 
-            var request = new SyncRequest
-            {
-                DeviceId = settings.DeviceId,
-                Since = since,
-                Changes = events.Select(e => new SyncChange
-                {
-                    Type = e.EntityType,
-                    Id = e.EntityId,
-                    ModifiedAt = e.ModifiedAt,
-                    Deleted = e.Deleted,
-                    Payload = e.PayloadJson,
-                }).ToList(),
-            };
-
-            var response = await BuildClient().SyncAsync(request);
+            var response = await RoundTripAsync(events, since);
 
             // Server answered but speaks an incompatible protocol: refuse to apply its
             // reply (it may serialize entities differently) and flag the mismatch instead.
@@ -138,6 +124,25 @@ public partial class SyncService : ObservableObject, IDisposable
             {
                 await SetStatusAfterSpin(SyncStatus.VersionMismatch, startedAt);
                 return;
+            }
+
+            // A server whose sequence went backwards was wiped or swapped out: its seq
+            // restarts at 0, our cursor no longer matches, and the (already-run) bootstrap
+            // guard would silently stop this device from ever re-uploading. Re-seed the
+            // outbox from the full local state and push everything again to restore the
+            // mirror, so a server reset no longer means silent data loss.
+            if (response.ServerSeq < since)
+            {
+                DiagnosticLog.Warn("sync",
+                    $"server sequence reset detected ({since} → {response.ServerSeq}), re-uploading full local state");
+                await RunOnDbThread(() => _db.BootstrapSync());
+                events = (await RunOnDbThread(() => _db.Tracker.AllPending().ToList()))!;
+                response = await RoundTripAsync(events, 0);
+                if (response.ProtocolVersion != SyncProtocol.Version)
+                {
+                    await SetStatusAfterSpin(SyncStatus.VersionMismatch, startedAt);
+                    return;
+                }
             }
 
             // Apply the reply (LWW, My Day preserved), clear what was pushed, persist the
@@ -233,6 +238,26 @@ public partial class SyncService : ObservableObject, IDisposable
             if (remaining > 0) await Task.Delay(TimeSpan.FromMilliseconds(remaining));
         }
         SetStatus(status, authFailed);
+    }
+
+    /// <summary>Builds a request from an outbox snapshot and performs the HTTP round-trip
+    /// — the only part of a sync that touches the network (kept off the DB thread).</summary>
+    private async Task<SyncResponse> RoundTripAsync(List<SyncEvent> events, long since)
+    {
+        var request = new SyncRequest
+        {
+            DeviceId = SettingsService.Current.DeviceId,
+            Since = since,
+            Changes = events.Select(e => new SyncChange
+            {
+                Type = e.EntityType,
+                Id = e.EntityId,
+                ModifiedAt = e.ModifiedAt,
+                Deleted = e.Deleted,
+                Payload = e.PayloadJson,
+            }).ToList(),
+        };
+        return await BuildClient().SyncAsync(request);
     }
 
     /// <summary>The server URL/key can be edited in settings between syncs, so the client
