@@ -15,4 +15,7 @@ public partial class ListGroup : ObservableObject
 
     [ObservableProperty]
     private bool _collapsed;
+
+    [ObservableProperty]
+    private long _modifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 }
