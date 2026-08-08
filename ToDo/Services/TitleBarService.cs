@@ -14,12 +14,24 @@ namespace ToDo.Services;
 public static class TitleBarService
 {
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20; // Win10 1809+, Win11
+    private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33; // Win11 22000+
     private const int DWMWA_BORDER_COLOR = 34;            // Win11 22000+
     private const int DWMWA_CAPTION_COLOR = 35;           // Win11 22000+
     private const int DWMWA_TEXT_COLOR = 36;              // Win11 22000+
 
+    private const int DWMWCP_ROUND = 2;
+
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+
+    /// <summary>Rounds the window corners (Win11 22000+). Used by the frameless
+    /// sticky-note window, which has no OS-drawn title bar to inherit rounding from.</summary>
+    public static void RoundCorners(IntPtr hwnd)
+    {
+        if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000)) return;
+        int preference = DWMWCP_ROUND;
+        DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref preference, sizeof(int));
+    }
 
     /// <summary>Re-applies the current theme to every open window (called after a theme swap).</summary>
     public static void ApplyAll()

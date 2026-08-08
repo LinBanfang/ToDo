@@ -195,6 +195,18 @@
             </StackPanel>
         </DataTemplate>
 
+        <!-- ═════ 行为 ═════ -->
+        <DataTemplate DataType="{x:Type vm:BehaviorSection}">
+            <StackPanel Margin="0,4">
+                <TextBlock Style="{StaticResource SettingSectionTitle}" Text="{Binding Title}"/>
+                <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,0,0,16"/>
+                <CheckBox Style="{StaticResource FluentCheckBox}" Content="{x:Static services:Loc.MinimizeToTrayOnClose}"
+                          IsChecked="{Binding MinimizeToTrayOnClose}" Margin="0,0,0,10"/>
+                <CheckBox Style="{StaticResource FluentCheckBox}" Content="{x:Static services:Loc.StickyShowTags}"
+                          IsChecked="{Binding StickyShowTags}"/>
+            </StackPanel>
+        </DataTemplate>
+
         <!-- ═════ 关于 ═════ -->
         <DataTemplate DataType="{x:Type vm:AboutSection}">
             <StackPanel Margin="0,4">

@@ -101,10 +101,13 @@ public sealed class SettingsServiceTests : IDisposable
 
         SettingsService.Load();
 
-        Assert.Equal(2, SettingsService.Current.SchemaVersion);
+        Assert.Equal(4, SettingsService.Current.SchemaVersion);
         Assert.Equal("Dark", SettingsService.Current.Theme);
         Assert.Equal("English", SettingsService.Current.Language);
         Assert.Equal(SettingsService.DefaultDbPath, SettingsService.Current.DbPath);
+        // New Behavior fields fall back to their property defaults on a legacy file
+        Assert.True(SettingsService.Current.MinimizeToTrayOnClose);
+        Assert.True(SettingsService.Current.StickyShowTags);
     }
 
     [Fact]

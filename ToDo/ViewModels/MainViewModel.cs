@@ -62,6 +62,9 @@ public partial class MainViewModel : ObservableObject
     // Mirrors FluentColors' TextDisabledBrush — only a fallback before App.Sync exists.
     private static readonly Brush _idleSyncBrush = new SolidColorBrush(Color.FromRgb(0xA1, 0x9F, 0x9D));
 
+    /// <summary>Whether the sticky note shows tag pills on task rows (live from settings).</summary>
+    public bool StickyShowTags => SettingsService.Current.StickyShowTags;
+
     public Brush SyncStatusBrush => App.Sync?.StatusBrush ?? _idleSyncBrush;
     public string SyncStatusText => App.Sync?.StatusText ?? Loc.SyncStatusDisabled;
     /// <summary>True while a round-trip is in flight — drives the sync icon's spin.</summary>

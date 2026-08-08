@@ -1,0 +1,325 @@
+<Window x:Class="ToDo.StickyWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        xmlns:models="clr-namespace:ToDo.Models;assembly=ToDo.Core"
+        xmlns:services="clr-namespace:ToDo.Services;assembly=ToDo.Core"
+        mc:Ignorable="d"
+        Title="{x:Static services:Loc.StickyNote}"
+        Width="340" Height="520"
+        MinWidth="260" MinHeight="320"
+        WindowStartupLocation="Manual"
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        Topmost="True"
+        ShowActivated="False"
+        ShowInTaskbar="False"
+        Background="{DynamicResource AppBackgroundBrush}"
+        FontFamily="{StaticResource FluentFont}">
+
+    <!-- Frameless note card: edges stay resizable via the chrome, the header is
+         dragged manually (WindowManager owns the window, so no OS title bar). -->
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="5"
+                            GlassFrameThickness="0" CornerRadius="0"
+                            UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <!-- List picker (the header dropdown) item look -->
+        <Style TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background"
+                                        Value="{DynamicResource CardHoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background"
+                                        Value="{DynamicResource CardSelectedBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextAccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Active-task row: rounded hover card + checkbox + title + due-date chip -->
+        <DataTemplate x:Key="StickyActiveTask" DataType="{x:Type models:TaskItem}">
+            <Border CornerRadius="6" Padding="10,7" Margin="0,1">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource CardHoverBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <!-- Checkbox square: accent border on hover (click = complete) -->
+                    <Border Grid.Column="0" Width="20" Height="20" Margin="0,0,10,0"
+                            VerticalAlignment="Center" CornerRadius="5" Cursor="Hand"
+                            Background="Transparent" BorderThickness="1.5"
+                            MouseLeftButtonDown="CompleteTask_Click">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="BorderBrush" Value="{DynamicResource NeutralGray110}"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="BorderBrush" Value="{DynamicResource TextAccentBrush}"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Title}" FontSize="13.5"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                   TextTrimming="CharacterEllipsis"/>
+                        <!-- Due-date tinted chip -->
+                        <Grid Margin="0,3,0,0" HorizontalAlignment="Left"
+                              Visibility="{Binding DueDate, Converter={StaticResource NullToVis}}">
+                            <Border CornerRadius="4"
+                                    Background="{Binding DueDate, Converter={StaticResource DueDateToBrush}}"
+                                    Opacity="0.15"/>
+                            <TextBlock Text="{Binding DueDate, Converter={StaticResource DueDateToString}}"
+                                       FontSize="11" Margin="6,1"
+                                       Foreground="{Binding DueDate, Converter={StaticResource DueDateToBrush}}"/>
+                        </Grid>
+                        <!-- Tag pills (small): a compact colored row that reuses the
+                             TagIdsToTags converter; hidden by the StickyShowTags setting -->
+                        <ItemsControl Margin="0,3,0,0"
+                                      Visibility="{Binding DataContext.StickyShowTags,
+                                                          RelativeSource={RelativeSource AncestorType=Window},
+                                                          Converter={StaticResource BoolToVis}}">
+                            <ItemsControl.ItemsSource>
+                                <MultiBinding Converter="{StaticResource TagIdsToTags}">
+                                    <Binding Path="TagIds"/>
+                                    <Binding Path="DataContext.Tags"
+                                             RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                </MultiBinding>
+                            </ItemsControl.ItemsSource>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:Tag}">
+                                    <Border Padding="5,1" Margin="0,0,4,2" CornerRadius="8"
+                                            Background="{Binding Color, Converter={StaticResource StringToAlphaBrush}}">
+                                        <TextBlock Text="{Binding Name}" FontSize="10.5"
+                                                   Foreground="{Binding Color, Converter={StaticResource StringToBrush}}"/>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- Completed-task row: click to reopen -->
+        <DataTemplate x:Key="StickyCompletedTask" DataType="{x:Type models:TaskItem}">
+            <Border CornerRadius="6" Padding="10,6" Margin="0,1" Cursor="Hand"
+                    MouseLeftButtonDown="ReopenTask_Click">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource CardHoverBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <TextBlock Text="{Binding Title}" FontSize="13" TextDecorations="Strikethrough"
+                           Foreground="{DynamicResource TextDisabledBrush}"
+                           TextTrimming="CharacterEllipsis"/>
+            </Border>
+        </DataTemplate>
+    </Window.Resources>
+
+    <!-- The note card -->
+    <Border CornerRadius="8" BorderThickness="1"
+            BorderBrush="{DynamicResource DividerBrush}"
+            Background="{DynamicResource AppBackgroundBrush}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>   <!-- header -->
+                <RowDefinition Height="Auto"/>   <!-- divider -->
+                <RowDefinition Height="*"/>      <!-- tasks -->
+            </Grid.RowDefinitions>
+
+            <!-- Header: list switcher + close / back-to-main buttons (drag to move) -->
+            <Grid Grid.Row="0" Height="46" Background="Transparent"
+                  MouseLeftButtonDown="Header_MouseLeftButtonDown">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- List switcher: the list name is drag real estate; only the ∨
+                     opens the dropdown (Popup + ListBox below). -->
+                <Border Grid.Column="0" Margin="8,6" CornerRadius="6">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource CardHoverBrush}"/>
+                                </Trigger>
+                                <DataTrigger Binding="{Binding IsChecked, ElementName=ListToggle}"
+                                             Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource CardHoverBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding ActiveList.DisplayName}" FontSize="13"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                   TextTrimming="CharacterEllipsis"
+                                   VerticalAlignment="Center" Margin="8,0,2,0"/>
+                        <ToggleButton x:Name="ListToggle" Focusable="False" Cursor="Hand"
+                                      VerticalAlignment="Center" Margin="0,0,4,0"
+                                      Foreground="{DynamicResource TextSecondaryBrush}">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="Bd" Background="Transparent" CornerRadius="4"
+                                            Padding="6,4">
+                                        <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets"
+                                                   FontSize="10" Foreground="{TemplateBinding Foreground}"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background"
+                                                    Value="{DynamicResource CardHoverBrush}"/>
+                                            <Setter Property="Foreground"
+                                                    Value="{DynamicResource TextAccentBrush}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="Bd" Property="Background"
+                                                    Value="{DynamicResource CardHoverBrush}"/>
+                                            <Setter Property="Foreground"
+                                                    Value="{DynamicResource TextAccentBrush}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+                    </StackPanel>
+                </Border>
+                <Popup IsOpen="{Binding IsChecked, ElementName=ListToggle}"
+                       PlacementTarget="{Binding ElementName=ListToggle}" Placement="Bottom"
+                       AllowsTransparency="True" StaysOpen="False" PopupAnimation="Fade">
+                    <Border Background="{DynamicResource CardBackgroundBrush}"
+                            BorderBrush="{DynamicResource NeutralGray50}" BorderThickness="1"
+                            CornerRadius="6" Margin="0,4" Padding="4" MaxHeight="260">
+                        <ListBox x:Name="ListPicker" ItemsSource="{Binding Lists}"
+                                 SelectedValue="{Binding ActiveListId}" SelectedValuePath="Id"
+                                 Background="Transparent" BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 SelectionChanged="ListPicker_SelectionChanged">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:TaskList}">
+                                    <TextBlock Text="{Binding DisplayName}"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+                </Popup>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal"
+                            VerticalAlignment="Center" Margin="4,0,6,0">
+                    <Button Style="{StaticResource FluentSubtleButton}" Padding="7" FontSize="14"
+                            VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets"
+                            Content="&#xE80F;" ToolTip="{x:Static services:Loc.OpenMainWindow}"
+                            AutomationProperties.AutomationId="StickyBackToMain"
+                            AutomationProperties.Name="{x:Static services:Loc.OpenMainWindow}"
+                            Click="BackToMain_Click"/>
+                    <Button Style="{StaticResource FluentSubtleButton}" Padding="7" FontSize="14"
+                            VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets"
+                            Content="&#xE711;" ToolTip="{x:Static services:Loc.StickyCloseNote}"
+                            AutomationProperties.AutomationId="StickyClose"
+                            AutomationProperties.Name="{x:Static services:Loc.StickyCloseNote}"
+                            Click="Close_Click"/>
+                </StackPanel>
+            </Grid>
+
+            <Border Grid.Row="1" Height="1" Background="{DynamicResource DividerBrush}" Margin="14,0"/>
+
+            <!-- Scrollable task area -->
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="8,4,8,10">
+                    <ItemsControl ItemsSource="{Binding ActiveTasks}"
+                                  ItemTemplate="{StaticResource StickyActiveTask}"/>
+
+                    <!-- Completed section (collapsed by default) -->
+                    <ToggleButton x:Name="CompletedToggle" Margin="0,8,0,0"
+                                  Focusable="False" Cursor="Hand"
+                                  HorizontalAlignment="Stretch">
+                        <ToggleButton.Template>
+                            <ControlTemplate TargetType="ToggleButton">
+                                <Border x:Name="Bg" Background="Transparent" CornerRadius="6" Padding="10,7">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" x:Name="Chevron" Text="&#xE76C;"
+                                                   FontFamily="Segoe MDL2 Assets" FontSize="10"
+                                                   Margin="0,0,6,0"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextDisabledBrush}"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{x:Static services:Loc.CompletedSection}"
+                                                   FontSize="12.5" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Column="2" Margin="8,0,0,0" FontSize="11"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextDisabledBrush}"
+                                                   Text="{Binding CompletedTasks.Count}"/>
+                                    </Grid>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Bg" Property="Background"
+                                                Value="{DynamicResource CardHoverBrush}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsChecked" Value="True">
+                                        <Setter TargetName="Chevron" Property="Text" Value="&#xE70D;"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </ToggleButton.Template>
+                    </ToggleButton>
+                    <StackPanel Visibility="{Binding IsChecked, ElementName=CompletedToggle,
+                                                    Converter={StaticResource BoolToVis}}">
+                        <ItemsControl ItemsSource="{Binding CompletedTasks}"
+                                      ItemTemplate="{StaticResource StickyCompletedTask}"
+                                      Margin="0,2,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Border>
+</Window>

@@ -49,6 +49,8 @@ public partial class MainWindow : Window
         ViewModel.CreateListGroupCommand.Execute("New group");
     }
 
+    private void StickyNote_Click(object sender, RoutedEventArgs e) => WindowManager.OpenSticky();
+
     private bool _suppressListGroupHeaderToggle;
 
     private void ListGroupHeader_Click(object sender, MouseButtonEventArgs e)
@@ -1667,6 +1669,17 @@ public partial class MainWindow : Window
         DetailNoteBox?.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
         if (ViewModel.SelectedTask != null)
             ViewModel.UpdateTaskCommand.Execute(ViewModel.SelectedTask);
+
+        // X closes to the tray (default); with the toggle off it exits the app.
+        // While actually quitting (tray "退出" / session end) let the window close.
+        if (!WindowManager.IsQuitting)
+        {
+            e.Cancel = true;
+            if (SettingsService.Current.MinimizeToTrayOnClose)
+                Hide();
+            else
+                WindowManager.Quit();
+        }
         base.OnClosing(e);
     }
 }

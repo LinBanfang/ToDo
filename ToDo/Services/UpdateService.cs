@@ -183,6 +183,11 @@ public static class UpdateService
     private static void OnUpdateChecked(UpdateInfoEventArgs args)
     {
         var owner = Application.Current?.MainWindow;
+        // While in tray/sticky mode the main window is hidden — resolve a visible
+        // owner (ResolveDialogOwner brings the main window back up if needed) so
+        // the update dialog never shows without one.
+        if (owner is not { IsVisible: true })
+            owner = WindowManager.ResolveDialogOwner();
         if (owner == null) { _manualCheck = false; return; }
 
         // Manual checks from the settings page report the outcome; background checks stay silent
