@@ -1291,7 +1291,10 @@ public partial class MainWindow : Window
         var pickItem = new MenuItem { Header = Loc.PickDate };
         pickItem.Click += (_, _) =>
         {
-            var dlg = new Views.Dialogs.DateTimeDialog(ViewModel.SelectedTask!.Reminder ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds())
+            // includeTime: reminders carry a time of day (due dates intentionally do not).
+            var dlg = new Views.Dialogs.DateTimeDialog(
+                ViewModel.SelectedTask!.Reminder ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                includeTime: true)
             { Owner = this, Title = "Reminder" };
             if (dlg.ShowDialog() == true && dlg.Saved)
                 SetReminder(dlg.ResultTimestamp);

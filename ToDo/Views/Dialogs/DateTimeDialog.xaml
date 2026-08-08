@@ -16,13 +16,34 @@
         <TextBlock Grid.Row="0" Text="{x:Static services:Loc.PickDate}" FontSize="18" FontWeight="SemiBold"
                    Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,16"/>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <ComboBox x:Name="YearCombo" Style="{StaticResource FluentComboBox}" FontSize="14"
-                      Width="84" Margin="0,0,8,0" VerticalAlignment="Center"/>
-            <ComboBox x:Name="MonthCombo" Style="{StaticResource FluentComboBox}" FontSize="14"
-                      Width="84" Margin="0,0,8,0" VerticalAlignment="Center"/>
-            <ComboBox x:Name="DayCombo" Style="{StaticResource FluentComboBox}" FontSize="14"
-                      Width="56" VerticalAlignment="Center"/>
+        <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <ComboBox x:Name="YearCombo" Style="{StaticResource FluentComboBox}" FontSize="14"
+                          Width="84" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                <ComboBox x:Name="MonthCombo" Style="{StaticResource FluentComboBox}" FontSize="14"
+                          Width="84" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                <ComboBox x:Name="DayCombo" Style="{StaticResource FluentComboBox}" FontSize="14"
+                          Width="56" VerticalAlignment="Center"/>
+            </StackPanel>
+            <!-- Time row, shown only for reminders (includeTime) — due dates stay date-only.
+                 Free-typed hour/minute (digits only) so any minute 0-59 is reachable, not
+                 just 5-minute steps; Save() validates the 0-23 / 0-59 ranges. -->
+            <StackPanel x:Name="TimeRow" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
+                <TextBox x:Name="HourBox" Style="{StaticResource FluentTextBox}" FontSize="14"
+                         Width="52" Margin="0,0,8,0" VerticalAlignment="Center"
+                         TextAlignment="Center" MaxLength="2"
+                         PreviewTextInput="TimePart_PreviewTextInput"/>
+                <TextBlock Text=":" FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}"
+                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <TextBox x:Name="MinuteBox" Style="{StaticResource FluentTextBox}" FontSize="14"
+                         Width="52" VerticalAlignment="Center"
+                         TextAlignment="Center" MaxLength="2"
+                         PreviewTextInput="TimePart_PreviewTextInput"/>
+            </StackPanel>
+            <TextBlock x:Name="TimeInvalidHint" Visibility="Collapsed"
+                       Text="{x:Static services:Loc.InvalidTime}" FontSize="12"
+                       Foreground="{DynamicResource AccentRedBrush}" Margin="0,8,0,0"
+                       HorizontalAlignment="Center"/>
         </StackPanel>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
