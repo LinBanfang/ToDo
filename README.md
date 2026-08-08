@@ -2,6 +2,22 @@
 
 仿 Microsoft To Do 的 Fluent Design 风格待办事项桌面应用，基于 WPF (.NET 9) 开发。
 
+## 截图
+
+自定义列表：任务分组、子步骤进度、彩色标签、截止日期、重要标记
+
+![工作列表](screenshots/work-list.png)
+
+「我的一天」：今日待办 + 今天到期的任务汇总
+
+![我的一天](screenshots/my-day.png)
+
+内嵌设置页：主题、语言、数据库路径、数据备份 / 恢复、多端同步
+
+![设置页](screenshots/settings.png)
+
+> 截图由演示数据生成，运行 `dotnet run --project ToDo.Demo -- <db-path>` 可复现，见下文项目结构。
+
 ## 功能
 
 - **列表管理** — 系统列表（我的一天 / 重要 / 计划内 / 任务）+ 自定义列表，支持列表分组、分组折叠
@@ -45,6 +61,7 @@ ToDo/                WPF 客户端（Views / ViewModels / Services / Styles / Co
 ToDo.Server/         同步服务器（Minimal API + SQLite，含 deploy/ 部署脚本与指南）
 ToDo.Tests/          WPF 客户端与 Core 测试
 ToDo.Server.Tests/   同步服务器测试
+ToDo.Demo/           演示数据生成工具（灌入展示各功能示例的数据库，用于截图 / 试用）
 ```
 
 ## 设计文档
