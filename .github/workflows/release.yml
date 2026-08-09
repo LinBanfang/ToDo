@@ -42,15 +42,10 @@ jobs:
       - name: Package zip
         run: Compress-Archive -Path publish/* -DestinationPath "ToDo-${{ env.RELEASE_TAG }}.zip"
 
-      - name: Upload zip artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-zip
-          path: ToDo-${{ env.RELEASE_TAG }}.zip
-          if-no-files-found: error
-
       # Release body comes from the matching CHANGELOG section (## [v1.2.3]), so the
       # description follows the curated changelog instead of auto-generated PR noise.
+      # Extracted before the artifact upload so the same body feeds both the GitHub Release
+      # and the Gitee mirror release.
       - name: Extract changelog for release body
         shell: pwsh
         run: |
@@ -72,6 +67,15 @@ jobs:
             }
             Set-Content -Path release-body.md -Value (($body -join "`n").Trim()) -Encoding utf8
           }
+
+      - name: Upload zip artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-zip
+          path: |
+            ToDo-${{ env.RELEASE_TAG }}.zip
+            release-body.md
+          if-no-files-found: error
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -117,6 +121,8 @@ jobs:
                 return Invoke-RestMethod -Method $Method -Uri $Uri -Body $Body -ErrorAction Stop
               } catch {
                 Write-Host "Gitee 调用失败(第 $i/$MaxRetries 次): $($_.Exception.Message)"
+                $detail = $_.ErrorDetails.Message
+                if ($detail) { Write-Host "  响应详情: $detail" }
                 if ($i -eq $MaxRetries) { throw }
                 Start-Sleep -Seconds $delay
                 $delay *= 2
@@ -132,12 +138,16 @@ jobs:
             Write-Host "Gitee tag $tag already exists or create failed: $($_.ErrorDetails.Message)"
           }
 
-          # 2. Create the release (Gitee expects form-encoded params; "body" is required)
+          # 2. Create the release with the CHANGELOG-derived body (Gitee expects form-encoded
+          #    params; "body" is required). Re-runs on an existing tag fail here — that's fine,
+          #    step 4 patches the existing release.
+          $releaseBody = Get-Content -Raw -Encoding UTF8 release-body.md
+          if (-not $releaseBody) { $releaseBody = "Release $tag" }
           try {
             Invoke-Gitee -Method Post -Uri "$base/releases?access_token=$token" -Body @{
               tag_name = $tag
               name = "Release $tag"
-              body = "Release $tag - https://github.com/LinBanfang/ToDo/releases/tag/$tag"
+              body = $releaseBody
               target_commitish = 'master'
             } | Out-Null
             Write-Host "Created Gitee release $tag"
@@ -154,9 +164,33 @@ jobs:
           $id = $match.id
           Write-Host "Found Gitee release id $id for $tag"
 
-          # 4. Upload the zip asset
+          # 4. Always refresh the release body from the CHANGELOG (idempotent — also fixes
+          #    releases created before this step read the changelog, like the current v1.2.3)
+          Invoke-Gitee -Method Patch -Uri "$base/releases/$id?access_token=$token" -Body @{
+            name = "Release $tag"
+            body = $releaseBody
+          } | Out-Null
+          Write-Host "Updated Gitee release $tag body from CHANGELOG"
+
+          # 5. Upload the zip asset
+          # Gitee 的 attach_files 对 PowerShell 的 Invoke-RestMethod -Form multipart 兼容不佳
+          # （此前返回 400 Bad Request），改用 curl.exe -F，与 Gitee 官方文档示例一致。
           $zip = "ToDo-$tag.zip"
-          $form = @{ file = Get-Item $zip }
-          $uploadUri = "$base/releases/$id/attach_files?access_token=$token"
-          Invoke-Gitee -Method Post -Uri $uploadUri -Form $form | Out-Null
-          Write-Host "Uploaded $zip to Gitee release $tag"
+          $uploadUri = "$base/releases/$id/attach_files"
+          $uploaded = $false
+          $delay = 3
+          for ($i = 1; $i -le 5; $i++) {
+            try {
+              $resp = & curl.exe -sS -f -X POST $uploadUri -F "access_token=$token" -F "file=@$zip" 2>&1
+              if ($LASTEXITCODE -ne 0) { throw "curl exit code $LASTEXITCODE : $($resp -join ' ')" }
+              Write-Host "Uploaded $zip to Gitee release $tag"
+              $uploaded = $true
+              break
+            } catch {
+              Write-Host "Gitee 上传失败(第 $i/5 次): $($_.Exception.Message)"
+              if ($i -eq 5) { throw }
+              Start-Sleep -Seconds $delay
+              $delay *= 2
+            }
+          }
+          if (-not $uploaded) { throw "Failed to upload $zip to Gitee release $tag" }
