@@ -171,11 +171,18 @@ jobs:
 
           # 4. Always refresh the release body from the CHANGELOG (idempotent — also fixes
           #    releases created before this step read the changelog, like the current v1.2.3)
-          Invoke-Gitee -Method Patch -Uri "$base/releases/$id?access_token=$token" -Body @{
-            name = "Release $tag"
-            body = $releaseBody
-          } | Out-Null
-          Write-Host "Updated Gitee release $tag body from CHANGELOG"
+          #    URL 必须用 ${id} 限定变量名：PowerShell 会把 $id?access_token 解析成单个空变量，
+          #    导致 URL 变成 .../releases/=TOKEN、release id 与 access_token 丢失，Gitee 返回 401。
+          #    本步失败仅告警不阻断 zip 上传（创建 release 时已写入 CHANGELOG 正文）。
+          try {
+            Invoke-Gitee -Method Patch -Uri "$base/releases/${id}?access_token=$token" -Body @{
+              name = "Release $tag"
+              body = $releaseBody
+            } | Out-Null
+            Write-Host "Updated Gitee release $tag body from CHANGELOG"
+          } catch {
+            Write-Host "WARN: 未能更新 Gitee release $tag 正文（不影响 zip 上传）: $($_.Exception.Message)"
+          }
 
           # 5. Upload the zip asset
           # Gitee 的 attach_files 对 PowerShell 的 Invoke-RestMethod -Form multipart 兼容不佳
