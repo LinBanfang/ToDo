@@ -11,6 +11,7 @@ namespace ToDo.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     private readonly DatabaseService _db;
+    private readonly IClock _clock;
 
     // ─── Collections ──────────────────────────────────────
     public ObservableCollection<TaskList> Lists { get; } = new();
@@ -103,15 +104,16 @@ public partial class MainViewModel : ObservableObject
         : ActiveList?.DisplayName ?? "";
         public string DbPath => _db.StoragePath;
 
-    private static bool IsToday(long ts)
+    private bool IsToday(long ts)
     {
         var dt = DateTimeOffset.FromUnixTimeMilliseconds(ts).LocalDateTime;
-        return dt.Date == DateTime.Today;
+        return dt.Date == _clock.Today;
     }
 
-    public MainViewModel(DatabaseService db)
+    public MainViewModel(DatabaseService db, IClock? clock = null)
     {
         _db = db;
+        _clock = clock ?? SystemClock.Instance;
         Theme = SettingsService.Current.Theme;
         SidebarWidth = new GridLength(Math.Max(SettingsService.Current.SidebarWidth, 180));
         Settings = new SettingsViewModel();
@@ -132,10 +134,11 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void SyncNow() => App.Sync?.Trigger();
 
-    /// <summary>Remove undone yesterday tasks from My Day</summary>
-    private void DailyMyDayReset()
+    /// <summary>Remove undone yesterday tasks from My Day (internal for tests — a
+    /// fake clock makes the "yesterday / today" boundary deterministic).</summary>
+    internal void DailyMyDayReset()
     {
-        var today = DateTime.Today;
+        var today = _clock.Today;
         var yesterdayTasks = Tasks.Where(t =>
             t.IsMyDay && t.CloseRecord == null && t.DueDate != null
             && !IsToday(t.DueDate.Value)
@@ -146,7 +149,7 @@ public partial class MainViewModel : ObservableObject
         {
             t.IsMyDay = false;
             t.MyDayOrder = -1;
-            t.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            t.ModifiedAt = _clock.UtcNow.ToUnixTimeMilliseconds();
             _db.Tasks.Update(t);
         }
 
@@ -161,7 +164,7 @@ public partial class MainViewModel : ObservableObject
         {
             t.IsMyDay = true;
             t.MyDayOrder = ++maxOrder;
-            t.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            t.ModifiedAt = _clock.UtcNow.ToUnixTimeMilliseconds();
             _db.Tasks.Update(t);
         }
     }
@@ -304,7 +307,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>Unclosed task count for a list (sidebar badge)</summary>
-    private static int CountForList(TaskList list, IEnumerable<TaskItem> tasks)
+    private int CountForList(TaskList list, IEnumerable<TaskItem> tasks)
     {
         return list.Type switch
         {
