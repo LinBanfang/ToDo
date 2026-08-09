@@ -2,21 +2,34 @@ name: Build and Release
 
 # 触发方式：
 #   git tag v1.0.0 && git push origin v1.0.0   → 自动构建并发布
-#   或在 GitHub Actions 页面手动 "Run workflow"
+#   或在 GitHub Actions 页面手动 "Run workflow"（workflow_dispatch 填 tag 可重跑 / 补同步）
 on:
   push:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      tag:
+        description: '要发布 / 同步的 tag（如 v1.2.2）。push tag 触发时留空即可。'
+        required: false
+        type: string
 
 jobs:
   release:
     runs-on: windows-latest
     permissions:
       contents: write # 创建 GitHub Release 需要写权限
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Resolve release tag
+        shell: pwsh
+        run: |
+          $tag = "${{ env.RELEASE_TAG }}"
+          if ($tag -notmatch '^v\d') { throw "无法解析发布 tag：'$tag'。请 push v* tag，或在手动运行时填写 tag 输入。" }
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -27,31 +40,69 @@ jobs:
         run: dotnet publish ToDo/ToDo.csproj -c Release -r win-x64 --self-contained true -o publish
 
       - name: Package zip
-        run: Compress-Archive -Path publish/* -DestinationPath "ToDo-${{ github.ref_name }}.zip"
+        run: Compress-Archive -Path publish/* -DestinationPath "ToDo-${{ env.RELEASE_TAG }}.zip"
+
+      - name: Upload zip artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-zip
+          path: ToDo-${{ env.RELEASE_TAG }}.zip
+          if-no-files-found: error
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ToDo-${{ github.ref_name }}.zip
+          tag_name: ${{ env.RELEASE_TAG }}
+          files: ToDo-${{ env.RELEASE_TAG }}.zip
           generate_release_notes: true
+          update_release: true # 重跑同 tag 时更新而非报错
 
-      # 同步同一份 zip 到 Gitee（需在仓库配置 GITEE_TOKEN secret，且 tag 已镜像到 Gitee）。
-      # 直接用 Gitee API 上传（release-sync 的资产上传有 bug：用原生 FormData 调 getHeaders() 会抛异常且被吞掉）
+  # Gitee 镜像独立成 job：Gitee API 偶发 DNS / 网络抖动时，可在 Actions 页面
+  # 对本 job 单独 "Re-run failed jobs"，无需重跑构建与 GitHub Release。
+  gitee:
+    runs-on: windows-latest
+    needs: release
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - name: Download zip artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-zip
+          path: .
+
       - name: Sync release to Gitee
         shell: pwsh
         env:
           GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
         run: |
           $ErrorActionPreference = 'Stop'
-          $tag = "${{ github.ref_name }}"
+          $tag = $env:RELEASE_TAG
           $owner = 'wu-bin-921'
           $repo = 'ToDo'
           $base = "https://gitee.com/api/v5/repos/$owner/$repo"
           $token = $env:GITEE_TOKEN
 
+          # Gitee 偶发 "No such host is known"（DNS 抖动）：指数退避重试吸收瞬时故障
+          function Invoke-Gitee {
+            param([string]$Method, [string]$Uri, [hashtable]$Body = @{}, [hashtable]$Form, [int]$MaxRetries = 5)
+            $delay = 3
+            for ($i = 1; $i -le $MaxRetries; $i++) {
+              try {
+                if ($Form) { return Invoke-RestMethod -Method $Method -Uri $Uri -Form $Form -ErrorAction Stop }
+                return Invoke-RestMethod -Method $Method -Uri $Uri -Body $Body -ErrorAction Stop
+              } catch {
+                Write-Host "Gitee 调用失败(第 $i/$MaxRetries 次): $($_.Exception.Message)"
+                if ($i -eq $MaxRetries) { throw }
+                Start-Sleep -Seconds $delay
+                $delay *= 2
+              }
+            }
+          }
+
           # 1. Ensure the tag exists on Gitee (release creation requires it)
           try {
-            Invoke-RestMethod -Method Post -Uri "$base/tags?access_token=$token" -Body @{ tag_name = $tag; refs = 'master' } -ErrorAction Stop | Out-Null
+            Invoke-Gitee -Method Post -Uri "$base/tags?access_token=$token" -Body @{ tag_name = $tag; refs = 'master' } | Out-Null
             Write-Host "Created Gitee tag $tag"
           } catch {
             Write-Host "Gitee tag $tag already exists or create failed: $($_.ErrorDetails.Message)"
@@ -59,21 +110,21 @@ jobs:
 
           # 2. Create the release (Gitee expects form-encoded params; "body" is required)
           try {
-            Invoke-RestMethod -Method Post -Uri "$base/releases?access_token=$token" -Body @{
+            Invoke-Gitee -Method Post -Uri "$base/releases?access_token=$token" -Body @{
               tag_name = $tag
               name = "Release $tag"
               body = "Release $tag - https://github.com/LinBanfang/ToDo/releases/tag/$tag"
               target_commitish = 'master'
-            } -ErrorAction Stop | Out-Null
+            } | Out-Null
             Write-Host "Created Gitee release $tag"
           } catch {
-            Write-Host "Gitee release $tag create failed: $($_.ErrorDetails.Message)"
+            Write-Host "Gitee release $tag create failed (可能已存在): $($_.ErrorDetails.Message)"
           }
 
           # 3. Find the release id by listing releases and matching the tag
           # (Gitee's releases/tags/{tag} returns null when called with a token)
           Start-Sleep -Seconds 2
-          $releases = Invoke-RestMethod -Method Get -Uri "$base/releases?access_token=$token&per_page=100" -ErrorAction Stop
+          $releases = Invoke-Gitee -Method Get -Uri "$base/releases?access_token=$token&per_page=100"
           $match = $releases | Where-Object { $_.tag_name -eq $tag }
           if (-not $match) { throw "No Gitee release for tag $tag in releases list" }
           $id = $match.id
@@ -83,5 +134,5 @@ jobs:
           $zip = "ToDo-$tag.zip"
           $form = @{ file = Get-Item $zip }
           $uploadUri = "$base/releases/$id/attach_files?access_token=$token"
-          Invoke-RestMethod -Method Post -Uri $uploadUri -Form $form -ErrorAction Stop | Out-Null
+          Invoke-Gitee -Method Post -Uri $uploadUri -Form $form | Out-Null
           Write-Host "Uploaded $zip to Gitee release $tag"
