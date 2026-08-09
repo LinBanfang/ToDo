@@ -629,7 +629,6 @@
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" FontFamily="Segoe MDL2 Assets"
                                                        FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"
@@ -645,12 +644,19 @@
                                                     </Style>
                                                 </TextBlock.Style>
                                             </TextBlock>
-                                            <TextBlock Grid.Column="1" Text="{Binding Group.Name}" FontSize="15"
-                                                       FontWeight="SemiBold" VerticalAlignment="Center"
-                                                       Foreground="{DynamicResource TextPrimaryBrush}"
-                                                       Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVis}}"
-                                                       Tag="GroupName"
-                                                       MouseLeftButtonDown="GroupName_DoubleClick"/>
+                                            <!-- Group name with the task count inline, e.g. "工作 (5)" -->
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                                        Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVis}}">
+                                                <TextBlock Text="{Binding Group.Name}" FontSize="15"
+                                                           FontWeight="SemiBold" VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                                           Tag="GroupName"
+                                                           MouseLeftButtonDown="GroupName_DoubleClick"/>
+                                                <TextBlock Text="{Binding Tasks.Count, StringFormat='({0})'}"
+                                                           FontSize="13" VerticalAlignment="Center"
+                                                           Margin="6,1,0,0"
+                                                           Foreground="{DynamicResource TextDisabledBrush}"/>
+                                            </StackPanel>
                                             <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
                                                      FontSize="15" FontWeight="SemiBold"
                                                      VerticalAlignment="Center"
@@ -658,9 +664,6 @@
                                                      Style="{StaticResource FluentInlineEditBox}"
                                                      KeyDown="GroupNameEdit_KeyDown"
                                                      LostFocus="GroupNameEdit_LostFocus"/>
-                                            <TextBlock Grid.Column="2" FontSize="13" VerticalAlignment="Center"
-                                                       Foreground="{DynamicResource TextDisabledBrush}"
-                                                       Text="{Binding Tasks.Count, StringFormat='{}{0}'}"/>
                                         </Grid>
                                     </Border>
                                     <!-- Tasks (hidden if collapsed; always show for ungrouped) -->
