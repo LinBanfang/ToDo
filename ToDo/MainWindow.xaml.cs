@@ -47,7 +47,7 @@ public partial class MainWindow : Window
 
     private void NewListGroup_Click(object sender, RoutedEventArgs e)
     {
-        ViewModel.CreateListGroupCommand.Execute("New group");
+        ViewModel.CreateListGroupCommand.Execute(Loc.NewGroup);
     }
 
     private void StickyNote_Click(object sender, RoutedEventArgs e) => WindowManager.OpenSticky();

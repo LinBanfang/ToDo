@@ -392,7 +392,7 @@
                                                            Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
-                                                            <Setter Property="Text" Value="&#xE970;"/>
+                                                            <Setter Property="Text" Value="&#xE70D;"/>
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding Group.Collapsed}" Value="True">
                                                                     <Setter Property="Text" Value="&#xE76C;"/>
@@ -509,19 +509,28 @@
 
                 <!-- New list input (between scroll and footer) -->
                 <Border Grid.Row="2" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
-                        Padding="10,6">
+                        Padding="14,6">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Content="{x:Static services:Loc.NewList}"
-                                Style="{StaticResource FluentButton}" FontSize="13"
-                                Foreground="{DynamicResource TextSecondaryBrush}"
-                                Click="NewList_Click" Padding="10,6" Margin="0,0,4,0"/>
-                        <Button Grid.Column="1" Content="&#xE710;" FontFamily="Segoe MDL2 Assets"
-                                Style="{StaticResource FluentSubtleButton}" FontSize="14"
-                                Width="32" Height="32" Padding="0"
+                        <Button Grid.Column="0" Style="{StaticResource FluentSubtleButton}"
+                                FontSize="15" Foreground="{DynamicResource TextSecondaryBrush}"
+                                Click="NewList_Click" Padding="6,3" Margin="0,0,4,0"
+                                HorizontalContentAlignment="Left">
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="+" FontSize="18" Margin="0,0,4,0"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Text="{x:Static services:Loc.NewListText}"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
+                        <Button Grid.Column="1" Content="&#xED0E;" FontFamily="Segoe Fluent Icons"
+                                Style="{StaticResource FluentSubtleButton}" FontSize="18"
+                                Width="36" Height="36" Padding="0"
                                 Click="NewListGroup_Click" Foreground="{DynamicResource TextSecondaryBrush}"
                                 ToolTip="{x:Static services:Loc.NewListGroup}"/>
                     </Grid>
@@ -544,7 +553,7 @@
                                     AutomationProperties.AutomationId="OpenSettings"
                                     AutomationProperties.Name="{x:Static services:Loc.Settings}"
                                     ToolTip="{x:Static services:Loc.Settings}"/>
-                            <Button Content="&#xE70B;" FontFamily="Segoe MDL2 Assets"
+                            <Button Content="&#xE70B;" FontFamily="Segoe Fluent Icons"
                                     Style="{StaticResource FluentSubtleButton}" FontSize="16"
                                     Width="28" Height="24" Padding="0" Margin="4,0,0,0"
                                     Click="StickyNote_Click"
@@ -562,11 +571,11 @@
                         <Button Grid.Column="1" Style="{StaticResource FluentSubtleButton}"
                                 Command="{Binding SyncNowCommand}"
                                 HorizontalAlignment="Right" VerticalAlignment="Center"
-                                Padding="4" Cursor="Hand"
+                                Padding="10,4" Cursor="Hand"
                                 ToolTip="{Binding SyncStatusText}"
                                 AutomationProperties.AutomationId="SyncStatus"
                                 AutomationProperties.Name="{x:Static services:Loc.SyncNow}">
-                            <Viewbox Width="15" Height="15" RenderTransformOrigin="0.5,0.5">
+                            <Viewbox Width="16" Height="16" RenderTransformOrigin="0.5,0.5">
                                 <Grid Width="16" Height="16">
                                     <Path Stroke="{Binding SyncStatusBrush}" StrokeThickness="2"
                                           StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
@@ -769,7 +778,7 @@
                                                        Foreground="{DynamicResource TextSecondaryBrush}">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
-                                                        <Setter Property="Text" Value="&#xE970;"/>
+                                                        <Setter Property="Text" Value="&#xE70D;"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding Group.Collapsed}" Value="True">
                                                                 <Setter Property="Text" Value="&#xE76C;"/>
@@ -852,15 +861,47 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <!-- Completed tasks -->
+                    <!-- Completed tasks (collapsible; expanded by default) -->
                     <Border Visibility="{Binding CompletedTasks.Count, Converter={StaticResource CountToVis}}"
                             BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
                             Margin="16,16,16,0" Padding="0,12,0,0">
                         <StackPanel>
-                            <TextBlock FontSize="12" FontWeight="SemiBold" Margin="8,0,0,8"
-                                       Foreground="{DynamicResource TextDisabledBrush}"
-                                       Text="{Binding CompletedHeader}"/>
-                            <ItemsControl ItemsSource="{Binding CompletedTasks}">
+                            <ToggleButton x:Name="CompletedToggle" IsChecked="True"
+                                          Focusable="False" Cursor="Hand" HorizontalAlignment="Stretch"
+                                          Margin="0,0,0,8">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Bg" Background="Transparent" CornerRadius="6" Padding="8,4">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" x:Name="Chevron" Text="&#xE70D;"
+                                                           FontFamily="Segoe MDL2 Assets" FontSize="10"
+                                                           Margin="0,0,6,0" VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource TextDisabledBrush}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding CompletedHeader}"
+                                                           FontSize="12" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextDisabledBrush}"
+                                                           VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bg" Property="Background"
+                                                        Value="{DynamicResource CardHoverBrush}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="False">
+                                                <Setter TargetName="Chevron" Property="Text" Value="&#xE76C;"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ItemsControl ItemsSource="{Binding CompletedTasks}"
+                                          Visibility="{Binding IsChecked, ElementName=CompletedToggle,
+                                                               Converter={StaticResource BoolToVis}}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="{x:Type models:TaskItem}">
                                         <Border Style="{StaticResource TaskRowStyle}" Opacity="0.7"
@@ -963,7 +1004,7 @@
                         <TextBlock Text="{x:Static services:Loc.TaskDetails}" FontSize="18" FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                    HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        <Button Content="&#xE10A;" FontFamily="Segoe MDL2 Assets"
+                        <Button Content="&#xE89F;" FontFamily="Segoe Fluent Icons"
                                 Style="{StaticResource FluentSubtleButton}" FontSize="14"
                                 HorizontalAlignment="Right"
                                 Click="DetailPane_Close"/>
