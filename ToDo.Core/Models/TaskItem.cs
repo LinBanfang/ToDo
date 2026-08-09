@@ -66,6 +66,19 @@ public partial class TaskItem : ObservableObject, IOrdered
     [BsonIgnore]
     private string _editTitle = string.Empty;
 
+    /// <summary>Number of attachments (ADR-013). Not persisted: attachments live in a
+    /// separate local-only collection, so this is refreshed from the DB on load / change.</summary>
+    [ObservableProperty]
+    [BsonIgnore]
+    private int _attachmentCount;
+
+    /// <summary>Local-only attachments (ADR-013), loaded from the separate DB collection
+    /// when the task is selected. Never serialized — sync's whole-entity LWW overwrite
+    /// must not touch it.</summary>
+    [ObservableProperty]
+    [BsonIgnore]
+    private System.Collections.ObjectModel.ObservableCollection<TaskAttachment> _attachments = new();
+
     /// <summary>
     /// Convenience: is the task closed?
     /// </summary>

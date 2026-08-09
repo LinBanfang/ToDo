@@ -223,33 +223,35 @@ public class ReminderToStringConverter : IValueConverter
 }
 
 /// <summary>Visibility for the "·" separators between a task row's meta items.
-/// MultiBinding values: [TagIds, Steps.Count, DueDate, Reminder, Note,
-/// ShowTaskTags, ShowTaskSteps, ShowTaskDue, ShowTaskReminder, ShowTaskNote]; the parameter
-/// picks the separator: "1" after tags or the My Day sun, "2" after steps, "3" after the
-/// due date, "4" after the reminder. Separator "1" additionally binds IsMyDay (index 10) so
-/// the sun counts as a leading item when tags are hidden. A separator is visible when its own
-/// item is visible (present AND its toggle is on) and at least one later item is visible, so
-/// a missing or hidden middle item never leaves a dangling "·". A past reminder counts as
-/// absent (it is hidden once reminded).</summary>
+/// MultiBinding values: [TagIds, Steps.Count, DueDate, Reminder, Note, AttachmentCount,
+/// ShowTaskTags, ShowTaskSteps, ShowTaskDue, ShowTaskReminder, ShowTaskNote, ShowTaskAttachments];
+/// the parameter picks the separator: "1" after tags or the My Day sun, "2" after steps,
+/// "3" after the due date, "4" after the reminder, "5" after the note icon. Separator "1"
+/// additionally binds IsMyDay (index 12) so the sun counts as a leading item when tags are
+/// hidden. A separator is visible when its own item is visible (present AND its toggle is on)
+/// and at least one later item is visible, so a missing or hidden middle item never leaves a
+/// dangling "·". A past reminder counts as absent (it is hidden once reminded).</summary>
 public class MetaSeparatorVisibilityConverter : IMultiValueConverter
 {
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
-        if (values.Length < 10) return Visibility.Collapsed;
+        if (values.Length < 12) return Visibility.Collapsed;
 
-        bool tags = (values[0] is IList list && list.Count > 0) && values[5] is true;
-        bool sun = values.Length > 10 && values[10] is true;   // My Day sun (separator 1 only)
-        bool steps = (values[1] is int n && n > 0) && values[6] is true;
-        bool due = values[2] != null && values[7] is true;
-        bool rem = values[3] != null && values[8] is true && IsFutureReminder(values[3]);
-        bool note = (values[4] is string s && !string.IsNullOrWhiteSpace(s)) && values[9] is true;
+        bool tags = (values[0] is IList list && list.Count > 0) && values[6] is true;
+        bool sun = values.Length > 12 && values[12] is true;   // My Day sun (separator 1 only)
+        bool steps = (values[1] is int n && n > 0) && values[7] is true;
+        bool due = values[2] != null && values[8] is true;
+        bool rem = values[3] != null && values[9] is true && IsFutureReminder(values[3]);
+        bool note = (values[4] is string s && !string.IsNullOrWhiteSpace(s)) && values[10] is true;
+        bool attach = (values[5] is int a && a > 0) && values[11] is true;
 
         bool visible = (parameter as string) switch
         {
-            "1" => (tags || sun) && (steps || due || rem || note),
-            "2" => steps && (due || rem || note),
-            "3" => due && (rem || note),
-            "4" => rem && note,
+            "1" => (tags || sun) && (steps || due || rem || note || attach),
+            "2" => steps && (due || rem || note || attach),
+            "3" => due && (rem || note || attach),
+            "4" => rem && (note || attach),
+            "5" => note && attach,
             _ => false,
         };
         return visible ? Visibility.Visible : Visibility.Collapsed;

@@ -79,6 +79,7 @@ public partial class MainViewModel : ObservableObject
     public bool ShowTaskDue => SettingsService.Current.ShowTaskDue;
     public bool ShowTaskReminder => SettingsService.Current.ShowTaskReminder;
     public bool ShowTaskNote => SettingsService.Current.ShowTaskNote;
+    public bool ShowTaskAttachments => SettingsService.Current.ShowTaskAttachments;
 
     public Brush SyncStatusBrush => App.Sync?.StatusBrush ?? _idleSyncBrush;
     public string SyncStatusText => App.Sync?.StatusText ?? Loc.SyncStatusDisabled;
@@ -146,6 +147,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowTaskDue));
         OnPropertyChanged(nameof(ShowTaskReminder));
         OnPropertyChanged(nameof(ShowTaskNote));
+        OnPropertyChanged(nameof(ShowTaskAttachments));
     }
 
     private void OnSyncStatusChanged()
@@ -320,6 +322,7 @@ public partial class MainViewModel : ObservableObject
         Tasks.Clear();
         foreach (var t in _db.Tasks.FindAll().OrderBy(x => x.Order))
             Tasks.Add(t);
+        _db.RefreshAttachmentCounts(Tasks);   // row paperclip counts (local-only, ADR-013)
 
         // Re-point the selection so the detail pane always edits the live instance
         RefreshSelectedTask();
@@ -480,6 +483,16 @@ public partial class MainViewModel : ObservableObject
 
     partial void OnSelectedTaskChanged(TaskItem? value)
     {
+        // Load local-only attachments (ADR-013) into the [BsonIgnore] list the detail
+        // pane binds to. Runs before the SelectedTask PropertyChanged fires, so WPF
+        // re-evaluating the binding sees the populated collection.
+        if (value != null)
+        {
+            value.Attachments.Clear();
+            foreach (var a in _db.GetAttachments(value.Id))
+                value.Attachments.Add(a);
+            _db.RefreshAttachmentCounts(new[] { value });
+        }
         // Detail pane pickers are refreshed by the view
     }
 
@@ -684,6 +697,7 @@ public partial class MainViewModel : ObservableObject
     private void DeleteTask(TaskItem task)
     {
         _db.Tasks.Delete(task.Id);
+        _db.DeleteAttachmentsForTask(task.Id);   // local attachments die with the task (ADR-013)
         Tasks.Remove(task);
         if (SelectedTask?.Id == task.Id)
             SelectedTask = null;

@@ -1,4 +1,6 @@
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -9,6 +11,7 @@ using ToDo.Models;
 using ToDo.Services;
 using ToDo.ViewModels;
 using ToDo.Views.Dialogs;
+using Microsoft.Win32;
 
 namespace ToDo;
 
@@ -1345,6 +1348,107 @@ public partial class MainWindow : Window
         {
             ViewModel.DeleteTaskCommand.Execute(ViewModel.SelectedTask);
         }
+    }
+
+    // ─── Attachments (local-only, ADR-013) ──────────────────
+    private const int MaxAttachmentMb = 50;
+    private const long MaxAttachmentBytes = MaxAttachmentMb * 1024 * 1024L;
+
+    private void AddAttachment_Click(object sender, RoutedEventArgs e)
+    {
+        var task = ViewModel.SelectedTask;
+        if (task == null) return;
+
+        var dlg = new OpenFileDialog { Title = Loc.AddAttachment, Multiselect = true };
+        if (dlg.ShowDialog(this) != true) return;
+
+        foreach (var file in dlg.FileNames)
+            AddAttachmentFile(task, file);
+        ReloadDetailAttachments();
+    }
+
+    private void AttachmentPanel_DragOver(object sender, DragEventArgs e)
+    {
+        e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void AttachmentPanel_Drop(object sender, DragEventArgs e)
+    {
+        var task = ViewModel.SelectedTask;
+        if (task == null || e.Data.GetData(DataFormats.FileDrop) is not string[] files) return;
+
+        foreach (var f in files)
+            AddAttachmentFile(task, f);
+        ReloadDetailAttachments();
+    }
+
+    private void AddAttachmentFile(TaskItem task, string filePath)
+    {
+        FileInfo? info = null;
+        try
+        {
+            info = new FileInfo(filePath);
+            if (info.Length > MaxAttachmentBytes)
+            {
+                FluentDialog.Show(this, Loc.AttachmentTooLarge(MaxAttachmentMb), Loc.Error);
+                return;
+            }
+            App.Database!.AddAttachment(new TaskAttachment
+            {
+                TaskId = task.Id,
+                FileName = info.Name,
+                Size = info.Length,
+                Data = File.ReadAllBytes(filePath),
+                AddedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            });
+        }
+        catch
+        {
+            FluentDialog.Show(this, Loc.AttachmentOpenFailed(info?.Name ?? filePath), Loc.Error);
+        }
+    }
+
+    private void AttachmentOpen_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.DataContext is TaskAttachment att)
+        {
+            try
+            {
+                // Extract to a unique temp file (Id prefix avoids name collisions),
+                // then let the OS pick the default handler by extension.
+                var dir = Path.Combine(Path.GetTempPath(), "ToDoAttachments");
+                Directory.CreateDirectory(dir);
+                var invalid = Path.GetInvalidFileNameChars();
+                var name = new string($"{att.Id}-{att.FileName}".Select(c => invalid.Contains(c) ? '_' : c).ToArray());
+                var path = Path.Combine(dir, name);
+                File.WriteAllBytes(path, att.Data);
+                Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+            }
+            catch
+            {
+                FluentDialog.Show(this, Loc.AttachmentOpenFailed(att.FileName), Loc.Error);
+            }
+        }
+    }
+
+    private void AttachmentRemove_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.SelectedTask == null || sender is not FrameworkElement fe || fe.DataContext is not TaskAttachment att) return;
+        App.Database!.DeleteAttachment(att.Id);
+        ReloadDetailAttachments();
+    }
+
+    /// <summary>Re-reads the selected task's attachments from the DB into the [BsonIgnore]
+    /// list the detail pane binds to, and refreshes the row paperclip count.</summary>
+    private void ReloadDetailAttachments()
+    {
+        var task = ViewModel.SelectedTask;
+        if (task == null) return;
+        task.Attachments.Clear();
+        foreach (var a in App.Database!.GetAttachments(task.Id))
+            task.Attachments.Add(a);
+        App.Database.RefreshAttachmentCounts(new[] { task });
     }
 
     private void DueDateBtn_Click(object sender, RoutedEventArgs e)

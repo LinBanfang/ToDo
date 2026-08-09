@@ -17,12 +17,16 @@ public class DatabaseService : IDisposable
     private readonly ILiteCollection<TaskItem> _rawTasks;
     private readonly ILiteCollection<Tag> _rawTags;
     private readonly ILiteCollection<ListGroup> _rawListGroups;
+    // Attachments are local-only (ADR-013): a plain collection, deliberately NOT tracked —
+    // no outbox, no sync payload, immune to ApplySync's whole-entity Task upsert.
+    private readonly ILiteCollection<TaskAttachment> _rawAttachments;
 
     public ILiteCollection<TaskList> Lists { get; }
     public ILiteCollection<TaskGroup> Groups { get; }
     public ILiteCollection<TaskItem> Tasks { get; }
     public ILiteCollection<Tag> Tags { get; }
     public ILiteCollection<ListGroup> ListGroups { get; }
+    public ILiteCollection<TaskAttachment> Attachments { get; }
 
     public SyncTracker Tracker => _tracker;
     public string StoragePath => _dbPath;
@@ -52,6 +56,7 @@ public class DatabaseService : IDisposable
         _rawTasks = _db.GetCollection<TaskItem>("tasks");
         _rawTags = _db.GetCollection<Tag>("tags");
         _rawListGroups = _db.GetCollection<ListGroup>("listgroups");
+        _rawAttachments = _db.GetCollection<TaskAttachment>("attachments");
 
         _tracker = new SyncTracker(_db.GetCollection<SyncEvent>("sync_events"));
 
@@ -66,6 +71,7 @@ public class DatabaseService : IDisposable
             t => t.Id, t => t.ModifiedAt = Now());
         ListGroups = new TrackedCollection<ListGroup>(_rawListGroups, _tracker, SyncEntityTypes.ListGroup,
             lg => lg.Id, lg => lg.ModifiedAt = Now());
+        Attachments = _rawAttachments;
 
         // Ensure indexes
         Lists.EnsureIndex(x => x.Type);
@@ -79,6 +85,7 @@ public class DatabaseService : IDisposable
         Tasks.EnsureIndex(x => x.Reminder);
         ListGroups.EnsureIndex(x => x.Order);
         Tags.EnsureIndex(x => x.Name, unique: true);
+        Attachments.EnsureIndex(x => x.TaskId);
 
         SeedDefaultData();
     }
@@ -230,6 +237,7 @@ public class DatabaseService : IDisposable
                 var task = _rawTasks.FindById(change.Id);
                 if (IsLocalNewer(task?.ModifiedAt, change)) return;
                 _rawTasks.Delete(change.Id);
+                DeleteAttachmentsForTask(change.Id);   // local attachments die with the task
                 break;
             case SyncEntityTypes.List:
                 var list = _rawLists.FindById(change.Id);
@@ -275,12 +283,37 @@ public class DatabaseService : IDisposable
         }
     }
 
-    /// <summary>Flushes LiteDB's journal then copies the database file to <paramref name="destPath"/>.</summary>
+    /// <summary>Flushes LiteDB's journal then copies the database file to <paramref name="destPath"/>.
+    /// Attachments live inside the DB file (ADR-013), so a backup automatically includes them.</summary>
     public void ExportTo(string destPath)
     {
         _db.Checkpoint();
         Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
         File.Copy(_dbPath, destPath, overwrite: true);
+    }
+
+    // ─── Attachments (local-only, ADR-013) ─────────────────
+
+    /// <summary>Attachments of a task, newest first.</summary>
+    public List<TaskAttachment> GetAttachments(string taskId) =>
+        _rawAttachments.Find(a => a.TaskId == taskId).OrderByDescending(a => a.AddedAt).ToList();
+
+    public int GetAttachmentCount(string taskId) => _rawAttachments.Count(a => a.TaskId == taskId);
+
+    public void AddAttachment(TaskAttachment attachment) => _rawAttachments.Insert(attachment);
+
+    public void DeleteAttachment(string id) => _rawAttachments.Delete(id);
+
+    /// <summary>Deletes every attachment of a task. Called wherever a task is removed
+    /// (the app's DeleteTask and ApplySync's task tombstone) so no orphan bytes remain.</summary>
+    public void DeleteAttachmentsForTask(string taskId) => _rawAttachments.DeleteMany(a => a.TaskId == taskId);
+
+    /// <summary>Sets each task's in-memory AttachmentCount (row paperclip indicator) from
+    /// indexed counts. Loads no attachment bytes; called on task load and after add/remove.</summary>
+    public void RefreshAttachmentCounts(IEnumerable<TaskItem> tasks)
+    {
+        foreach (var t in tasks)
+            t.AttachmentCount = GetAttachmentCount(t.Id);
     }
 
     public void Dispose()

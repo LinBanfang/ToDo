@@ -34,6 +34,8 @@ public class AppSettings
     public bool ShowTaskReminder { get; set; } = true;
     /// <summary>Show the note icon on main-list task rows.</summary>
     public bool ShowTaskNote { get; set; } = true;
+    /// <summary>Show the attachment (paperclip) icon on main-list task rows.</summary>
+    public bool ShowTaskAttachments { get; set; } = true;
 
     /// <summary>Sticky window geometry (DIPs); null = center on first open.</summary>
     public double? StickyLeft { get; set; }

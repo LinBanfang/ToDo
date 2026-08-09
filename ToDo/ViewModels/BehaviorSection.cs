@@ -12,6 +12,7 @@ public sealed class BehaviorSection : SettingsSection
     private bool _showTaskDue;
     private bool _showTaskReminder;
     private bool _showTaskNote;
+    private bool _showTaskAttachments;
 
     public bool MinimizeToTrayOnClose
     {
@@ -105,6 +106,19 @@ public sealed class BehaviorSection : SettingsSection
         }
     }
 
+    public bool ShowTaskAttachments
+    {
+        get => _showTaskAttachments;
+        set
+        {
+            if (SetProperty(ref _showTaskAttachments, value))
+            {
+                SettingsService.Current.ShowTaskAttachments = value;
+                SettingsService.Save();
+            }
+        }
+    }
+
     public BehaviorSection()
     {
         _minimizeToTrayOnClose = SettingsService.Current.MinimizeToTrayOnClose;
@@ -114,5 +128,6 @@ public sealed class BehaviorSection : SettingsSection
         _showTaskDue = SettingsService.Current.ShowTaskDue;
         _showTaskReminder = SettingsService.Current.ShowTaskReminder;
         _showTaskNote = SettingsService.Current.ShowTaskNote;
+        _showTaskAttachments = SettingsService.Current.ShowTaskAttachments;
     }
 }

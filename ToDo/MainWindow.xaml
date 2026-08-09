@@ -118,11 +118,13 @@
                                     <Binding Path="DueDate"/>
                                     <Binding Path="Reminder"/>
                                     <Binding Path="Note"/>
+                                    <Binding Path="AttachmentCount"/>
                                     <Binding Path="DataContext.ShowTaskTags" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <Binding Path="DataContext.ShowTaskSteps" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <Binding Path="DataContext.ShowTaskDue" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <Binding Path="DataContext.ShowTaskReminder" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <Binding Path="DataContext.ShowTaskNote" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskAttachments" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <Binding Path="IsMyDay"/>
                                     <MultiBinding.ConverterParameter>1</MultiBinding.ConverterParameter>
                                 </MultiBinding>
@@ -149,11 +151,13 @@
                                     <Binding Path="DueDate"/>
                                     <Binding Path="Reminder"/>
                                     <Binding Path="Note"/>
+                                    <Binding Path="AttachmentCount"/>
                                     <Binding Path="DataContext.ShowTaskTags" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <Binding Path="DataContext.ShowTaskSteps" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <Binding Path="DataContext.ShowTaskDue" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <Binding Path="DataContext.ShowTaskReminder" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <Binding Path="DataContext.ShowTaskNote" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskAttachments" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <MultiBinding.ConverterParameter>2</MultiBinding.ConverterParameter>
                                 </MultiBinding>
                             </TextBlock.Visibility>
@@ -183,11 +187,13 @@
                                     <Binding Path="DueDate"/>
                                     <Binding Path="Reminder"/>
                                     <Binding Path="Note"/>
+                                    <Binding Path="AttachmentCount"/>
                                     <Binding Path="DataContext.ShowTaskTags" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <Binding Path="DataContext.ShowTaskSteps" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <Binding Path="DataContext.ShowTaskDue" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <Binding Path="DataContext.ShowTaskReminder" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <Binding Path="DataContext.ShowTaskNote" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskAttachments" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <MultiBinding.ConverterParameter>3</MultiBinding.ConverterParameter>
                                 </MultiBinding>
                             </TextBlock.Visibility>
@@ -218,11 +224,13 @@
                                     <Binding Path="DueDate"/>
                                     <Binding Path="Reminder"/>
                                     <Binding Path="Note"/>
+                                    <Binding Path="AttachmentCount"/>
                                     <Binding Path="DataContext.ShowTaskTags" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <Binding Path="DataContext.ShowTaskSteps" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <Binding Path="DataContext.ShowTaskDue" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <Binding Path="DataContext.ShowTaskReminder" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <Binding Path="DataContext.ShowTaskNote" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskAttachments" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                     <MultiBinding.ConverterParameter>4</MultiBinding.ConverterParameter>
                                 </MultiBinding>
                             </TextBlock.Visibility>
@@ -236,6 +244,38 @@
                                 <MultiBinding Converter="{StaticResource ItemAndSettingVis}">
                                     <Binding Path="Note"/>
                                     <Binding Path="DataContext.ShowTaskNote" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                </MultiBinding>
+                            </TextBlock.Visibility>
+                        </TextBlock>
+                        <!-- · note → attachment -->
+                        <TextBlock Text="·" FontSize="13" Margin="5,0,5,0" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextDisabledBrush}">
+                            <TextBlock.Visibility>
+                                <MultiBinding Converter="{StaticResource MetaSep}">
+                                    <Binding Path="TagIds"/>
+                                    <Binding Path="Steps.Count"/>
+                                    <Binding Path="DueDate"/>
+                                    <Binding Path="Reminder"/>
+                                    <Binding Path="Note"/>
+                                    <Binding Path="AttachmentCount"/>
+                                    <Binding Path="DataContext.ShowTaskTags" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskSteps" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskDue" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskReminder" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskNote" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskAttachments" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <MultiBinding.ConverterParameter>5</MultiBinding.ConverterParameter>
+                                </MultiBinding>
+                            </TextBlock.Visibility>
+                        </TextBlock>
+                        <!-- Attachment (paperclip) icon: shows when the task has attachments -->
+                        <TextBlock Text="&#xE723;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TaskMetaBrush}">
+                            <TextBlock.Visibility>
+                                <MultiBinding Converter="{StaticResource ItemAndSettingVis}">
+                                    <Binding Path="AttachmentCount"/>
+                                    <Binding Path="DataContext.ShowTaskAttachments" RelativeSource="{RelativeSource AncestorType=Window}"/>
                                 </MultiBinding>
                             </TextBlock.Visibility>
                         </TextBlock>
@@ -1276,6 +1316,77 @@
                                         Style="{StaticResource FluentSubtleButton}" FontSize="12"
                                         HorizontalAlignment="Left" Foreground="{DynamicResource TextAccentBrush}"
                                         Click="DetailPane_EditCloseTime"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Attachments (local-only, ADR-013) -->
+                        <Border Background="{DynamicResource AppBackgroundBrush}"
+                                CornerRadius="6" Padding="12" Margin="0,0,0,16"
+                                AllowDrop="True" DragOver="AttachmentPanel_DragOver" Drop="AttachmentPanel_Drop">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{x:Static services:Loc.Attachments}"
+                                               FontSize="11" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextDisabledBrush}"
+                                               VerticalAlignment="Center"/>
+                                    <Button Grid.Column="1" Content="{x:Static services:Loc.AddAttachment}"
+                                            Style="{StaticResource FluentSubtleButton}" FontSize="12"
+                                            Padding="8,3" Foreground="{DynamicResource TextAccentBrush}"
+                                            Click="AddAttachment_Click"/>
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding SelectedTask.Attachments}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type models:TaskAttachment}">
+                                            <Grid Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="&#xE723;" FontFamily="Segoe MDL2 Assets"
+                                                           FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"
+                                                           Foreground="{DynamicResource TaskMetaBrush}"/>
+                                                <Button Grid.Column="1" HorizontalAlignment="Left"
+                                                        Style="{StaticResource FluentSubtleButton}"
+                                                        FontSize="13" Padding="0"
+                                                        Click="AttachmentOpen_Click">
+                                                    <Button.Content>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding FileName}" VerticalAlignment="Center"
+                                                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                            <TextBlock Text="{Binding SizeDisplay}" FontSize="11"
+                                                                       VerticalAlignment="Center" Margin="8,0,0,0"
+                                                                       Foreground="{DynamicResource TextDisabledBrush}"/>
+                                                        </StackPanel>
+                                                    </Button.Content>
+                                                </Button>
+                                                <Button Grid.Column="2" Content="&#xE711;" FontFamily="Segoe MDL2 Assets"
+                                                        Style="{StaticResource FluentSubtleButton}" FontSize="12"
+                                                        Width="24" Height="24" Padding="0"
+                                                        Foreground="{DynamicResource TextDisabledBrush}"
+                                                        ToolTip="{x:Static services:Loc.Delete}"
+                                                        Click="AttachmentRemove_Click"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBlock Text="{x:Static services:Loc.NoAttachments}" FontSize="12"
+                                           Foreground="{DynamicResource TextDisabledBrush}" Margin="0,2,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedTask.Attachments.Count}" Value="0">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </StackPanel>
                         </Border>
 

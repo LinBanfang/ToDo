@@ -256,7 +256,9 @@
                 <CheckBox Style="{StaticResource FluentCheckBox}" Content="{x:Static services:Loc.ShowTaskReminder}"
                           IsChecked="{Binding ShowTaskReminder}" Margin="0,0,0,10"/>
                 <CheckBox Style="{StaticResource FluentCheckBox}" Content="{x:Static services:Loc.ShowTaskNote}"
-                          IsChecked="{Binding ShowTaskNote}"/>
+                          IsChecked="{Binding ShowTaskNote}" Margin="0,0,0,10"/>
+                <CheckBox Style="{StaticResource FluentCheckBox}" Content="{x:Static services:Loc.ShowTaskAttachments}"
+                          IsChecked="{Binding ShowTaskAttachments}"/>
             </StackPanel>
         </DataTemplate>
 

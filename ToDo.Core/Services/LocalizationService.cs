@@ -48,6 +48,13 @@ public static class Loc
     public static string Cancelled => Language == AppLanguage.Chinese ? "已取消" : "Cancelled";
     public static string EditCloseTime => Language == AppLanguage.Chinese ? "编辑关闭时间..." : "Edit close time...";
     public static string Notes => Language == AppLanguage.Chinese ? "备注" : "NOTES";
+    public static string Attachments => Language == AppLanguage.Chinese ? "附件" : "ATTACHMENTS";
+    public static string AddAttachment => Language == AppLanguage.Chinese ? "添加附件" : "Add attachment";
+    public static string NoAttachments => Language == AppLanguage.Chinese ? "暂无附件" : "No attachments";
+    public static string AttachmentOpenFailed(string name) => Language == AppLanguage.Chinese
+        ? $"无法打开附件 \"{name}\"" : $"Couldn't open attachment \"{name}\"";
+    public static string AttachmentTooLarge(int mb) => Language == AppLanguage.Chinese
+        ? $"单个附件不能超过 {mb} MB" : $"Attachment too large (max {mb} MB)";
     public static string Delete => Language == AppLanguage.Chinese ? "删除" : "Delete";
     public static string Complete => Language == AppLanguage.Chinese ? "完成" : "Complete";
     public static string Cancel => Language == AppLanguage.Chinese ? "取消" : "Cancel";
@@ -251,6 +258,8 @@ public static class Loc
         ? "显示提醒" : "Show reminders";
     public static string ShowTaskNote => Language == AppLanguage.Chinese
         ? "显示备注图标" : "Show note icon";
+    public static string ShowTaskAttachments => Language == AppLanguage.Chinese
+        ? "显示附件图标" : "Show attachment icon";
     public static string StickyNote => Language == AppLanguage.Chinese ? "迷你便笺" : "Sticky note";
     public static string OpenMainWindow => Language == AppLanguage.Chinese ? "打开主界面" : "Open main window";
     public static string ExitApp => Language == AppLanguage.Chinese ? "退出" : "Exit";

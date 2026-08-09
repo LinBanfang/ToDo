@@ -233,10 +233,10 @@ public sealed class ConverterTests
     public void MetaSeparator_AfterTags_VisibleOnlyWhenLaterItemPresent()
     {
         IMultiValueConverter c = new MetaSeparatorVisibilityConverter();
-        object[] With(string[] tags, int steps, long? due, long? rem, string? note,
+        object[] With(string[] tags, int steps, long? due, long? rem, string? note, int attach = 0,
                       bool showTags = true, bool showSteps = true, bool showDue = true,
-                      bool showRem = true, bool showNote = true) =>
-            new object[] { tags, steps, due!, rem!, note!, showTags, showSteps, showDue, showRem, showNote };
+                      bool showRem = true, bool showNote = true, bool showAttach = true) =>
+            new object[] { tags, steps, due!, rem!, note!, attach, showTags, showSteps, showDue, showRem, showNote, showAttach };
 
         Assert.Equal(Visibility.Visible, c.Convert(With(new[] { "t1" }, 0, 123, null, null), typeof(Visibility), "1", Inv));
         Assert.Equal(Visibility.Collapsed, c.Convert(With(new[] { "t1" }, 0, null, null, null), typeof(Visibility), "1", Inv));
@@ -247,9 +247,9 @@ public sealed class ConverterTests
     public void MetaSeparator_WithMyDaySun_CountsAsLeadingItem()
     {
         IMultiValueConverter c = new MetaSeparatorVisibilityConverter();
-        // Separator "1" binds IsMyDay last (index 10): the sun counts as a leading item.
+        // Separator "1" binds IsMyDay last (index 12): the sun counts as a leading item.
         object[] With(bool sun, string[] tags, int steps, long? due) =>
-            new object[] { tags, steps, due!, null!, null, true, true, true, true, true, sun };
+            new object[] { tags, steps, due!, null!, null, 0, true, true, true, true, true, true, sun };
 
         // Sun visible, tags hidden → the "·" before steps still shows
         Assert.Equal(Visibility.Visible, c.Convert(With(true, Array.Empty<string>(), 2, null), typeof(Visibility), "1", Inv));
@@ -263,10 +263,10 @@ public sealed class ConverterTests
     public void MetaSeparator_AfterSteps_NeedsLaterItem()
     {
         IMultiValueConverter c = new MetaSeparatorVisibilityConverter();
-        object[] With(string[] tags, int steps, long? due, long? rem, string? note,
+        object[] With(string[] tags, int steps, long? due, long? rem, string? note, int attach = 0,
                       bool showTags = true, bool showSteps = true, bool showDue = true,
-                      bool showRem = true, bool showNote = true) =>
-            new object[] { tags, steps, due!, rem!, note!, showTags, showSteps, showDue, showRem, showNote };
+                      bool showRem = true, bool showNote = true, bool showAttach = true) =>
+            new object[] { tags, steps, due!, rem!, note!, attach, showTags, showSteps, showDue, showRem, showNote, showAttach };
 
         Assert.Equal(Visibility.Visible, c.Convert(With(Array.Empty<string>(), 2, 123, null, null), typeof(Visibility), "2", Inv));
         Assert.Equal(Visibility.Collapsed, c.Convert(With(Array.Empty<string>(), 2, null, null, null), typeof(Visibility), "2", Inv));
@@ -278,10 +278,10 @@ public sealed class ConverterTests
         IMultiValueConverter c = new MetaSeparatorVisibilityConverter();
         // The reminder timestamp must be in the future — a past one is hidden
         long future = new DateTimeOffset(DateTime.Now.AddMinutes(30)).ToUnixTimeMilliseconds();
-        object[] With(string[] tags, int steps, long? due, long? rem, string? note,
+        object[] With(string[] tags, int steps, long? due, long? rem, string? note, int attach = 0,
                       bool showTags = true, bool showSteps = true, bool showDue = true,
-                      bool showRem = true, bool showNote = true) =>
-            new object[] { tags, steps, due!, rem!, note!, showTags, showSteps, showDue, showRem, showNote };
+                      bool showRem = true, bool showNote = true, bool showAttach = true) =>
+            new object[] { tags, steps, due!, rem!, note!, attach, showTags, showSteps, showDue, showRem, showNote, showAttach };
 
         Assert.Equal(Visibility.Visible, c.Convert(With(Array.Empty<string>(), 0, 123, future, null), typeof(Visibility), "3", Inv));
         Assert.Equal(Visibility.Collapsed, c.Convert(With(Array.Empty<string>(), 0, 123, null, null), typeof(Visibility), "3", Inv));
@@ -293,14 +293,33 @@ public sealed class ConverterTests
         IMultiValueConverter c = new MetaSeparatorVisibilityConverter();
         // The reminder timestamp must be in the future — a past one is hidden
         long future = new DateTimeOffset(DateTime.Now.AddMinutes(30)).ToUnixTimeMilliseconds();
-        object[] With(string[] tags, int steps, long? due, long? rem, string? note,
+        object[] With(string[] tags, int steps, long? due, long? rem, string? note, int attach = 0,
                       bool showTags = true, bool showSteps = true, bool showDue = true,
-                      bool showRem = true, bool showNote = true) =>
-            new object[] { tags, steps, due!, rem!, note!, showTags, showSteps, showDue, showRem, showNote };
+                      bool showRem = true, bool showNote = true, bool showAttach = true) =>
+            new object[] { tags, steps, due!, rem!, note!, attach, showTags, showSteps, showDue, showRem, showNote, showAttach };
 
         Assert.Equal(Visibility.Visible, c.Convert(With(Array.Empty<string>(), 0, null, future, "hi"), typeof(Visibility), "4", Inv));
         Assert.Equal(Visibility.Collapsed, c.Convert(With(Array.Empty<string>(), 0, null, future, null), typeof(Visibility), "4", Inv));
         Assert.Equal(Visibility.Collapsed, c.Convert(With(Array.Empty<string>(), 0, null, future, "   "), typeof(Visibility), "4", Inv));
+    }
+
+    [Fact]
+    public void MetaSeparator_AfterNote_NeedsAttachment()
+    {
+        IMultiValueConverter c = new MetaSeparatorVisibilityConverter();
+        object[] With(string[] tags, int steps, long? due, long? rem, string? note, int attach = 0,
+                      bool showTags = true, bool showSteps = true, bool showDue = true,
+                      bool showRem = true, bool showNote = true, bool showAttach = true) =>
+            new object[] { tags, steps, due!, rem!, note!, attach, showTags, showSteps, showDue, showRem, showNote, showAttach };
+
+        // Note + attachment → the "·" between them shows
+        Assert.Equal(Visibility.Visible, c.Convert(With(Array.Empty<string>(), 0, null, null, "hi", 1), typeof(Visibility), "5", Inv));
+        // No attachment after the note → no dangling "·"
+        Assert.Equal(Visibility.Collapsed, c.Convert(With(Array.Empty<string>(), 0, null, null, "hi", 0), typeof(Visibility), "5", Inv));
+        // Note hidden by its toggle → separator gone even with an attachment
+        Assert.Equal(Visibility.Collapsed, c.Convert(With(Array.Empty<string>(), 0, null, null, "hi", 1, showNote: false), typeof(Visibility), "5", Inv));
+        // Attachment count hidden by its toggle → separator gone
+        Assert.Equal(Visibility.Collapsed, c.Convert(With(Array.Empty<string>(), 0, null, null, "hi", 1, showAttach: false), typeof(Visibility), "5", Inv));
     }
 
     [Fact]
@@ -310,7 +329,7 @@ public sealed class ConverterTests
         long past = new DateTimeOffset(DateTime.Now.AddMinutes(-5)).ToUnixTimeMilliseconds();
         long future = new DateTimeOffset(DateTime.Now.AddMinutes(30)).ToUnixTimeMilliseconds();
         object[] With(long? rem, string? note = null) =>
-            new object[] { Array.Empty<string>(), 0, 123L, rem!, note!, true, true, true, true, true };
+            new object[] { Array.Empty<string>(), 0, 123L, rem!, note!, 0, true, true, true, true, true, true };
 
         // Separator after the due date needs a later visible item; a past reminder doesn't count
         Assert.Equal(Visibility.Collapsed, c.Convert(With(past), typeof(Visibility), "3", Inv));
@@ -324,10 +343,10 @@ public sealed class ConverterTests
     public void MetaSeparator_HiddenItemNeverLeavesDanglingSeparator()
     {
         IMultiValueConverter c = new MetaSeparatorVisibilityConverter();
-        object[] With(string[] tags, int steps, long? due, long? rem, string? note,
+        object[] With(string[] tags, int steps, long? due, long? rem, string? note, int attach = 0,
                       bool showTags = true, bool showSteps = true, bool showDue = true,
-                      bool showRem = true, bool showNote = true) =>
-            new object[] { tags, steps, due!, rem!, note!, showTags, showSteps, showDue, showRem, showNote };
+                      bool showRem = true, bool showNote = true, bool showAttach = true) =>
+            new object[] { tags, steps, due!, rem!, note!, attach, showTags, showSteps, showDue, showRem, showNote, showAttach };
 
         // Tags + due date, but the due-date toggle is off → no separator after tags
         Assert.Equal(Visibility.Collapsed, c.Convert(
