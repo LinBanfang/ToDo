@@ -186,7 +186,33 @@ jobs:
             Write-Host "WARN: 未能更新 Gitee release $tag 正文（不影响 zip 上传）: $($_.Exception.Message)"
           }
 
-          # 5. Upload the zip asset
+          # 5. Prune old release attachments to stay under Gitee's 1 GB free quota.
+          #    Gitee 免费仓库发布附件配额 1GB，而每个 self-contained zip 约 72MB，
+          #    约 14 个即占满（v1.2.4 曾因此返回 "文件大小已超出仓库附件配额"）。
+          #    策略：保留最新 $keep 个 release 的附件，删除更老 release 的 ToDo-*.zip。
+          #    v*.zip / v*.tar.gz 是 Gitee 自动生成的源码包，不属于我们上传的附件，不动。
+          $keep = 3
+          $all = @(Invoke-Gitee -Method Get -Uri "$base/releases?access_token=$token&per_page=100")
+          $sorted = $all | Sort-Object id -Descending
+          $keepIds = @($sorted | Select-Object -First $keep | ForEach-Object { $_.id })
+          $pruned = 0
+          foreach ($rel in $sorted) {
+            if ($rel.id -in $keepIds -or $rel.id -eq $id) { continue }
+            $atts = @(Invoke-Gitee -Method Get -Uri "$base/releases/$($rel.id)/attach_files?access_token=$token")
+            foreach ($att in $atts) {
+              if ($att.name -notlike 'ToDo-*') { continue }
+              try {
+                Invoke-Gitee -Method Delete -Uri "$base/releases/$($rel.id)/attach_files/$($att.id)?access_token=$token" | Out-Null
+                Write-Host "Pruned $($rel.tag_name)/$($att.name)"
+                $pruned++
+              } catch {
+                Write-Host "WARN: 未能删除 $($rel.tag_name)/$($att.name): $($_.Exception.Message)"
+              }
+            }
+          }
+          Write-Host "Pruned $pruned old attachment(s), keeping latest $keep release(s)"
+
+          # 6. Upload the zip asset
           # v1.2.0-v1.2.2 的成功经验：access_token 放查询串 + file 走 multipart body。
           # 上次 curl -F 把 access_token 挪进 form 字段导致 400，回归查询串方式。
           # 不用 -f：失败时能连同响应体一起带回，便于诊断。
