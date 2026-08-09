@@ -596,10 +596,11 @@
             </Border>
 
             <!-- Task area -->
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,15,0,20">
-                <StackPanel>
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,15,0,20"
+                          AllowDrop="True" PreviewDragOver="TaskArea_PreviewDragOver">
+                <StackPanel x:Name="TaskAreaPanel">
                     <!-- ═══ CUSTOM LIST: Groups (first entry = ungrouped tasks) ═══ -->
-                    <ItemsControl ItemsSource="{Binding GroupedTaskList}"
+                    <ItemsControl x:Name="GroupedTasksControl" ItemsSource="{Binding GroupedTaskList}"
                                   Visibility="{Binding IsCustomList, Converter={StaticResource BoolToVis}}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="{x:Type vm:GroupedTasks}">
@@ -610,8 +611,11 @@
                                         Drop="GroupSection_Drop"
                                         Padding="0" Background="Transparent" CornerRadius="6">
                                 <StackPanel>
-                                    <!-- Group header (only for real groups) -->
+                                    <!-- Group header (only for real groups). Tag anchors the
+                                         visual-tree search that locates the "ungrouped zone"
+                                         boundary for the drop slot (FindUngroupedZoneBottom). -->
                                     <Border Style="{StaticResource GroupHeaderStyle}" Cursor="Hand"
+                                            Tag="TaskGroupHeader"
                                             Visibility="{Binding HasGroup, Converter={StaticResource BoolToVis}}"
                                             PreviewMouseLeftButtonDown="RecordDragStart"
                                             PreviewMouseMove="GroupHeader_PreviewMouseMove"
@@ -668,6 +672,33 @@
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
+                                    <!-- Empty ungrouped section: zero height with no tasks, so
+                                         while a task drag nears the top of the list this slot
+                                         expands to accept a grouped task dragged back to ungrouped
+                                         (drops bubble to GroupSection_Drop). It only appears when
+                                         the pointer is in the top zone (above the first group's
+                                         mid) and slides/fades in rather than popping. Height,
+                                         Opacity and Margin are animated from code-behind
+                                         (MainWindow.SetDropSlotOpen) — a Style trigger's
+                                         EnterActions storyboard is not reverted when the trigger
+                                         deactivates, leaving the slot stuck open. The Tag anchors
+                                         that visual-tree lookup; the base setters are the closed
+                                         state. -->
+                                    <Border Tag="UngroupDropSlot" Padding="12,8" CornerRadius="8"
+                                            ClipToBounds="True"
+                                            BorderBrush="{DynamicResource NeutralGray110}"
+                                            BorderThickness="1" Background="Transparent">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Height" Value="0"/>
+                                                <Setter Property="Opacity" Value="0"/>
+                                                <Setter Property="Margin" Value="32,0"/>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{x:Static services:Loc.DropToUngroupHint}"
+                                                   FontSize="13" Foreground="{DynamicResource TextDisabledBrush}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
                             </StackPanel>
                                 </Border>
                         </DataTemplate>

@@ -58,6 +58,7 @@ public static class Loc
     public static string MoveToList => Language == AppLanguage.Chinese ? "移动到列表" : "Move to list";
     public static string MoveToGroup => Language == AppLanguage.Chinese ? "移动到分组" : "Move to group";
     public static string Ungrouped => Language == AppLanguage.Chinese ? "未分组" : "Ungrouped";
+    public static string DropToUngroupHint => Language == AppLanguage.Chinese ? "拖到此处移出分组" : "Drop here to ungroup";
     public static string RemoveFromGroup => Language == AppLanguage.Chinese ? "从分组移出" : "Remove from group";
     public static string ReopenTask => Language == AppLanguage.Chinese ? "重新打开" : "Reopen task";
     public static string DeleteTask => Language == AppLanguage.Chinese ? "删除任务" : "Delete task";

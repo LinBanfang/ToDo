@@ -45,6 +45,13 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _searchQuery = string.Empty;
 
+    // ─── Drag & Drop ──────────────────────────────────────
+    /// <summary>True while a task-row drag is in flight. The empty-ungrouped drop slot
+    /// is shown only during a drag — a permanent placeholder would be visual noise.
+    /// The slot itself is driven from code-behind (MainWindow.SetDropSlotOpen).</summary>
+    [ObservableProperty]
+    private bool _isTaskDragging;
+
     // ─── Theme ────────────────────────────────────────────
     [ObservableProperty]
     private string _theme = "Light"; // Light, Dark
@@ -680,6 +687,9 @@ public partial class MainViewModel : ObservableObject
     private void MoveTaskToGroup((TaskItem task, TaskGroup? group) param)
     {
         param.task.GroupId = param.group?.Id;
+        // Append at the end of the target group (ungrouped = null) so the moved task
+        // lands predictably, matching MoveTaskToList's next-order placement.
+        param.task.Order = NextOrder(Tasks.Where(t => t.GroupId == param.group?.Id).Select(t => t.Order));
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(param.task);
 
@@ -959,4 +969,9 @@ public partial class GroupedTasks : ObservableObject
 
     public bool HasGroup => Group != null;
     public bool TaskListVisible => Group == null || !Group.Collapsed;
+
+    /// <summary>True for the ungrouped section when it holds no tasks: the wrapper
+    /// Border is zero-height then, so the UI shows a hint strip as the drop target
+    /// for dragging a grouped task back to ungrouped.</summary>
+    public bool ShowEmptyUngroupedHint => Group == null && Tasks.Count == 0;
 }

@@ -95,6 +95,99 @@ public sealed class MainViewModelTests : IDisposable
     }
 
     [Fact]
+    public void RefreshActiveTasks_CustomList_BuildsGroupedSections()
+    {
+        _db.Lists.Insert(new TaskList { Id = "list-custom", Name = "Custom", Type = ListType.Custom, Order = 1 });
+        _db.Groups.Insert(new TaskGroup { Id = "g1", ListId = "list-custom", Name = "Group 1", Order = 0 });
+        _db.Groups.Insert(new TaskGroup { Id = "g2", ListId = "list-custom", Name = "Group 2", Order = 1 });
+        _db.Tasks.Insert(new TaskItem { Id = "u1", ListId = "list-custom", Title = "ungrouped", Order = 0 });
+        _db.Tasks.Insert(new TaskItem { Id = "a1", ListId = "list-custom", GroupId = "g1", Title = "a1", Order = 0 });
+        _db.Tasks.Insert(new TaskItem { Id = "a2", ListId = "list-custom", GroupId = "g1", Title = "a2", Order = 1 });
+        _db.Tasks.Insert(new TaskItem { Id = "b1", ListId = "list-custom", GroupId = "g2", Title = "b1", Order = 0 });
+        _vm.Refresh();
+        _vm.ActiveListId = "list-custom";
+
+        // Ungrouped section first (always a drop target), then groups in Order.
+        Assert.Equal(3, _vm.GroupedTaskList.Count);
+
+        var ungrouped = _vm.GroupedTaskList[0];
+        Assert.False(ungrouped.HasGroup);
+        Assert.False(ungrouped.ShowEmptyUngroupedHint);   // has a task → no drop hint
+        Assert.Equal(new[] { "u1" }, ungrouped.Tasks.Select(t => t.Id));
+
+        var g1 = _vm.GroupedTaskList[1];
+        Assert.Equal("g1", g1.Group!.Id);
+        Assert.Equal(new[] { "a1", "a2" }, g1.Tasks.Select(t => t.Id));
+
+        var g2 = _vm.GroupedTaskList[2];
+        Assert.Equal("g2", g2.Group!.Id);
+        Assert.Equal(new[] { "b1" }, g2.Tasks.Select(t => t.Id));
+    }
+
+    [Fact]
+    public void RefreshActiveTasks_AllTasksGrouped_UngroupedSectionShowsDropHint()
+    {
+        // No ungrouped tasks at all → the ungrouped section is empty and must still
+        // advertise itself as a drop target for grouped tasks.
+        _db.Lists.Insert(new TaskList { Id = "list-custom", Name = "Custom", Type = ListType.Custom, Order = 1 });
+        _db.Groups.Insert(new TaskGroup { Id = "g1", ListId = "list-custom", Name = "G", Order = 0 });
+        _db.Tasks.Insert(new TaskItem { Id = "a1", ListId = "list-custom", GroupId = "g1", Title = "a1", Order = 0 });
+        _vm.Refresh();
+        _vm.ActiveListId = "list-custom";
+
+        var ungrouped = _vm.GroupedTaskList[0];
+        Assert.False(ungrouped.HasGroup);
+        Assert.Empty(ungrouped.Tasks);
+        Assert.True(ungrouped.ShowEmptyUngroupedHint);
+    }
+
+    [Fact]
+    public void MoveTaskToGroup_AppendsAtEndOfTargetGroup()
+    {
+        _db.Lists.Insert(new TaskList { Id = "list-custom", Name = "Custom", Type = ListType.Custom, Order = 1 });
+        _db.Groups.Insert(new TaskGroup { Id = "g1", ListId = "list-custom", Name = "G", Order = 0 });
+        var t1 = new TaskItem { Id = "t1", ListId = "list-custom", GroupId = "g1", Title = "a", Order = 0 };
+        var t2 = new TaskItem { Id = "t2", ListId = "list-custom", GroupId = "g1", Title = "b", Order = 1 };
+        var u1 = new TaskItem { Id = "u1", ListId = "list-custom", Title = "u", Order = 0 };
+        _db.Tasks.Insert(t1);
+        _db.Tasks.Insert(t2);
+        _db.Tasks.Insert(u1);
+        _vm.Refresh();
+        _vm.ActiveListId = "list-custom";
+
+        // Use the instance from _vm.Tasks — LiteDB hands back a fresh object on query,
+        // so mutating the local variable wouldn't affect what the ViewModel sees.
+        _vm.MoveTaskToGroupCommand.Execute((_vm.Tasks.First(t => t.Id == "u1"), _vm.Groups.First(g => g.Id == "g1")));
+
+        var moved = _vm.Tasks.First(t => t.Id == "u1");
+        Assert.Equal("g1", moved.GroupId);
+        Assert.Equal(2, moved.Order);   // appended after the group's current max (t2 = 1)
+    }
+
+    [Fact]
+    public void MoveTaskToGroup_NullGroup_UngroupsTask_AppendedLast()
+    {
+        _db.Lists.Insert(new TaskList { Id = "list-custom", Name = "Custom", Type = ListType.Custom, Order = 1 });
+        _db.Groups.Insert(new TaskGroup { Id = "g1", ListId = "list-custom", Name = "G", Order = 0 });
+        var a1 = new TaskItem { Id = "a1", ListId = "list-custom", GroupId = "g1", Title = "a1", Order = 0 };
+        var u1 = new TaskItem { Id = "u1", ListId = "list-custom", Title = "u1", Order = 0 };
+        _db.Tasks.Insert(a1);
+        _db.Tasks.Insert(u1);
+        _vm.Refresh();
+        _vm.ActiveListId = "list-custom";
+
+        // Dragging a grouped task to the ungrouped drop slot lands at the end of the
+        // ungrouped section (below the existing ungrouped task). Again, operate on the
+        // instance the ViewModel holds (see the comment in the sibling test).
+        _vm.MoveTaskToGroupCommand.Execute((_vm.Tasks.First(t => t.Id == "a1"), null));
+
+        var moved = _vm.Tasks.First(t => t.Id == "a1");
+        Assert.Null(moved.GroupId);
+        Assert.Equal(1, moved.Order);   // after u1 (Order 0)
+        Assert.Equal(new[] { "u1", "a1" }, _vm.GroupedTaskList[0].Tasks.Select(t => t.Id));
+    }
+
+    [Fact]
     public void RefreshActiveTasks_RecomputesSidebarCounts()
     {
         // Tasks: 2 open + 1 closed

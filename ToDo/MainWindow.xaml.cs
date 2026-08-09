@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using ToDo.Models;
 using ToDo.Services;
@@ -705,8 +706,125 @@ public partial class MainWindow : Window
             && fe.DataContext is TaskItem task && !task.IsClosed && !task.IsEditingTitle
             && DragThresholdExceeded(e))
         {
-            DragDrop.DoDragDrop(fe, task, DragDropEffects.Move);
+            // While the drag runs the pointer is tracked so the empty-ungrouped drop
+            // slot only appears when the drag reaches the top zone (near the first
+            // group's header) — see TaskArea_PreviewDragOver. Both flags reset when the
+            // drag finishes (drop, cancel or Esc). DoDragDrop blocks, so the flags are
+            // scoped correctly even though the handler returns below them.
+            ViewModel.IsTaskDragging = true;
+            _ungroupedZoneBottom = FindUngroupedZoneBottom();
+            try
+            {
+                DragDrop.DoDragDrop(fe, task, DragDropEffects.Move);
+            }
+            finally
+            {
+                ViewModel.IsTaskDragging = false;
+                _ungroupedZoneBottom = null;
+                SetDropSlotOpen(false);
+            }
         }
+    }
+
+    /// <summary>Expanded height of the empty-ungrouped drop slot (matches the XAML
+    /// Padding so the hint text fits).</summary>
+    private const double UngroupedSlotHeight = 36;
+
+    private static readonly TimeSpan SlotOpenDuration = TimeSpan.FromMilliseconds(150);
+    private static readonly TimeSpan SlotCloseDuration = TimeSpan.FromMilliseconds(120);
+
+    /// <summary>Bottom edge (content Y) of the "ungrouped zone" for the current drag:
+    /// the first group header's mid, pushed down by the slot's expanded height so the
+    /// whole open slot stays inside the zone. Null when there's no first group (a slot
+    /// can't be shown without one). Set at drag start, cleared on drag end.</summary>
+    private double? _ungroupedZoneBottom;
+
+    /// <summary>Current open/closed state of the drop slot, so the high-frequency drag
+    /// events don't restart the animations every frame.</summary>
+    private bool _dropSlotOpen;
+
+    /// <summary>Tracks the pointer while a task row is dragged so the drop slot only
+    /// opens in the top zone. Attached to the task-area ScrollViewer: over the section
+    /// drop targets the tunneling event still reaches it (sections set e.Handled on the
+    /// bubbling DragOver), and its own AllowDrop covers the strips between sections.
+    /// No DragLeave handling on purpose — a leave fires whenever the target moves to a
+    /// neighbouring section, which would flicker the slot at the top-zone boundary.</summary>
+    private void TaskArea_PreviewDragOver(object sender, DragEventArgs e)
+    {
+        if (!ViewModel.IsTaskDragging || !e.Data.GetDataPresent(typeof(TaskItem))) return;
+        var pos = e.GetPosition(TaskAreaPanel);
+        SetDropSlotOpen(_ungroupedZoneBottom != null && pos.Y <= _ungroupedZoneBottom.Value);
+    }
+
+    /// <summary>Slides the empty-ungrouped drop slot in/out. Driven directly rather than
+    /// via a Style trigger's EnterActions storyboard, which WPF does not revert when the
+    /// trigger deactivates — the slot would stay stuck open after the pointer leaves the
+    /// top zone or the drag is released.</summary>
+    private void SetDropSlotOpen(bool open)
+    {
+        if (_dropSlotOpen == open) return;
+        _dropSlotOpen = open;
+        var slot = FindDropSlot();
+        if (slot == null) return;
+        if (open)
+        {
+            slot.BeginAnimation(FrameworkElement.HeightProperty,
+                new DoubleAnimation(UngroupedSlotHeight, SlotOpenDuration)
+                { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
+            slot.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(1, SlotOpenDuration));
+            slot.BeginAnimation(FrameworkElement.MarginProperty,
+                new ThicknessAnimation(new Thickness(32, 2, 32, 2), SlotOpenDuration));
+        }
+        else
+        {
+            slot.BeginAnimation(FrameworkElement.HeightProperty, new DoubleAnimation(0, SlotCloseDuration));
+            slot.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0, SlotCloseDuration));
+            slot.BeginAnimation(FrameworkElement.MarginProperty,
+                new ThicknessAnimation(new Thickness(32, 0, 32, 0), SlotCloseDuration));
+        }
+    }
+
+    /// <summary>Locates the drop slot inside the (first = ungrouped) section's container.
+    /// Null when the group list is hidden, e.g. while viewing a system list.</summary>
+    private Border? FindDropSlot()
+    {
+        var container = GroupedTasksControl.ItemContainerGenerator.ContainerFromIndex(0) as FrameworkElement;
+        if (container == null) return null;
+        return FindVisualChild<Border>(container, b => b.Tag is string s && s == "UngroupDropSlot");
+    }
+
+    /// <summary>Content-Y of the boundary below which the "ungrouped zone" ends. The
+    /// zone covers the drop slot plus the first group's upper half: the header's mid,
+    /// shifted down by the slot's expanded height so the whole open slot stays inside
+    /// the zone (otherwise dragging onto the slot's lower edge would collapse it).
+    /// Measured while the slot is closed, so the shift is applied explicitly.
+    /// Returns null when the ungrouped section already has tasks — then it's a real
+    /// drop target on its own (cross-group row drop) and the slot is visual noise.</summary>
+    private double? FindUngroupedZoneBottom()
+    {
+        // Ungrouped tasks present → no slot; the section already accepts drops.
+        if (ViewModel.GroupedTaskList.FirstOrDefault()?.ShowEmptyUngroupedHint != true)
+            return null;
+        var container = GroupedTasksControl.ItemContainerGenerator.ContainerFromIndex(1) as FrameworkElement;
+        if (container == null) return null;
+        var header = FindVisualChild<Border>(container, b => b.Tag is string s && s == "TaskGroupHeader");
+        if (header == null || header.ActualHeight <= 0) return null;
+        return header.TranslatePoint(new Point(0, 0), TaskAreaPanel).Y
+            + UngroupedSlotHeight
+            + header.ActualHeight / 2;
+    }
+
+    /// <summary>Depth-first search for the first descendant element matching the predicate.</summary>
+    private static T? FindVisualChild<T>(DependencyObject root, Func<T, bool>? predicate = null)
+        where T : DependencyObject
+    {
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is T match && (predicate == null || predicate(match))) return match;
+            if (FindVisualChild(child, predicate) is T found) return found;
+        }
+        return null;
     }
 
     // Task row reorder drop handlers
@@ -762,11 +880,12 @@ public partial class MainWindow : Window
             var draggedTask = e.Data.GetData(typeof(TaskItem)) as TaskItem;
             if (draggedTask == null || draggedTask.Id == targetTask.Id) return;
 
-            // Same list and group
+            // Reorder only within the same list — cross-list moves use the sidebar.
             if (draggedTask.ListId != targetTask.ListId) return;
-            if (draggedTask.GroupId != targetTask.GroupId) return;
 
-            // Move dragged task to target's position
+            // Move dragged task to target's position. When the row's group differs, the
+            // drop retargets the task into that group — which is how a grouped task gets
+            // dragged back to ungrouped (drop on an ungrouped row) and vice versa.
             var siblings = ViewModel.Tasks
                 .Where(t => t.ListId == targetTask.ListId
                     && t.GroupId == targetTask.GroupId
@@ -774,17 +893,23 @@ public partial class MainWindow : Window
                 .OrderBy(t => t.Order)
                 .ToList();
 
-            siblings.Remove(draggedTask);
-            var targetIdx = siblings.IndexOf(targetTask);
-            if (targetIdx < 0) return;
+            bool crossGroup = draggedTask.GroupId != targetTask.GroupId;
+            if (crossGroup)
+            {
+                // The dragged task isn't in the target group's sibling list yet — add it
+                // so ReorderService can pin it to the drop position in that group.
+                if (!siblings.Contains(draggedTask)) siblings.Add(draggedTask);
+            }
 
             // Upper half of the target row inserts before it, lower half after it
             bool lowerHalf = e.GetPosition(border).Y > border.ActualHeight / 2;
-            siblings.Insert(lowerHalf ? targetIdx + 1 : targetIdx, draggedTask);
+            if (!ReorderService.Reorder(siblings, draggedTask, targetTask, lowerHalf)) return;
 
-            // Reassign orders
-            for (int i = 0; i < siblings.Count; i++)
-                siblings[i].Order = i;
+            if (crossGroup)
+            {
+                draggedTask.GroupId = targetTask.GroupId;
+                draggedTask.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            }
 
             // Save all
             foreach (var t in siblings)
