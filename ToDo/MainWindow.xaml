@@ -739,8 +739,9 @@
             </Border>
 
             <!-- Task area -->
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,15,0,20"
-                          AllowDrop="True" PreviewDragOver="TaskArea_PreviewDragOver">
+            <ScrollViewer x:Name="TaskAreaScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,15,0,20"
+                          AllowDrop="True" PreviewDragOver="TaskArea_PreviewDragOver"
+                          ScrollChanged="TaskAreaScroll_ScrollChanged">
                 <StackPanel x:Name="TaskAreaPanel">
                     <!-- ═══ CUSTOM LIST: Groups (first entry = ungrouped tasks) ═══ -->
                     <ItemsControl x:Name="GroupedTasksControl" ItemsSource="{Binding GroupedTaskList}"
@@ -920,7 +921,7 @@
             </ScrollViewer>
 
             <!-- Fixed Add Task Input at bottom -->
-            <Border Grid.Row="2" Padding="24,8,24,12"
+            <Border x:Name="AddTaskFooter" Grid.Row="2" Padding="32,8,32,12"
                     BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
                     Background="{DynamicResource AppBackgroundBrush}">
                 <Border.Style>
@@ -933,16 +934,35 @@
                     </Style>
                 </Border.Style>
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="+" FontSize="18" FontWeight="Light"
-                               Foreground="{DynamicResource TextAccentBrush}"
-                               VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <TextBox x:Name="AddTaskBox" Grid.Column="1"
+                    <TextBox x:Name="AddTaskBox"
                              Style="{StaticResource FluentTextBox}"
-                             KeyDown="AddTaskBox_KeyDown"/>
+                             FontSize="15" Height="47" VerticalContentAlignment="Center"
+                             Padding="43,4,6,4"
+                             KeyDown="AddTaskBox_KeyDown"
+                             GotFocus="AddTaskBox_GotFocus"
+                             LostFocus="AddTaskBox_LostFocus"
+                             TextChanged="AddTaskBox_TextChanged"/>
+                    <!-- Empty checkbox (same look/position as task rows), shown while the box has focus -->
+                    <Border x:Name="AddTaskCheckbox" Width="22" Height="22"
+                            Margin="12,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                            Background="Transparent" BorderBrush="{DynamicResource NeutralGray110}"
+                            BorderThickness="1.5" CornerRadius="4"
+                            IsHitTestVisible="False" Visibility="Collapsed"/>
+                    <!-- Placeholder "+ 添加任务": only when empty and not focused. "+" sits in the
+                         checkbox slot, text starts where typed text lands -->
+                    <Grid x:Name="AddTaskPlaceholder" IsHitTestVisible="False"
+                          VerticalAlignment="Center" Margin="12,0,0,0" Visibility="Collapsed">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="+" FontSize="22" FontWeight="Light"
+                                   Foreground="{DynamicResource TextAccentBrush}"
+                                   Width="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{x:Static services:Loc.AddTask}" FontSize="15"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   Margin="10,0,0,0" VerticalAlignment="Center"/>
+                    </Grid>
                 </Grid>
             </Border>
         </Grid>

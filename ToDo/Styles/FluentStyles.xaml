@@ -68,10 +68,12 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
+                    <!-- TextBox applies its Padding internally via the TextBoxView, so the
+                         Border must NOT also pad — otherwise text is inset twice. -->
                     <Border Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            CornerRadius="4">
                         <ScrollViewer x:Name="PART_ContentHost"/>
                     </Border>
                     <ControlTemplate.Triggers>

@@ -36,6 +36,7 @@ public partial class MainWindow : Window
             SearchPlaceholder.Visibility = hasText ? Visibility.Collapsed : Visibility.Visible;
             SearchClearBtn.Visibility = hasText ? Visibility.Visible : Visibility.Collapsed;
         };
+        UpdateAddTaskPlaceholder();
     }
 
     // ─── Sidebar ──────────────────────────────────────────
@@ -433,6 +434,32 @@ public partial class MainWindow : Window
     }
 
     // ─── Main Content ─────────────────────────────────────
+    private void AddTaskBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        // Focus switches the placeholder into a task row: "+" becomes the empty checkbox.
+        AddTaskCheckbox.Visibility = Visibility.Visible;
+        AddTaskPlaceholder.Visibility = Visibility.Collapsed;
+    }
+
+    private void AddTaskBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        AddTaskCheckbox.Visibility = Visibility.Collapsed;
+        UpdateAddTaskPlaceholder();
+    }
+
+    private void AddTaskBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        UpdateAddTaskPlaceholder();
+    }
+
+    private void UpdateAddTaskPlaceholder()
+    {
+        // Placeholder ("+ 添加任务") only while the box is empty and not focused.
+        AddTaskPlaceholder.Visibility =
+            !AddTaskBox.IsKeyboardFocused && string.IsNullOrEmpty(AddTaskBox.Text)
+                ? Visibility.Visible : Visibility.Collapsed;
+    }
+
     private void AddTaskBox_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Enter && sender is TextBox tb && !string.IsNullOrWhiteSpace(tb.Text))
@@ -441,6 +468,18 @@ public partial class MainWindow : Window
             tb.Text = "";
             e.Handled = true;
         }
+    }
+
+    // When the task-area scrollbar appears it shrinks the task rows' width, so the
+    // fixed add-task footer would otherwise stick out ~scrollbar-width on the right.
+    // Mirror the scrollbar into the footer's right padding to keep both right edges
+    // aligned. Fires on scrollbar show/hide, content changes and window resize.
+    private void TaskAreaScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)
+    {
+        double extra = TaskAreaScroll.ComputedVerticalScrollBarVisibility == Visibility.Visible
+            ? SystemParameters.VerticalScrollBarWidth
+            : 0;
+        AddTaskFooter.Padding = new Thickness(32, 8, 32 + extra, 12);
     }
 
     private void NewGroup_Click(object sender, RoutedEventArgs e)
