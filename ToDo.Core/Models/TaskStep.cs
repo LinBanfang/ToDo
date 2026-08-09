@@ -3,7 +3,7 @@ using LiteDB;
 
 namespace ToDo.Models;
 
-public partial class TaskStep : ObservableObject
+public partial class TaskStep : ObservableObject, IOrdered
 {
     [ObservableProperty]
     private string _id = Guid.NewGuid().ToString();

@@ -12,7 +12,7 @@ public enum ListType
     Custom
 }
 
-public partial class TaskList : ObservableObject
+public partial class TaskList : ObservableObject, IOrdered
 {
     [ObservableProperty]
     private string _id = Guid.NewGuid().ToString();

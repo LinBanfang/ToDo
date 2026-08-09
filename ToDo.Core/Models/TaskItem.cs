@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace ToDo.Models;
 
-public partial class TaskItem : ObservableObject
+public partial class TaskItem : ObservableObject, IOrdered
 {
     [ObservableProperty]
     private string _id = Guid.NewGuid().ToString();

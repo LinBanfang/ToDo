@@ -2,7 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace ToDo.Models;
 
-public partial class ListGroup : ObservableObject
+public partial class ListGroup : ObservableObject, IOrdered
 {
     [ObservableProperty]
     private string _id = Guid.NewGuid().ToString();

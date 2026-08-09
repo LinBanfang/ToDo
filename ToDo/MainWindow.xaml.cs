@@ -309,17 +309,9 @@ public partial class MainWindow : Window
     private void ReorderListGroups(Border b, DragEventArgs e, ListGroup dragged, ListGroup target)
     {
         var siblings = ViewModel.ListGroups.OrderBy(g => g.Order).ToList();
-        if (!siblings.Contains(dragged)) return;
-        siblings.Remove(dragged);
-        var targetIdx = siblings.IndexOf(target);
-        if (targetIdx < 0) return;
-
         // Upper half of the target header inserts before it, lower half after it
         bool lowerHalf = e.GetPosition(b).Y > b.ActualHeight / 2;
-        siblings.Insert(lowerHalf ? targetIdx + 1 : targetIdx, dragged);
-
-        for (int i = 0; i < siblings.Count; i++)
-            siblings[i].Order = i;
+        if (!ReorderService.Reorder(siblings, dragged, target, lowerHalf)) return;
         foreach (var g in siblings)
             App.Database!.ListGroups.Update(g);
 
@@ -670,18 +662,10 @@ public partial class MainWindow : Window
             .Where(l => !l.IsSystem) // system lists stay in fixed order
             .OrderBy(l => l.Order)
             .ToList();
-        if (!siblings.Contains(dragged)) return; // dragged from a different area
-
-        siblings.Remove(dragged);
-        var targetIdx = siblings.IndexOf((TaskList)targetItem.DataContext!);
-        if (targetIdx < 0) return;
 
         // Upper half of the target row inserts before it, lower half after it
         bool lowerHalf = e.GetPosition(targetItem).Y > targetItem.ActualHeight / 2;
-        siblings.Insert(lowerHalf ? targetIdx + 1 : targetIdx, dragged);
-
-        for (int i = 0; i < siblings.Count; i++)
-            siblings[i].Order = i;
+        if (!ReorderService.Reorder(siblings, dragged, (TaskList)targetItem.DataContext!, lowerHalf)) return;
 
         foreach (var l in siblings)
             App.Database!.Lists.Update(l);
@@ -886,17 +870,9 @@ public partial class MainWindow : Window
     private void ReorderTaskGroups(Border border, DragEventArgs e, TaskGroup dragged, TaskGroup target)
     {
         var siblings = ViewModel.Groups.Where(g => g.ListId == target.ListId).OrderBy(g => g.Order).ToList();
-        if (!siblings.Contains(dragged)) return;
-        siblings.Remove(dragged);
-        var targetIdx = siblings.IndexOf(target);
-        if (targetIdx < 0) return;
-
         // Upper half of the target header inserts before it, lower half after it
         bool lowerHalf = e.GetPosition(border).Y > border.ActualHeight / 2;
-        siblings.Insert(lowerHalf ? targetIdx + 1 : targetIdx, dragged);
-
-        for (int i = 0; i < siblings.Count; i++)
-            siblings[i].Order = i;
+        if (!ReorderService.Reorder(siblings, dragged, target, lowerHalf)) return;
         foreach (var g in siblings)
             App.Database!.Groups.Update(g);
 
@@ -1501,14 +1477,13 @@ public partial class MainWindow : Window
             && e.Data.GetData(typeof(TaskStep)) is TaskStep dragged && dragged.Id != target.Id)
         {
             var steps = ViewModel.SelectedTask.Steps;
-            steps.Remove(dragged);
-            var targetIdx = steps.IndexOf(target);
-            if (targetIdx < 0) { e.Handled = true; return; }
-
             // Upper half of the target row inserts before it, lower half after it
             bool lowerHalf = e.GetPosition(border).Y > border.ActualHeight / 2;
-            steps.Insert(lowerHalf ? targetIdx + 1 : targetIdx, dragged);
-            for (int i = 0; i < steps.Count; i++) steps[i].Order = i;
+            if (!ReorderService.Reorder(steps, dragged, target, lowerHalf))
+            {
+                e.Handled = true;
+                return;
+            }
             ViewModel.UpdateTaskCommand.Execute(ViewModel.SelectedTask);
         }
         e.Handled = true;
