@@ -118,6 +118,11 @@ jobs:
             for ($i = 1; $i -le $MaxRetries; $i++) {
               try {
                 if ($Form) { return Invoke-RestMethod -Method $Method -Uri $Uri -Form $Form -ErrorAction Stop }
+                # Invoke-RestMethod 只对 POST 自动设置 form-urlencoded；PATCH/PUT 不带 body 时
+                # Content-Type 为空，Gitee 会拒绝并返回 406。非空 body 显式指定（GET 无 body 不走此分支）。
+                if ($Body -and $Body.Count -gt 0) {
+                    return Invoke-RestMethod -Method $Method -Uri $Uri -Body $Body -ContentType 'application/x-www-form-urlencoded' -ErrorAction Stop
+                }
                 return Invoke-RestMethod -Method $Method -Uri $Uri -Body $Body -ErrorAction Stop
               } catch {
                 Write-Host "Gitee 调用失败(第 $i/$MaxRetries 次): $($_.Exception.Message)"
