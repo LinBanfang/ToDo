@@ -739,7 +739,7 @@
             </Border>
 
             <!-- Task area -->
-            <ScrollViewer x:Name="TaskAreaScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,15,0,20"
+            <ScrollViewer x:Name="TaskAreaScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,15,0,8"
                           AllowDrop="True" PreviewDragOver="TaskArea_PreviewDragOver"
                           ScrollChanged="TaskAreaScroll_ScrollChanged">
                 <StackPanel x:Name="TaskAreaPanel">
