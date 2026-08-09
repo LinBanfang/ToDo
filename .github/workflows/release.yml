@@ -175,7 +175,9 @@ jobs:
           #    导致 URL 变成 .../releases/=TOKEN、release id 与 access_token 丢失，Gitee 返回 401。
           #    本步失败仅告警不阻断 zip 上传（创建 release 时已写入 CHANGELOG 正文）。
           try {
+            # Gitee 的 PATCH /releases/{id} 必须带 tag_name，否则返回 "tag_name is missing"
             Invoke-Gitee -Method Patch -Uri "$base/releases/${id}?access_token=$token" -Body @{
+              tag_name = $tag
               name = "Release $tag"
               body = $releaseBody
             } | Out-Null
@@ -185,16 +187,21 @@ jobs:
           }
 
           # 5. Upload the zip asset
-          # Gitee 的 attach_files 对 PowerShell 的 Invoke-RestMethod -Form multipart 兼容不佳
-          # （此前返回 400 Bad Request），改用 curl.exe -F，与 Gitee 官方文档示例一致。
+          # v1.2.0-v1.2.2 的成功经验：access_token 放查询串 + file 走 multipart body。
+          # 上次 curl -F 把 access_token 挪进 form 字段导致 400，回归查询串方式。
+          # 不用 -f：失败时能连同响应体一起带回，便于诊断。
           $zip = "ToDo-$tag.zip"
-          $uploadUri = "$base/releases/$id/attach_files"
+          $uploadUri = "$base/releases/$id/attach_files?access_token=$token"
           $uploaded = $false
           $delay = 3
           for ($i = 1; $i -le 5; $i++) {
             try {
-              $resp = & curl.exe -sS -f -X POST $uploadUri -F "access_token=$token" -F "file=@$zip" 2>&1
-              if ($LASTEXITCODE -ne 0) { throw "curl exit code $LASTEXITCODE : $($resp -join ' ')" }
+              # -w 把 HTTP 状态码拼到输出末尾；不用 -f，失败时响应体会留在输出里便于诊断。
+              $resp = (& curl.exe -sS -X POST $uploadUri -F "file=@$zip" -w "`nHTTP_CODE:%{http_code}" 2>&1 | Out-String).Trim()
+              $code = [regex]::Match($resp, 'HTTP_CODE:(\d+)').Groups[1].Value
+              if (-not $code -or [int]$code -notin 200..299) {
+                throw "curl exit $LASTEXITCODE, HTTP $code : $resp"
+              }
               Write-Host "Uploaded $zip to Gitee release $tag"
               $uploaded = $true
               break
