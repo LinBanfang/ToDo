@@ -2,6 +2,15 @@
 
 本项目遵循[语义化版本](https://semver.org/lang/zh-CN/)。格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [v1.2.2] - 2026-08-09
+
+### 新增
+- **分组任务可拖回未分组**：已分组的任务拖到列表顶部（第一分组上半区域），出现拖放槽位并松开即移出分组，自动排到未分组任务末尾；已存在未分组任务时无需槽位，不显示
+- **分组任务数量内联**：分组名右侧直接显示任务数（如「工作 (5)」），随分组折叠 / 展开一致显示
+
+### 优化
+- **同步诊断日志**：同步全流程（拉取 / 应用 / 冲突）接入统一诊断日志，便于排查同步问题
+
 ## [v1.2.1] - 2026-08-08
 
 ### 新增
@@ -142,7 +151,10 @@
 - 浅色 / 深色主题（DynamicResource 运行时切换）、中英文切换
 - LiteDB 本地存储（默认 `%LOCALAPPDATA%\ToDo\todo.db`，路径可配置）
 
-[unreleased]: https://github.com/LinBanfang/ToDo/compare/v1.1.2...HEAD
+[unreleased]: https://github.com/LinBanfang/ToDo/compare/v1.2.2...HEAD
+[v1.2.2]: https://github.com/LinBanfang/ToDo/compare/v1.2.1...v1.2.2
+[v1.2.1]: https://github.com/LinBanfang/ToDo/compare/v1.2.0...v1.2.1
+[v1.2.0]: https://github.com/LinBanfang/ToDo/compare/v1.1.2...v1.2.0
 [v1.1.2]: https://github.com/LinBanfang/ToDo/compare/v1.1.1...v1.1.2
 [v1.1.1]: https://github.com/LinBanfang/ToDo/compare/v1.1.0...v1.1.1
 [v1.1.0]: https://github.com/LinBanfang/ToDo/compare/v1.0.15...v1.1.0
