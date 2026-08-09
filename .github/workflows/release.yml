@@ -49,12 +49,36 @@ jobs:
           path: ToDo-${{ env.RELEASE_TAG }}.zip
           if-no-files-found: error
 
+      # Release body comes from the matching CHANGELOG section (## [v1.2.3]), so the
+      # description follows the curated changelog instead of auto-generated PR noise.
+      - name: Extract changelog for release body
+        shell: pwsh
+        run: |
+          $tag = "${{ env.RELEASE_TAG }}"
+          $pattern = '^## \[' + [regex]::Escape($tag) + '\]'
+          $lines = Get-Content (Join-Path $env:GITHUB_WORKSPACE 'CHANGELOG.md')
+          $start = -1
+          for ($i = 0; $i -lt $lines.Count; $i++) {
+            if ($lines[$i] -match $pattern) { $start = $i; break }
+          }
+          if ($start -lt 0) {
+            Write-Host "CHANGELOG has no section for $tag — using generic body"
+            Set-Content -Path release-body.md -Value "Release $tag" -Encoding utf8
+          } else {
+            $body = New-Object System.Collections.Generic.List[string]
+            for ($i = $start; $i -lt $lines.Count; $i++) {
+              if ($i -gt $start -and $lines[$i] -match '^## \[v') { break }
+              $body.Add($lines[$i])
+            }
+            Set-Content -Path release-body.md -Value (($body -join "`n").Trim()) -Encoding utf8
+          }
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
           files: ToDo-${{ env.RELEASE_TAG }}.zip
-          generate_release_notes: true
+          body_path: release-body.md
           update_release: true # 重跑同 tag 时更新而非报错
 
   # Gitee 镜像独立成 job：Gitee API 偶发 DNS / 网络抖动时，可在 Actions 页面
