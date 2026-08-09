@@ -2,6 +2,18 @@
 
 本项目遵循[语义化版本](https://semver.org/lang/zh-CN/)。格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [v1.2.3] - 2026-08-09
+
+### 新增
+- **任务行元信息显示**：任务标题下方新增第二行，展示彩色标签、子步骤进度（如 1/3）、截止日期、提醒、备注；设置页「行为」区新增 5 个显示开关（标签 / 步骤 / 截止日期 / 提醒 / 备注），关闭即时生效
+
+### 优化
+- **「我的一天」太阳移入元信息行**：从任务行右侧移到标签与步骤之间，标签右侧不再显示「·」分隔点
+- **提醒显示规则**：过去时间的提醒视为已提醒、不再显示；非当天提醒只显示日期（当天才显示时分）；提醒图标改用铃铛
+- **逾期只靠颜色标识**：逾期日期不再带「逾期」文字，统一用红色标注
+- **元信息颜色统一**：步骤 / 截止 / 提醒 / 备注统一为中间灰（浅色 / 深色主题各自适配），阅读更一致
+- **备注图标**改用 Segoe Fluent Icons 字体渲染
+
 ## [v1.2.2] - 2026-08-09
 
 ### 新增
@@ -151,7 +163,8 @@
 - 浅色 / 深色主题（DynamicResource 运行时切换）、中英文切换
 - LiteDB 本地存储（默认 `%LOCALAPPDATA%\ToDo\todo.db`，路径可配置）
 
-[unreleased]: https://github.com/LinBanfang/ToDo/compare/v1.2.2...HEAD
+[unreleased]: https://github.com/LinBanfang/ToDo/compare/v1.2.3...HEAD
+[v1.2.3]: https://github.com/LinBanfang/ToDo/compare/v1.2.2...v1.2.3
 [v1.2.2]: https://github.com/LinBanfang/ToDo/compare/v1.2.1...v1.2.2
 [v1.2.1]: https://github.com/LinBanfang/ToDo/compare/v1.2.0...v1.2.1
 [v1.2.0]: https://github.com/LinBanfang/ToDo/compare/v1.1.2...v1.2.0
