@@ -35,6 +35,7 @@
     <SolidColorBrush x:Key="TextSecondaryBrush" Color="#605E5C"/>
     <SolidColorBrush x:Key="TextDisabledBrush" Color="#A19F9D"/>
     <SolidColorBrush x:Key="TextAccentBrush" Color="#0078D4"/>
+    <SolidColorBrush x:Key="TaskMetaBrush" Color="#807F7D"/>
 
     <SolidColorBrush x:Key="BorderLightBrush" Color="#E1DFDD"/>
     <SolidColorBrush x:Key="DividerBrush" Color="#EDEBE9"/>

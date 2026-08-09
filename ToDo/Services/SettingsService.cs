@@ -22,6 +22,19 @@ public class AppSettings
     public bool MinimizeToTrayOnClose { get; set; } = true;
     /// <summary>Show colored tag pills on sticky-note task rows (default on).</summary>
     public bool StickyShowTags { get; set; } = true;
+
+    // ─── Main-list task row meta toggles (default all on) ───
+    /// <summary>Show tags on main-list task rows.</summary>
+    public bool ShowTaskTags { get; set; } = true;
+    /// <summary>Show the step progress (e.g. 1/3) on main-list task rows.</summary>
+    public bool ShowTaskSteps { get; set; } = true;
+    /// <summary>Show the due date on main-list task rows.</summary>
+    public bool ShowTaskDue { get; set; } = true;
+    /// <summary>Show the reminder on main-list task rows.</summary>
+    public bool ShowTaskReminder { get; set; } = true;
+    /// <summary>Show the note icon on main-list task rows.</summary>
+    public bool ShowTaskNote { get; set; } = true;
+
     /// <summary>Sticky window geometry (DIPs); null = center on first open.</summary>
     public double? StickyLeft { get; set; }
     public double? StickyTop { get; set; }
@@ -64,11 +77,13 @@ public static class SettingsService
     /// <summary>Where a chosen backup is staged before it replaces the live DB on restart.</summary>
     public static string PendingRestoreFilePath => Path.Combine(SettingsDir, "pending-restore.db");
 
-    private const int CurrentSchemaVersion = 5;   // v5 adds ReminderSoundPath; v4 adds StickyShowTags; v3 added the Behavior block + sticky geometry
+    private const int CurrentSchemaVersion = 6;   // v6 adds ShowTask* row toggles; v5 adds ReminderSoundPath; v4 adds StickyShowTags; v3 added the Behavior block + sticky geometry
 
     private static AppSettings? _current;
 
-    /// <summary>Auto-update feeds written on first launch and used when settings has none.</summary>
+    /// <summary>Raised after settings are persisted, so live UI (e.g. the main task list)
+    /// can re-read toggles that drive bindings.</summary>
+    public static event Action? SettingsChanged;
     public static List<UpdateSourceSetting> DefaultUpdateSources { get; } = new()
     {
         new() { Type = "github", Url = "https://api.github.com/repos/LinBanfang/ToDo/releases/latest" },
@@ -132,6 +147,7 @@ public static class SettingsService
         Directory.CreateDirectory(SettingsDir);
         var json = JsonSerializer.Serialize(Current, new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(SettingsFile, json);
+        SettingsChanged?.Invoke();
     }
 
     public static void SetDbPath(string newPath)

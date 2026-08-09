@@ -7,7 +7,8 @@
 #   3. Launches the app pointed at that DB via a temporary settings.json.
 #   4. Drives the UI with UIAutomation: clicks sidebar 工作 / 我的一天, opens the
 #      sticky note via the footer button (captures the separate sticky window, then
-#      clicks its back-to-main button), opens the settings page — one shot each.
+#      clicks its back-to-main button), opens the settings page and navigates to the
+#      行为 section (shows the task-row display toggles) — one shot each.
 #   5. Captures with DwmGetWindowAttribute(DWMWA_EXTENDED_FRAME_BOUNDS) so the
 #      Windows window shadow (left/right/bottom ~7px, top 0) is NOT included and
 #      the borders stay symmetric — see docs/screenshots.md.
@@ -195,7 +196,10 @@ try {
     if (-not (Test-Path $exe)) { throw "ToDo.exe not found at $exe — build first or pass -Configuration" }
 
     # 2) fresh demo DB
-    Get-Process -Name 'ToDo' -ErrorAction SilentlyContinue | Stop-Process -Force
+    # Kill only THIS repo's ToDo.exe (Path match). Get-Process -Name 'ToDo' also
+    # matches the Microsoft Store's "Todo.exe" — don't close the user's other app.
+    Get-Process -Name 'ToDo' -ErrorAction SilentlyContinue |
+        Where-Object { try { $_.Path -eq $exe } catch { $false } } | Stop-Process -Force
     Start-Sleep -Milliseconds 900
     Remove-Item $DbPath -Force -ErrorAction SilentlyContinue
     Remove-Item $journalPath -Force -ErrorAction SilentlyContinue
@@ -206,7 +210,7 @@ try {
     # 3) temporary settings pointing at the demo DB (backup the real file first)
     Copy-Item $settingsPath $settingsBak -Force
     $demoSettings = @{
-        SchemaVersion = 5; DbPath = $DbPath; Theme = $Theme; SidebarWidth = 280
+        SchemaVersion = 6; DbPath = $DbPath; Theme = $Theme; SidebarWidth = 280
         Language = 'Chinese'; CheckForUpdatesOnStartup = $false; ReminderNotifications = $false
         ReminderSound = $false; ReminderSoundPath = ''; SyncEnabled = $false; SyncServerUrl = ''; SyncKey = ''
         DeviceId = ''; LastSyncServerSeq = 0; LastSyncTime = 0; UpdateSources = @(); PendingRestorePath = $null
@@ -294,6 +298,12 @@ try {
     if (-not $openBtn) { throw 'OpenSettings button not found' }
     $openBtn.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
     Start-Sleep -Seconds 2
+    # The settings page opens on the 常规 section; click the 行为 nav item so the
+    # new "任务列表显示" row toggles are what settings.png showcases.
+    $behavior = Find-SidebarText $root '行为'
+    if (-not $behavior) { throw 'settings nav "行为" not found' }
+    Click-Center $behavior | Out-Null
+    Start-Sleep -Seconds 1
     $p = Join-Path $OutputDir 'settings.png'
     Save-WindowShot $hwnd $p | Out-Null
     Assert-SymmetricEdges $p

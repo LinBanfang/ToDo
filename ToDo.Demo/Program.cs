@@ -31,12 +31,13 @@ TaskList NewList(string id, string name, string icon, string? groupId, int order
 TaskItem Task(string listId, string title, int order,
     string? groupId = null, IEnumerable<Tag>? tags = null,
     bool important = false, bool myDay = false, int myDayOrder = -1,
-    long? due = null, string? note = null, IEnumerable<TaskStep>? steps = null) =>
+    long? due = null, long? reminder = null, string? note = null,
+    IEnumerable<TaskStep>? steps = null) =>
     new()
     {
         Title = title, ListId = listId, GroupId = groupId, Order = order,
         IsImportant = important, IsMyDay = myDay, MyDayOrder = myDayOrder,
-        DueDate = due, Note = note,
+        DueDate = due, Reminder = reminder, Note = note,
         Steps = steps == null ? new() : new(steps),
         TagIds = tags?.Select(t => t.Id).ToList() ?? new(),
     };
@@ -80,7 +81,7 @@ db.Groups.Insert(grpMeet);
 
 // ─── 工作 · 开发任务 ─────────────────────────────────────
 db.Tasks.Insert(Task(work.Id, "重构同步引擎的 LWW 合并逻辑", 0,
-    groupId: grpDev.Id, important: true, myDay: true, myDayOrder: 0, due: Ms(1, 18),
+    groupId: grpDev.Id, important: true, myDay: true, myDayOrder: 0, due: Ms(1, 18), reminder: Ms(3, 17, 0),
     note: "服务器按 ModifiedAt 做 last-writer-wins;输家重推时由服务器返回更新版本自愈。",
     tags: new[] { tags["重要"], tags["工作"] },
     steps: new[] {
@@ -90,7 +91,7 @@ db.Tasks.Insert(Task(work.Id, "重构同步引擎的 LWW 合并逻辑", 0,
     }));
 
 db.Tasks.Insert(Task(work.Id, "修复数据库文件被占用导致的备份失败", 1,
-    groupId: grpDev.Id, important: true, due: Ms(0, 14),
+    groupId: grpDev.Id, important: true, due: Ms(0, 22), reminder: Ms(0, 21, 50),
     note: "备份前先释放 LiteDB 文件句柄,再复制文件。",
     tags: new[] { tags["紧急"], tags["工作"] },
     steps: new[] {
@@ -100,7 +101,7 @@ db.Tasks.Insert(Task(work.Id, "修复数据库文件被占用导致的备份失�
     }));
 
 db.Tasks.Insert(Task(work.Id, "升级 NuGet 依赖到最新稳定版", 2,
-    groupId: grpDev.Id, due: Ms(2, 10),
+    groupId: grpDev.Id, due: Ms(-2, 10),
     tags: new[] { tags["工作"] },
     steps: new[] { Step("评估破坏性变更", false, 0) }));
 
@@ -118,14 +119,17 @@ db.Tasks.Insert(tDoc);
 
 // ─── 工作 · 会议与沟通 ───────────────────────────────────
 db.Tasks.Insert(Task(work.Id, "周一晨会同步开发进度", 0,
-    groupId: grpMeet.Id, due: Ms(0, 9), note: "同步四个模块的合并进展与阻塞项。",
+    groupId: grpMeet.Id, due: Ms(0, 9), reminder: Ms(0, 8, 30),
+    note: "同步四个模块的合并进展与阻塞项。",
     tags: new[] { tags["工作"] }));
 
 db.Tasks.Insert(Task(work.Id, "给团队分享 LWW 合并方案", 1,
-    groupId: grpMeet.Id, important: true, due: Ms(5, 15), tags: new[] { tags["工作"] }));
+    groupId: grpMeet.Id, important: true, due: Ms(5, 15), reminder: Ms(5, 14, 30),
+    tags: new[] { tags["工作"] }));
 
 db.Tasks.Insert(Task(work.Id, "回复用户的同步失败反馈", 2,
-    groupId: grpMeet.Id, due: Ms(0, 16), tags: new[] { tags["紧急"], tags["工作"] }));
+    groupId: grpMeet.Id, due: Ms(0, 16), reminder: Ms(-1, 9, 0),
+    tags: new[] { tags["紧急"], tags["工作"] }));
 
 var tCancel = Task(work.Id, "预约与客户的产品评审会", 3,
     groupId: grpMeet.Id, tags: new[] { tags["工作"] });
@@ -159,7 +163,8 @@ db.Tasks.Insert(Task(study.Id, "学习 EF Core 事务与并发控制", 3,
 
 // ─── 生活 ────────────────────────────────────────────────
 db.Tasks.Insert(Task(life.Id, "买猫粮和猫砂", 0,
-    myDay: true, myDayOrder: 1, due: Ms(0, 19), tags: new[] { tags["购物"] }));
+    myDay: true, myDayOrder: 1, due: Ms(0, 23), reminder: Ms(0, 22, 30),
+    tags: new[] { tags["购物"] }));
 
 db.Tasks.Insert(Task(life.Id, "预约牙医复诊", 1,
     important: true, due: Ms(1, 10), tags: new[] { tags["个人"] }));
@@ -176,7 +181,7 @@ db.Tasks.Insert(tClean);
 
 // ─── 健身 ────────────────────────────────────────────────
 db.Tasks.Insert(Task(fitness.Id, "晨跑 5 公里", 0,
-    myDay: true, myDayOrder: 2, due: Ms(0, 7),
+    myDay: true, myDayOrder: 2, due: Ms(0, 7), reminder: Ms(1, 6, 45),
     tags: new[] { tags["健康"] },
     steps: new[] {
         Step("热身", true, 0),

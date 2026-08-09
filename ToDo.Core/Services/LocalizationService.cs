@@ -85,7 +85,6 @@ public static class Loc
     public static string TagPlaceholder => Language == AppLanguage.Chinese ? "新标签名" : "New tag name";
     public static string Add => Language == AppLanguage.Chinese ? "添加" : "Add";
     public static string Done => Language == AppLanguage.Chinese ? "完成" : "Done";
-    public static string Overdue => Language == AppLanguage.Chinese ? "逾期" : "Overdue";
     public static string Today => Language == AppLanguage.Chinese ? "今天" : "Today";
     public static string Tomorrow => Language == AppLanguage.Chinese ? "明天" : "Tomorrow";
     public static string ThisWeek => Language == AppLanguage.Chinese ? "下周" : "Next Week";
@@ -125,10 +124,13 @@ public static class Loc
     // Short date (DueDateToStringConverter)
     public static string ShortDate(DateTime dt) =>
         Language == AppLanguage.Chinese ? $"{dt.Month}月{dt.Day}日" : dt.ToString("MMM d", CultureInfo.InvariantCulture);
-    public static string OverdueDate(DateTime dt) =>
-        Language == AppLanguage.Chinese ? $"逾期 {dt.Month}月{dt.Day}日" : $"Overdue {dt:MMM d}";
     public static string ReminderTime(DateTime dt) =>
         Language == AppLanguage.Chinese ? $"{dt.Month}月{dt.Day}日 {dt:HH:mm}" : dt.ToString("MMM d, HH:mm", CultureInfo.InvariantCulture);
+    // A reminder falling today shows just the time on the task row.
+    public static string ReminderTimeOnly(DateTime dt) => dt.ToString("HH:mm", CultureInfo.InvariantCulture);
+    // A reminder on another day shows just the date on the task row (no clock time).
+    public static string ReminderDateOnly(DateTime dt) =>
+        Language == AppLanguage.Chinese ? $"{dt.Month}月{dt.Day}日" : dt.ToString("MMM d", CultureInfo.InvariantCulture);
     public static string Reminder => Language == AppLanguage.Chinese ? "提醒" : "Reminder";
     public static string AddDueDate => Language == AppLanguage.Chinese ? "添加截止日期" : "Add due date";
     public static string AddReminder => Language == AppLanguage.Chinese ? "添加提醒" : "Add reminder";
@@ -236,6 +238,18 @@ public static class Loc
         ? "关闭主窗口时最小化到托盘" : "Minimize to tray on close";
     public static string StickyShowTags => Language == AppLanguage.Chinese
         ? "在便笺中显示标签" : "Show tags in sticky note";
+    public static string TaskRowDisplay => Language == AppLanguage.Chinese
+        ? "任务列表显示" : "Task row display";
+    public static string ShowTaskTags => Language == AppLanguage.Chinese
+        ? "显示标签" : "Show tags";
+    public static string ShowTaskSteps => Language == AppLanguage.Chinese
+        ? "显示步骤进度" : "Show step progress";
+    public static string ShowTaskDue => Language == AppLanguage.Chinese
+        ? "显示截止日期" : "Show due date";
+    public static string ShowTaskReminder => Language == AppLanguage.Chinese
+        ? "显示提醒" : "Show reminders";
+    public static string ShowTaskNote => Language == AppLanguage.Chinese
+        ? "显示备注图标" : "Show note icon";
     public static string StickyNote => Language == AppLanguage.Chinese ? "迷你便笺" : "Sticky note";
     public static string OpenMainWindow => Language == AppLanguage.Chinese ? "打开主界面" : "Open main window";
     public static string ExitApp => Language == AppLanguage.Chinese ? "退出" : "Exit";

@@ -73,6 +73,13 @@ public partial class MainViewModel : ObservableObject
     /// <summary>Whether the sticky note shows tag pills on task rows (live from settings).</summary>
     public bool StickyShowTags => SettingsService.Current.StickyShowTags;
 
+    // ─── Task-row meta toggles (live from settings) ─────
+    public bool ShowTaskTags => SettingsService.Current.ShowTaskTags;
+    public bool ShowTaskSteps => SettingsService.Current.ShowTaskSteps;
+    public bool ShowTaskDue => SettingsService.Current.ShowTaskDue;
+    public bool ShowTaskReminder => SettingsService.Current.ShowTaskReminder;
+    public bool ShowTaskNote => SettingsService.Current.ShowTaskNote;
+
     public Brush SyncStatusBrush => App.Sync?.StatusBrush ?? _idleSyncBrush;
     public string SyncStatusText => App.Sync?.StatusText ?? Loc.SyncStatusDisabled;
     /// <summary>True while a round-trip is in flight — drives the sync icon's spin.</summary>
@@ -127,6 +134,18 @@ public partial class MainViewModel : ObservableObject
         LoadAll();
         DailyMyDayReset();
         if (App.Sync != null) App.Sync.StatusChanged += OnSyncStatusChanged;
+        SettingsService.SettingsChanged += OnSettingsChanged;
+    }
+
+    /// <summary>Re-read the row-display toggles after any settings save so the live
+    /// task list immediately reflects changes made on the settings page.</summary>
+    private void OnSettingsChanged()
+    {
+        OnPropertyChanged(nameof(ShowTaskTags));
+        OnPropertyChanged(nameof(ShowTaskSteps));
+        OnPropertyChanged(nameof(ShowTaskDue));
+        OnPropertyChanged(nameof(ShowTaskReminder));
+        OnPropertyChanged(nameof(ShowTaskNote));
     }
 
     private void OnSyncStatusChanged()

@@ -89,6 +89,7 @@ public static class ThemeService
         d["TextSecondaryBrush"] = Brush("#C8C6C4");
         d["TextDisabledBrush"] = Brush("#797775");
         d["TextAccentBrush"] = Brush("#4CC2FF");
+        d["TaskMetaBrush"] = Brush("#A19F9D");
         d["BorderLightBrush"] = Brush("#333333");
         d["DividerBrush"] = Brush("#3C3C3C");
         d["AccentRedBrush"] = Brush("#F1707B");

@@ -41,6 +41,15 @@ public sealed class LocDateTests : IDisposable
     }
 
     [Theory]
+    [InlineData(AppLanguage.Chinese, "3月5日")]
+    [InlineData(AppLanguage.English, "Mar 5")]
+    public void ReminderDateOnly_FormatsPerLanguage(AppLanguage lang, string expected)
+    {
+        Loc.SetLanguage(lang);
+        Assert.Equal(expected, Loc.ReminderDateOnly(new DateTime(2024, 3, 5)));
+    }
+
+    [Theory]
     [InlineData(AppLanguage.Chinese, "刚刚")]
     [InlineData(AppLanguage.English, "just now")]
     public void JustNow_Localized(AppLanguage lang, string expected)

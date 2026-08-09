@@ -73,16 +73,15 @@
                              IsVisibleChanged="TaskTitleEdit_IsVisibleChanged"
                              KeyDown="TaskTitleEdit_KeyDown"
                              LostFocus="TaskTitleEdit_LostFocus"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
-                        <TextBlock Text="{Binding DueDate, Converter={StaticResource DueDateToString}}"
-                                   FontSize="13" Margin="0,0,8,0"
-                                   Foreground="{Binding DueDate, Converter={StaticResource DueDateToBrush}}"
-                                   Visibility="{Binding DueDate, Converter={StaticResource NullToVis}}"/>
-                        <TextBlock FontSize="13" Foreground="{DynamicResource TextDisabledBrush}"
-                                   Visibility="{Binding Steps.Count, Converter={StaticResource CountToVis}}">
-                            <Run Text="{Binding CompletedStepCount, Mode=OneWay}"/><Run Text="/"/><Run Text="{Binding Steps.Count, Mode=OneWay}"/>
-                        </TextBlock>
-                        <ItemsControl Margin="4,0,0,0">
+                    <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,3,0,0">
+                        <!-- Tags -->
+                        <ItemsControl>
+                            <ItemsControl.Visibility>
+                                <MultiBinding Converter="{StaticResource ItemAndSettingVis}">
+                                    <Binding Path="TagIds"/>
+                                    <Binding Path="DataContext.ShowTaskTags" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                </MultiBinding>
+                            </ItemsControl.Visibility>
                             <ItemsControl.ItemsSource>
                                 <MultiBinding Converter="{StaticResource TagIdsToTags}">
                                     <Binding Path="TagIds"/>
@@ -90,7 +89,7 @@
                                 </MultiBinding>
                             </ItemsControl.ItemsSource>
                             <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                <ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:Tag}">
@@ -102,13 +101,148 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                    </StackPanel>
+                        <!-- My Day sun: between tags and steps while the task is in My Day -->
+                        <TextBlock Text="&#xE706;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                   VerticalAlignment="Center" Margin="6,0,0,0"
+                                   Foreground="{DynamicResource TextAccentBrush}"
+                                   Visibility="{Binding IsMyDay, Converter={StaticResource BoolToVis}}"/>
+                        <!-- Gap after tags / My Day sun: no "·" — the tag pills self-delimit.
+                             Visibility still depends on a leading item and a later item, so the
+                             gap only appears between meta items, never at the line start. -->
+                        <TextBlock Text="" FontSize="13" Margin="5,0,5,0" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextDisabledBrush}">
+                            <TextBlock.Visibility>
+                                <MultiBinding Converter="{StaticResource MetaSep}">
+                                    <Binding Path="TagIds"/>
+                                    <Binding Path="Steps.Count"/>
+                                    <Binding Path="DueDate"/>
+                                    <Binding Path="Reminder"/>
+                                    <Binding Path="Note"/>
+                                    <Binding Path="DataContext.ShowTaskTags" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskSteps" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskDue" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskReminder" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskNote" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="IsMyDay"/>
+                                    <MultiBinding.ConverterParameter>1</MultiBinding.ConverterParameter>
+                                </MultiBinding>
+                            </TextBlock.Visibility>
+                        </TextBlock>
+                        <!-- Steps progress -->
+                        <TextBlock FontSize="13" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TaskMetaBrush}">
+                            <TextBlock.Visibility>
+                                <MultiBinding Converter="{StaticResource ItemAndSettingVis}">
+                                    <Binding Path="Steps.Count"/>
+                                    <Binding Path="DataContext.ShowTaskSteps" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                </MultiBinding>
+                            </TextBlock.Visibility>
+                            <Run Text="{Binding CompletedStepCount, Mode=OneWay}"/><Run Text="/"/><Run Text="{Binding Steps.Count, Mode=OneWay}"/>
+                        </TextBlock>
+                        <!-- · steps → due date -->
+                        <TextBlock Text="·" FontSize="13" Margin="5,0,5,0" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextDisabledBrush}">
+                            <TextBlock.Visibility>
+                                <MultiBinding Converter="{StaticResource MetaSep}">
+                                    <Binding Path="TagIds"/>
+                                    <Binding Path="Steps.Count"/>
+                                    <Binding Path="DueDate"/>
+                                    <Binding Path="Reminder"/>
+                                    <Binding Path="Note"/>
+                                    <Binding Path="DataContext.ShowTaskTags" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskSteps" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskDue" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskReminder" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskNote" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <MultiBinding.ConverterParameter>2</MultiBinding.ConverterParameter>
+                                </MultiBinding>
+                            </TextBlock.Visibility>
+                        </TextBlock>
+                        <!-- Due date: 📅 + text -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <StackPanel.Visibility>
+                                <MultiBinding Converter="{StaticResource ItemAndSettingVis}">
+                                    <Binding Path="DueDate"/>
+                                    <Binding Path="DataContext.ShowTaskDue" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                </MultiBinding>
+                            </StackPanel.Visibility>
+                            <TextBlock Text="&#xE787;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                       VerticalAlignment="Center" Margin="0,0,4,0"
+                                       Foreground="{Binding DueDate, Converter={StaticResource DueDateToBrush}}"/>
+                            <TextBlock Text="{Binding DueDate, Converter={StaticResource DueDateToString}}"
+                                       FontSize="13" VerticalAlignment="Center"
+                                       Foreground="{Binding DueDate, Converter={StaticResource DueDateToBrush}}"/>
+                        </StackPanel>
+                        <!-- · due date → reminder -->
+                        <TextBlock Text="·" FontSize="13" Margin="5,0,5,0" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextDisabledBrush}">
+                            <TextBlock.Visibility>
+                                <MultiBinding Converter="{StaticResource MetaSep}">
+                                    <Binding Path="TagIds"/>
+                                    <Binding Path="Steps.Count"/>
+                                    <Binding Path="DueDate"/>
+                                    <Binding Path="Reminder"/>
+                                    <Binding Path="Note"/>
+                                    <Binding Path="DataContext.ShowTaskTags" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskSteps" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskDue" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskReminder" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskNote" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <MultiBinding.ConverterParameter>3</MultiBinding.ConverterParameter>
+                                </MultiBinding>
+                            </TextBlock.Visibility>
+                        </TextBlock>
+                        <!-- Reminder: 🔔 + text -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <StackPanel.Visibility>
+                                <MultiBinding Converter="{StaticResource ItemAndSettingVis}">
+                                    <Binding Path="Reminder"/>
+                                    <Binding Path="DataContext.ShowTaskReminder" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <MultiBinding.ConverterParameter>future</MultiBinding.ConverterParameter>
+                                </MultiBinding>
+                            </StackPanel.Visibility>
+                            <TextBlock Text="&#xEA8F;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                       VerticalAlignment="Center" Margin="0,0,4,0"
+                                       Foreground="{DynamicResource TaskMetaBrush}"/>
+                            <TextBlock Text="{Binding Reminder, Converter={StaticResource ReminderToString}}"
+                                       FontSize="13" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource TaskMetaBrush}"/>
+                        </StackPanel>
+                        <!-- · reminder → note -->
+                        <TextBlock Text="·" FontSize="13" Margin="5,0,5,0" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextDisabledBrush}">
+                            <TextBlock.Visibility>
+                                <MultiBinding Converter="{StaticResource MetaSep}">
+                                    <Binding Path="TagIds"/>
+                                    <Binding Path="Steps.Count"/>
+                                    <Binding Path="DueDate"/>
+                                    <Binding Path="Reminder"/>
+                                    <Binding Path="Note"/>
+                                    <Binding Path="DataContext.ShowTaskTags" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskSteps" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskDue" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskReminder" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <Binding Path="DataContext.ShowTaskNote" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                    <MultiBinding.ConverterParameter>4</MultiBinding.ConverterParameter>
+                                </MultiBinding>
+                            </TextBlock.Visibility>
+                        </TextBlock>
+                        <!-- Note icon: single icon, content only in the tooltip -->
+                        <TextBlock Text="&#xE932;" FontFamily="Segoe Fluent Icons" FontSize="14"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TaskMetaBrush}"
+                                   ToolTip="{Binding Note}">
+                            <TextBlock.Visibility>
+                                <MultiBinding Converter="{StaticResource ItemAndSettingVis}">
+                                    <Binding Path="Note"/>
+                                    <Binding Path="DataContext.ShowTaskNote" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                </MultiBinding>
+                            </TextBlock.Visibility>
+                        </TextBlock>
+                    </WrapPanel>
                 </StackPanel>
                 <!-- Right icons -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="&#xE706;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="4,0"
-                               Foreground="{DynamicResource TextAccentBrush}"
-                               Visibility="{Binding IsMyDay, Converter={StaticResource BoolToVis}}"/>
                     <Border Background="Transparent" Cursor="Hand" MouseLeftButtonDown="Star_Click" Width="24" Height="24">
                         <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="16"
                                    HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -912,7 +1046,7 @@
                                             Click="ReminderBtn_Click">
                                         <Button.Content>
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="&#xE91C;" FontFamily="Segoe MDL2 Assets"
+                                                <TextBlock Text="&#xEA8F;" FontFamily="Segoe MDL2 Assets"
                                                            FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
                                                 <TextBlock x:Name="ReminderLabel" VerticalAlignment="Center"/>
                                             </StackPanel>

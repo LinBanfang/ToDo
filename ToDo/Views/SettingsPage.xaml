@@ -244,7 +244,19 @@
                 <CheckBox Style="{StaticResource FluentCheckBox}" Content="{x:Static services:Loc.MinimizeToTrayOnClose}"
                           IsChecked="{Binding MinimizeToTrayOnClose}" Margin="0,0,0,10"/>
                 <CheckBox Style="{StaticResource FluentCheckBox}" Content="{x:Static services:Loc.StickyShowTags}"
-                          IsChecked="{Binding StickyShowTags}"/>
+                          IsChecked="{Binding StickyShowTags}" Margin="0,0,0,18"/>
+                <TextBlock Text="{x:Static services:Loc.TaskRowDisplay}" FontSize="11" FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextDisabledBrush}" Margin="0,0,0,8"/>
+                <CheckBox Style="{StaticResource FluentCheckBox}" Content="{x:Static services:Loc.ShowTaskTags}"
+                          IsChecked="{Binding ShowTaskTags}" Margin="0,0,0,10"/>
+                <CheckBox Style="{StaticResource FluentCheckBox}" Content="{x:Static services:Loc.ShowTaskSteps}"
+                          IsChecked="{Binding ShowTaskSteps}" Margin="0,0,0,10"/>
+                <CheckBox Style="{StaticResource FluentCheckBox}" Content="{x:Static services:Loc.ShowTaskDue}"
+                          IsChecked="{Binding ShowTaskDue}" Margin="0,0,0,10"/>
+                <CheckBox Style="{StaticResource FluentCheckBox}" Content="{x:Static services:Loc.ShowTaskReminder}"
+                          IsChecked="{Binding ShowTaskReminder}" Margin="0,0,0,10"/>
+                <CheckBox Style="{StaticResource FluentCheckBox}" Content="{x:Static services:Loc.ShowTaskNote}"
+                          IsChecked="{Binding ShowTaskNote}"/>
             </StackPanel>
         </DataTemplate>
 

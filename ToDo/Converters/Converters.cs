@@ -149,7 +149,6 @@ public class DueDateToStringConverter : IValueConverter
             if (dt.Date == today) return Loc.Today;
             if (dt.Date == today.AddDays(1)) return Loc.Tomorrow;
             if (dt.Date == today.AddDays(-1)) return Loc.Yesterday;
-            if (dt.Date < today) return Loc.OverdueDate(dt);
             return Loc.ShortDate(dt);
         }
         return "";
@@ -169,10 +168,97 @@ public class DueDateToBrushConverter : IValueConverter
             if (dt.Date < DateTime.Today)
                 return (Brush)System.Windows.Application.Current.FindResource("AccentRedBrush");
         }
-        return (Brush)System.Windows.Application.Current.FindResource("TextSecondaryBrush");
+        return (Brush)System.Windows.Application.Current.FindResource("TaskMetaBrush");
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
+/// <summary>Visibility for a task-row meta item: the item must be present AND its display
+/// toggle (bound second) must be on. Presence is inferred from the value type —
+/// IList count &gt; 0, int &gt; 0, long = non-null timestamp, non-empty string. A "future"
+/// converter parameter additionally requires a long timestamp to still be in the future
+/// (reminders are hidden once their time has passed).</summary>
+public class ItemAndSettingVisibilityConverter : IMultiValueConverter
+{
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (values.Length < 2 || values[1] is not true) return Visibility.Collapsed;
+        bool present = values[0] switch
+        {
+            IList list => list.Count > 0,
+            int n => n > 0,
+            long ts => parameter as string == "future"
+                ? DateTimeOffset.FromUnixTimeMilliseconds(ts).LocalDateTime > DateTime.Now
+                : true,
+            string s => !string.IsNullOrWhiteSpace(s),
+            _ => false,
+        };
+        return present ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
+/// <summary>Reminder timestamp → list text. A reminder whose time has passed is treated as
+/// already reminded and hidden; today shows just the time (HH:mm); any other day shows just
+/// the date.</summary>
+public class ReminderToStringConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is long ts)
+        {
+            var dt = DateTimeOffset.FromUnixTimeMilliseconds(ts).LocalDateTime;
+            if (dt <= DateTime.Now) return "";   // already reminded — don't show
+            return dt.Date == DateTime.Today ? Loc.ReminderTimeOnly(dt) : Loc.ReminderDateOnly(dt);
+        }
+        return "";
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
+/// <summary>Visibility for the "·" separators between a task row's meta items.
+/// MultiBinding values: [TagIds, Steps.Count, DueDate, Reminder, Note,
+/// ShowTaskTags, ShowTaskSteps, ShowTaskDue, ShowTaskReminder, ShowTaskNote]; the parameter
+/// picks the separator: "1" after tags or the My Day sun, "2" after steps, "3" after the
+/// due date, "4" after the reminder. Separator "1" additionally binds IsMyDay (index 10) so
+/// the sun counts as a leading item when tags are hidden. A separator is visible when its own
+/// item is visible (present AND its toggle is on) and at least one later item is visible, so
+/// a missing or hidden middle item never leaves a dangling "·". A past reminder counts as
+/// absent (it is hidden once reminded).</summary>
+public class MetaSeparatorVisibilityConverter : IMultiValueConverter
+{
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (values.Length < 10) return Visibility.Collapsed;
+
+        bool tags = (values[0] is IList list && list.Count > 0) && values[5] is true;
+        bool sun = values.Length > 10 && values[10] is true;   // My Day sun (separator 1 only)
+        bool steps = (values[1] is int n && n > 0) && values[6] is true;
+        bool due = values[2] != null && values[7] is true;
+        bool rem = values[3] != null && values[8] is true && IsFutureReminder(values[3]);
+        bool note = (values[4] is string s && !string.IsNullOrWhiteSpace(s)) && values[9] is true;
+
+        bool visible = (parameter as string) switch
+        {
+            "1" => (tags || sun) && (steps || due || rem || note),
+            "2" => steps && (due || rem || note),
+            "3" => due && (rem || note),
+            "4" => rem && note,
+            _ => false,
+        };
+        return visible ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private static bool IsFutureReminder(object? value)
+        => value is long ts && DateTimeOffset.FromUnixTimeMilliseconds(ts).LocalDateTime > DateTime.Now;
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         => throw new NotImplementedException();
 }
 
