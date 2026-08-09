@@ -21,6 +21,9 @@ public static class DiagnosticLog
     public static void Warn(string module, string message) => Write("WARN", module, message);
     public static void Error(string module, string message) => Write("ERROR", module, message);
 
+    /// <summary>Test seam: fires for every line that was written (level, module, message).</summary>
+    internal static event Action<string, string, string>? Written;
+
     private static void Write(string level, string module, string message)
     {
         try
@@ -34,6 +37,7 @@ public static class DiagnosticLog
                 File.AppendAllText(FilePath,
                     $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] [{level}] [{module}] {message}{Environment.NewLine}");
             }
+            Written?.Invoke(level, module, message);
         }
         catch
         {

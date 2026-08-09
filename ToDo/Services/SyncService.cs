@@ -94,7 +94,11 @@ public partial class SyncService : ObservableObject, IDisposable
         if (string.IsNullOrWhiteSpace(settings.SyncServerUrl) || string.IsNullOrWhiteSpace(settings.SyncKey))
         { SetStatus(SyncStatus.NotConfigured); return; }
 
-        if (Interlocked.Exchange(ref _inFlight, 1) != 0) return;
+        if (Interlocked.Exchange(ref _inFlight, 1) != 0)
+        {
+            DiagnosticLog.Info("sync", "overlapping round-trip dropped (previous still in flight)");
+            return;
+        }
         var startedAt = Environment.TickCount64;
         try
         {
@@ -105,6 +109,7 @@ public partial class SyncService : ObservableObject, IDisposable
             // entity so pre-existing data uploads instead of staying only on this device.
             if (settings.LastSyncServerSeq == 0 && !_bootstrapped)
             {
+                DiagnosticLog.Info("sync", "first sync: seeding outbox from existing data");
                 await RunOnDbThread(() => _db.BootstrapSync());
                 _bootstrapped = true;
             }
@@ -115,6 +120,7 @@ public partial class SyncService : ObservableObject, IDisposable
                 var evs = _db.Tracker.AllPending().ToList();
                 return (evs, SettingsService.Current.LastSyncServerSeq);
             });
+            DiagnosticLog.Info("sync", $"round-trip start: device={settings.DeviceId} since={since} pending={events.Count}");
 
             var response = await RoundTripAsync(events, since);
 
@@ -122,6 +128,7 @@ public partial class SyncService : ObservableObject, IDisposable
             // reply (it may serialize entities differently) and flag the mismatch instead.
             if (response.ProtocolVersion != SyncProtocol.Version)
             {
+                DiagnosticLog.Error("sync", $"protocol mismatch: server={response.ProtocolVersion}, client={SyncProtocol.Version}; reply refused");
                 await SetStatusAfterSpin(SyncStatus.VersionMismatch, startedAt);
                 return;
             }
@@ -140,6 +147,7 @@ public partial class SyncService : ObservableObject, IDisposable
                 response = await RoundTripAsync(events, 0);
                 if (response.ProtocolVersion != SyncProtocol.Version)
                 {
+                    DiagnosticLog.Error("sync", $"protocol mismatch after reset re-upload: server={response.ProtocolVersion}, client={SyncProtocol.Version}; reply refused");
                     await SetStatusAfterSpin(SyncStatus.VersionMismatch, startedAt);
                     return;
                 }
@@ -156,15 +164,18 @@ public partial class SyncService : ObservableObject, IDisposable
                 SettingsService.Save();
                 _onSynced?.Invoke();
             });
+            DiagnosticLog.Info("sync", $"round-trip ok: applied {response.Changes?.Count ?? 0} change(s), server seq {response.ServerSeq}");
 
             await SetStatusAfterSpin(SyncStatus.Online, startedAt);
         }
-        catch (SyncAuthException)
+        catch (SyncAuthException ex)
         {
+            DiagnosticLog.Error("sync", $"sync key rejected (HTTP 401): {ex.Message}");
             await SetStatusAfterSpin(SyncStatus.Offline, startedAt, authFailed: true);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            DiagnosticLog.Error("sync", $"round-trip failed: {ErrorDetail(ex)}");
             await SetStatusAfterSpin(SyncStatus.Offline, startedAt);
         }
         finally
@@ -238,6 +249,15 @@ public partial class SyncService : ObservableObject, IDisposable
             if (remaining > 0) await Task.Delay(TimeSpan.FromMilliseconds(remaining));
         }
         SetStatus(status, authFailed);
+    }
+
+    /// <summary>Unwraps to the innermost exception so the log shows the real cause
+    /// (e.g. "connection refused") instead of an HttpRequestException wrapper.</summary>
+    private static string ErrorDetail(Exception ex)
+    {
+        var current = ex;
+        while (current.InnerException != null) current = current.InnerException;
+        return $"{current.GetType().Name}: {current.Message}";
     }
 
     /// <summary>Builds a request from an outbox snapshot and performs the HTTP round-trip

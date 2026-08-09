@@ -277,4 +277,50 @@ public sealed class SyncServiceTests : IDisposable
         Assert.Null(_db.Tasks.FindById("t-remote"));                         // reply refused
         Assert.Single(_db.Tracker.AllPending());                             // outbox still pending
     }
+
+    [Fact]
+    public async Task AuthFailure_LogsErrorLineToDiagnosticLog()
+    {
+        SettingsService.Current.LastSyncServerSeq = 3;
+        var handler = new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.Unauthorized));
+        var svc = new SyncService(_db, null, handler);
+
+        using var sink = new LogSink();
+        await svc.SyncOnceAsync();
+
+        Assert.Contains(sink.Lines, l => l.Level == "ERROR" && l.Module == "sync" && l.Message.Contains("401"));
+    }
+
+    [Fact]
+    public async Task SuccessfulRoundTrip_LogsStartAndSummary()
+    {
+        SettingsService.Current.LastSyncServerSeq = 0;
+        var handler = new StubHandler(_ => JsonResponse(HttpStatusCode.OK, new SyncResponse { ServerSeq = 0 }));
+        var svc = new SyncService(_db, null, handler);
+
+        using var sink = new LogSink();
+        await svc.SyncOnceAsync();
+
+        // The full flow is wired to DiagnosticLog: outbound snapshot + inbound summary.
+        Assert.Contains(sink.Lines, l => l.Level == "INFO" && l.Module == "sync"
+            && l.Message.StartsWith("round-trip start:"));
+        Assert.Contains(sink.Lines, l => l.Level == "INFO" && l.Module == "sync"
+            && l.Message.StartsWith("round-trip ok:"));
+    }
+
+    /// <summary>Captures every DiagnosticLog line written while active (test seam).</summary>
+    private sealed class LogSink : IDisposable
+    {
+        public List<(string Level, string Module, string Message)> Lines { get; } = new();
+
+        private readonly Action<string, string, string> _handler;
+
+        public LogSink()
+        {
+            _handler = (level, module, message) => Lines.Add((level, module, message));
+            DiagnosticLog.Written += _handler;
+        }
+
+        public void Dispose() => DiagnosticLog.Written -= _handler;
+    }
 }

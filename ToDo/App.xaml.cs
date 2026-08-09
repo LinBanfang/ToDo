@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
 using ToDo.Services;
+using ToDo.Sync;
 using ToDo.ViewModels;
 using ToDo.Views.Dialogs;
 
@@ -51,6 +52,12 @@ public partial class App : Application
         RestorePendingDatabase();
 
         Database = new DatabaseService(ResolveDbPath());
+
+        // The sync engine (in ToDo.Core) reports through the same app log as the rest of
+        // the app; the seam is a no-op until wired here (ADR-009).
+        SyncDiagnostics.Log = m => DiagnosticLog.Info("sync", m);
+        SyncDiagnostics.LogWarn = m => DiagnosticLog.Warn("sync", m);
+        SyncDiagnostics.LogError = m => DiagnosticLog.Error("sync", m);
 
         // Sync is created before the ViewModel so the settings SyncSection can subscribe
         // to its StatusChanged; the refresh hook + timer start once the VM exists.

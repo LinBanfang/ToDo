@@ -163,4 +163,41 @@ public sealed class SyncApplierTests : IDisposable
 
         Assert.Equal("a", _db.Tasks.FindById("t1").Title);  // untouched
     }
+
+    [Fact]
+    public void LocalNewerConflict_IsReportedViaSyncDiagnostics()
+    {
+        var captured = new List<string>();
+        SyncDiagnostics.Log = m => captured.Add(m);
+        try
+        {
+            _db.ApplySync(new[] { Change(new TaskItem { Id = "t1", ListId = "list-1", Title = "local", ModifiedAt = 200 }) });
+            _db.ApplySync(new[] { Change(new TaskItem { Id = "t1", ListId = "list-1", Title = "stale", ModifiedAt = 100 }) });
+        }
+        finally
+        {
+            SyncDiagnostics.Log = null;
+        }
+
+        Assert.Equal("local", _db.Tasks.FindById("t1").Title);   // local wins (LWW)
+        Assert.Contains(captured, m => m.Contains("conflict") && m.Contains("t1"));
+    }
+
+    [Fact]
+    public void ApplyFailure_IsReportedViaSyncDiagnostics()
+    {
+        var captured = new List<string>();
+        SyncDiagnostics.LogWarn = m => captured.Add(m);
+        try
+        {
+            // A Task change whose payload isn't valid JSON → deserialization throws.
+            _db.ApplySync(new[] { new SyncChange { Type = SyncEntityTypes.Task, Id = "t1", ModifiedAt = 100, Payload = "not-json" } });
+        }
+        finally
+        {
+            SyncDiagnostics.LogWarn = null;
+        }
+
+        Assert.Contains(captured, m => m.Contains("failed") && m.Contains("t1"));
+    }
 }

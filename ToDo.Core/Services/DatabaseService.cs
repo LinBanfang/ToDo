@@ -145,8 +145,17 @@ public class DatabaseService : IDisposable
         foreach (var change in changes.OrderBy(c => c.ModifiedAt))
         {
             try { ApplyOne(change); }
-            catch (Exception ex) { SyncDiagnostics.Info($"ApplySync {change.Type}:{change.Id} failed: {ex.Message}"); }
+            catch (Exception ex) { SyncDiagnostics.Warn($"ApplySync {change.Type}:{change.Id} failed: {ex.Message}"); }
         }
+    }
+
+    /// <summary>Local-newer LWW check: returns true (and logs the conflict) when the local
+    /// copy is newer than the incoming change, so the remote change is skipped.</summary>
+    private static bool IsLocalNewer(long? localModifiedAt, SyncChange change)
+    {
+        if (localModifiedAt == null || localModifiedAt <= change.ModifiedAt) return false;
+        SyncDiagnostics.Info($"ApplySync conflict: kept local {change.Type}:{change.Id} (local {localModifiedAt} > remote {change.ModifiedAt})");
+        return true;
     }
 
     private void ApplyOne(SyncChange change)
@@ -156,7 +165,11 @@ public class DatabaseService : IDisposable
             ApplyTombstone(change);
             return;
         }
-        if (string.IsNullOrEmpty(change.Payload)) return;
+        if (string.IsNullOrEmpty(change.Payload))
+        {
+            SyncDiagnostics.Info($"ApplySync skipped {change.Type}:{change.Id} (empty payload)");
+            return;
+        }
 
         switch (change.Type)
         {
@@ -164,7 +177,7 @@ public class DatabaseService : IDisposable
             {
                 var incoming = (TaskItem)SyncEntitySerializer.FromChange(change)!;
                 var local = _rawTasks.FindById(incoming.Id);
-                if (local != null && local.ModifiedAt > incoming.ModifiedAt) return;
+                if (IsLocalNewer(local?.ModifiedAt, change)) return;
                 if (local != null) { incoming.IsMyDay = local.IsMyDay; incoming.MyDayOrder = local.MyDayOrder; }
                 _rawTasks.Upsert(incoming);
                 break;
@@ -173,7 +186,7 @@ public class DatabaseService : IDisposable
             {
                 var incoming = (TaskList)SyncEntitySerializer.FromChange(change)!;
                 var local = _rawLists.FindById(incoming.Id);
-                if (local != null && local.ModifiedAt > incoming.ModifiedAt) return;
+                if (IsLocalNewer(local?.ModifiedAt, change)) return;
                 _rawLists.Upsert(incoming);
                 break;
             }
@@ -181,7 +194,7 @@ public class DatabaseService : IDisposable
             {
                 var incoming = (TaskGroup)SyncEntitySerializer.FromChange(change)!;
                 var local = _rawGroups.FindById(incoming.Id);
-                if (local != null && local.ModifiedAt > incoming.ModifiedAt) return;
+                if (IsLocalNewer(local?.ModifiedAt, change)) return;
                 _rawGroups.Upsert(incoming);
                 break;
             }
@@ -189,7 +202,7 @@ public class DatabaseService : IDisposable
             {
                 var incoming = (ListGroup)SyncEntitySerializer.FromChange(change)!;
                 var local = _rawListGroups.FindById(incoming.Id);
-                if (local != null && local.ModifiedAt > incoming.ModifiedAt) return;
+                if (IsLocalNewer(local?.ModifiedAt, change)) return;
                 _rawListGroups.Upsert(incoming);
                 break;
             }
@@ -197,7 +210,7 @@ public class DatabaseService : IDisposable
             {
                 var incoming = (Tag)SyncEntitySerializer.FromChange(change)!;
                 var local = _rawTags.FindById(incoming.Id);
-                if (local != null && local.ModifiedAt > incoming.ModifiedAt) return;
+                if (IsLocalNewer(local?.ModifiedAt, change)) return;
                 _rawTags.Upsert(incoming);
                 break;
             }
@@ -215,12 +228,12 @@ public class DatabaseService : IDisposable
         {
             case SyncEntityTypes.Task:
                 var task = _rawTasks.FindById(change.Id);
-                if (task != null && task.ModifiedAt > change.ModifiedAt) return;
+                if (IsLocalNewer(task?.ModifiedAt, change)) return;
                 _rawTasks.Delete(change.Id);
                 break;
             case SyncEntityTypes.List:
                 var list = _rawLists.FindById(change.Id);
-                if (list != null && list.ModifiedAt > change.ModifiedAt) return;
+                if (IsLocalNewer(list?.ModifiedAt, change)) return;
                 foreach (var t in _rawTasks.Find(t => t.ListId == change.Id))
                 {
                     t.ListId = "list-tasks";   // orphaned tasks → inbox, like the app's DeleteList
@@ -232,7 +245,7 @@ public class DatabaseService : IDisposable
                 break;
             case SyncEntityTypes.Group:
                 var group = _rawGroups.FindById(change.Id);
-                if (group != null && group.ModifiedAt > change.ModifiedAt) return;
+                if (IsLocalNewer(group?.ModifiedAt, change)) return;
                 foreach (var t in _rawTasks.Find(t => t.GroupId == change.Id))
                 {
                     t.GroupId = null;
@@ -242,7 +255,7 @@ public class DatabaseService : IDisposable
                 break;
             case SyncEntityTypes.ListGroup:
                 var listGroup = _rawListGroups.FindById(change.Id);
-                if (listGroup != null && listGroup.ModifiedAt > change.ModifiedAt) return;
+                if (IsLocalNewer(listGroup?.ModifiedAt, change)) return;
                 foreach (var l in _rawLists.Find(l => l.GroupId == change.Id))
                 {
                     l.GroupId = null;
@@ -252,7 +265,7 @@ public class DatabaseService : IDisposable
                 break;
             case SyncEntityTypes.Tag:
                 var tag = _rawTags.FindById(change.Id);
-                if (tag != null && tag.ModifiedAt > change.ModifiedAt) return;
+                if (IsLocalNewer(tag?.ModifiedAt, change)) return;
                 foreach (var t in _rawTasks.FindAll())
                 {
                     if (t.TagIds.Remove(change.Id)) _rawTasks.Update(t);
