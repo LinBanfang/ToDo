@@ -2,18 +2,12 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:services="clr-namespace:ToDo.Services;assembly=ToDo.Core"
-        Title="{x:Static services:Loc.ListTheme}" Height="656" Width="380"
+        Title="{x:Static services:Loc.ListTheme}" Height="540" Width="600"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         Background="{DynamicResource CardBackgroundBrush}"
         FontFamily="{StaticResource FluentFont}">
     <Grid Margin="20">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -21,7 +15,7 @@
 
         <!-- Live preview: the chosen background under translucent mock task rows, with a
              header strip mirroring the real title bar (its text color follows the choice) -->
-        <Border x:Name="PreviewBox" Grid.Row="0" Height="172" CornerRadius="8" ClipToBounds="True">
+        <Border x:Name="PreviewBox" Grid.Row="0" Height="160" CornerRadius="8" ClipToBounds="True">
             <Grid>
                 <!-- Image dimming mask, mirroring the full-bleed real background -->
                 <Border x:Name="PreviewMask" Background="{DynamicResource ListBackgroundMaskBrush}" Visibility="Collapsed"/>
@@ -30,64 +24,70 @@
                         <TextBlock x:Name="PreviewTitle" Margin="20,0" VerticalAlignment="Center" FontSize="28"
                                    FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                     </Border>
-                    <Border x:Name="PreviewCard1" Height="32" Margin="20,6,20,4" CornerRadius="8"
+                    <Border x:Name="PreviewCard1" Height="30" Margin="20,6,20,3" CornerRadius="8"
                             Background="{DynamicResource TaskCardBrush}"/>
-                    <Border x:Name="PreviewCard2" Height="32" Margin="20,4" CornerRadius="8"
+                    <Border x:Name="PreviewCard2" Height="30" Margin="20,3" CornerRadius="8"
                             Background="{DynamicResource TaskCardBrush}"/>
-                    <Border x:Name="PreviewCard3" Height="32" Margin="20,4" CornerRadius="8"
+                    <Border x:Name="PreviewCard3" Height="30" Margin="20,3" CornerRadius="8"
                             Background="{DynamicResource TaskCardHoverBrush}"/>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- No background -->
-        <Button Grid.Row="1" Content="{x:Static services:Loc.NoBackground}" Style="{StaticResource FluentSubtleButton}"
-                FontSize="13" HorizontalAlignment="Left" Margin="0,12,0,0" Padding="8,4"
-                Click="NoBackground_Click"/>
+        <!-- Background type (left) / display settings (right) -->
+        <Grid Grid.Row="1" Margin="0,14,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="230"/>
+                <ColumnDefinition Width="1"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-        <!-- Solid color -->
-        <Border Grid.Row="2" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
-                Margin="0,12,0,0" Padding="0,10,0,0">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="{x:Static services:Loc.SolidColor}" FontSize="13"
-                           Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                <Button x:Name="ColorSwatchBtn" Grid.Column="1" Width="28" Height="28" HorizontalAlignment="Right"
-                        Background="{DynamicResource TextSecondaryBrush}" BorderThickness="0" Cursor="Hand"
-                        ToolTip="{x:Static services:Loc.MoreColors}" Click="ColorSwatch_Click"/>
-            </Grid>
-        </Border>
+            <!-- ═══ 背景类型 ═══ -->
+            <StackPanel Grid.Column="0" Margin="0,0,24,0">
+                <!-- No background -->
+                <Button Content="{x:Static services:Loc.NoBackground}" Style="{StaticResource FluentSubtleButton}"
+                        FontSize="13" HorizontalAlignment="Left" Padding="8,4"
+                        Click="NoBackground_Click"/>
 
-        <!-- Background image -->
-        <Border Grid.Row="3" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
-                Margin="0,12,0,0" Padding="0,10,0,0">
-            <StackPanel>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="{x:Static services:Loc.ChooseImage}" FontSize="13"
-                               Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <Button Content="{x:Static services:Loc.ChooseImage}" Style="{StaticResource FluentButton}"
-                                FontSize="13" Padding="12,5" Click="ChooseImage_Click"/>
-                        <Button Content="{x:Static services:Loc.RemoveImage}" Style="{StaticResource FluentSubtleButton}"
-                                FontSize="13" Padding="8,5" Margin="8,0,0,0" Click="RemoveImage_Click"/>
+                <!-- Solid color -->
+                <Border BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
+                        Margin="0,10,0,0" Padding="0,10,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{x:Static services:Loc.SolidColor}" FontSize="13"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                        <Button x:Name="ColorSwatchBtn" Grid.Column="1" Width="28" Height="28" HorizontalAlignment="Right"
+                                Background="{DynamicResource TextSecondaryBrush}" BorderThickness="0" Cursor="Hand"
+                                ToolTip="{x:Static services:Loc.MoreColors}" Click="ColorSwatch_Click"/>
+                    </Grid>
+                </Border>
+
+                <!-- Background image -->
+                <Border BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
+                        Margin="0,10,0,0" Padding="0,10,0,0">
+                    <StackPanel>
+                        <TextBlock Text="{x:Static services:Loc.ChooseImage}" FontSize="13"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <Button Content="{x:Static services:Loc.ChooseImage}" Style="{StaticResource FluentButton}"
+                                    FontSize="13" Padding="12,5" Click="ChooseImage_Click"/>
+                            <Button Content="{x:Static services:Loc.RemoveImage}" Style="{StaticResource FluentSubtleButton}"
+                                    FontSize="13" Padding="8,5" Margin="8,0,0,0" Click="RemoveImage_Click"/>
+                        </StackPanel>
+                        <TextBlock Text="{x:Static services:Loc.ListThemeImageLocalHint}" FontSize="11"
+                                   Foreground="{DynamicResource TextDisabledBrush}" Margin="0,8,0,0" TextWrapping="Wrap"/>
                     </StackPanel>
-                </Grid>
-                <TextBlock Text="{x:Static services:Loc.ListThemeImageLocalHint}" FontSize="11"
-                           Foreground="{DynamicResource TextDisabledBrush}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                </Border>
             </StackPanel>
-        </Border>
 
-        <!-- Background strength (local-only, ADR-014) -->
-        <Border Grid.Row="4" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
-                Margin="0,12,0,0" Padding="0,10,0,0">
-            <StackPanel>
+            <Border Grid.Column="1" Background="{DynamicResource DividerBrush}"/>
+
+            <!-- ═══ 显示设置（本地、不同步）═══ -->
+            <StackPanel Grid.Column="2" Margin="24,0,0,0">
+                <!-- Background strength -->
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -106,60 +106,60 @@
                 </Grid>
                 <TextBlock Text="{x:Static services:Loc.BackgroundStrengthLocalHint}" FontSize="11"
                            Foreground="{DynamicResource TextDisabledBrush}" Margin="0,8,0,0" TextWrapping="Wrap"/>
-            </StackPanel>
-        </Border>
 
-        <!-- Card opacity (local-only per list, ADR-014) -->
-        <Border Grid.Row="5" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
-                Margin="0,12,0,0" Padding="0,10,0,0">
-            <StackPanel>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="{x:Static services:Loc.CardOpacity}" FontSize="13"
-                               Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                    <Slider x:Name="CardOpacitySlider" Grid.Column="1" Minimum="30" Maximum="100"
-                            IsSnapToTickEnabled="True" TickFrequency="5"
-                            VerticalAlignment="Center" Margin="12,0,8,0"
-                            ValueChanged="CardOpacitySlider_ValueChanged"/>
-                    <TextBlock x:Name="CardOpacityValue" Grid.Column="2" Width="38" TextAlignment="Right"
-                               FontSize="13" FontWeight="SemiBold"
-                               Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                </Grid>
-                <TextBlock Text="{x:Static services:Loc.CardOpacityLocalHint}" FontSize="11"
-                           Foreground="{DynamicResource TextDisabledBrush}" Margin="0,8,0,0" TextWrapping="Wrap"/>
-            </StackPanel>
-        </Border>
+                <!-- Card opacity -->
+                <Border BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
+                        Margin="0,12,0,0" Padding="0,12,0,0">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{x:Static services:Loc.CardOpacity}" FontSize="13"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                            <Slider x:Name="CardOpacitySlider" Grid.Column="1" Minimum="30" Maximum="100"
+                                    IsSnapToTickEnabled="True" TickFrequency="5"
+                                    VerticalAlignment="Center" Margin="12,0,8,0"
+                                    ValueChanged="CardOpacitySlider_ValueChanged"/>
+                            <TextBlock x:Name="CardOpacityValue" Grid.Column="2" Width="38" TextAlignment="Right"
+                                       FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                        </Grid>
+                        <TextBlock Text="{x:Static services:Loc.CardOpacityLocalHint}" FontSize="11"
+                                   Foreground="{DynamicResource TextDisabledBrush}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
 
-        <!-- Title text color (local-only per list, ADR-014) -->
-        <Border Grid.Row="6" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
-                Margin="0,12,0,0" Padding="0,10,0,0">
-            <StackPanel>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="{x:Static services:Loc.TitleTextColor}" FontSize="13"
-                               Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                    <ComboBox x:Name="TitleModeCombo" Grid.Column="1" Style="{StaticResource FluentComboBox}"
-                              Width="150" FontSize="13" HorizontalAlignment="Right"
-                              SelectionChanged="TitleModeCombo_SelectionChanged">
-                        <ComboBoxItem Content="{x:Static services:Loc.TitleTextAuto}"/>
-                        <ComboBoxItem Content="{x:Static services:Loc.TitleTextDark}"/>
-                        <ComboBoxItem Content="{x:Static services:Loc.TitleTextLight}"/>
-                    </ComboBox>
-                </Grid>
-                <TextBlock x:Name="TitleModeHint" FontSize="11"
-                           Foreground="{DynamicResource TextDisabledBrush}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                <!-- Title text color -->
+                <Border BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
+                        Margin="0,12,0,0" Padding="0,12,0,0">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{x:Static services:Loc.TitleTextColor}" FontSize="13"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="TitleModeCombo" Grid.Column="1" Style="{StaticResource FluentComboBox}"
+                                      Width="150" FontSize="13" HorizontalAlignment="Right"
+                                      SelectionChanged="TitleModeCombo_SelectionChanged">
+                                <ComboBoxItem Content="{x:Static services:Loc.TitleTextAuto}"/>
+                                <ComboBoxItem Content="{x:Static services:Loc.TitleTextDark}"/>
+                                <ComboBoxItem Content="{x:Static services:Loc.TitleTextLight}"/>
+                            </ComboBox>
+                        </Grid>
+                        <TextBlock x:Name="TitleModeHint" FontSize="11"
+                                   Foreground="{DynamicResource TextDisabledBrush}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
             </StackPanel>
-        </Border>
+        </Grid>
 
         <!-- Footer buttons -->
-        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
             <Button Content="{x:Static services:Loc.Cancel}" Style="{StaticResource FluentButton}"
                     FontSize="13" Padding="16,6" IsCancel="True" Click="Cancel_Click"/>
             <Button Content="{x:Static services:Loc.OK}" Style="{StaticResource FluentAccentButton}"
