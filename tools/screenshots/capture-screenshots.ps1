@@ -1,14 +1,16 @@
 ﻿# capture-screenshots.ps1
-# Regenerate the README feature screenshots (work-list / my-day / sticky-note / settings).
+# Regenerate the README feature screenshots (work-list / my-day / sticky-note /
+# list-theme / settings).
 #
 # What it does:
 #   1. Builds ToDo + ToDo.Demo (skip with -SkipBuild).
 #   2. Seeds a throwaway demo DB from ToDo.Demo (temporary file, never your real one).
 #   3. Launches the app pointed at that DB via a temporary settings.json.
-#   4. Drives the UI with UIAutomation: clicks sidebar 工作 / 我的一天, opens the
-#      sticky note via the footer button (captures the separate sticky window, then
-#      clicks its back-to-main button), opens the settings page and navigates to the
-#      行为 section (shows the task-row display toggles) — one shot each.
+#   4. Drives the UI with UIAutomation: clicks sidebar 工作 / 我的一天 / 学习 (the
+#      themed list), opens the sticky note via the footer button (captures the
+#      separate sticky window, then clicks its back-to-main button), opens the
+#      settings page and navigates to the 行为 section (shows the task-row display
+#      toggles) — one shot each.
 #   5. Captures with DwmGetWindowAttribute(DWMWA_EXTENDED_FRAME_BOUNDS) so the
 #      Windows window shadow (left/right/bottom ~7px, top 0) is NOT included and
 #      the borders stay symmetric — see docs/screenshots.md.
@@ -161,7 +163,15 @@ function Save-WindowShot($hwnd, [string]$path) {
 # edge colors must match, so the four borders render symmetrically.
 # $strip: how many outer pixels to scan for shadow (12 = full DWM shadow ~7px; the
 # small sticky note is content-dense, so 3px still catches a real shadow at the edge).
-function Assert-SymmetricEdges([string]$path, [int]$strip = 12) {
+function Assert-SymmetricEdges([string]$path, [int]$strip = 12, [switch]$SkipEdgeCheck) {
+    if ($SkipEdgeCheck) {
+        # Themed list shot: the background image fills the content column out to the
+        # window's right edge, so right != left edge color and the image may legitimately
+        # contain dark pixels in the strip. The DWM shadow is already excluded by
+        # DWMWA_EXTENDED_FRAME_BOUNDS, so nothing reliable to assert here — skip.
+        $log.AppendLine("  edge check: skipped (themed background fills the right edge)") | Out-Null
+        return
+    }
     $bmp = New-Object System.Drawing.Bitmap($path)
     $w = $bmp.Width; $h = $bmp.Height
     $midX = [int]($w / 2); $midY = [int]($h / 2)
@@ -291,6 +301,17 @@ try {
     $p = Join-Path $OutputDir 'my-day.png'
     Save-WindowShot $hwnd $p | Out-Null
     Assert-SymmetricEdges $p
+
+    # Themed list shot: 学习 has the demo background image (seeded by ToDo.Demo from
+    # Assets/demo-theme-bg.jpg). The theme fills the content column to the window's right
+    # edge, so the uniform-edge invariant doesn't apply — skip that self-check here.
+    $study = Find-SidebarText $root '学习'
+    if (-not $study) { throw 'sidebar "学习" not found' }
+    Click-Center $study | Out-Null
+    Start-Sleep -Seconds 2
+    $p = Join-Path $OutputDir 'list-theme.png'
+    Save-WindowShot $hwnd $p | Out-Null
+    Assert-SymmetricEdges $p -SkipEdgeCheck
 
     $openCond = New-Object System.Windows.Automation.PropertyCondition(
         [System.Windows.Automation.AutomationElement]::AutomationIdProperty, 'OpenSettings')

@@ -1,10 +1,12 @@
 # README 功能截图：生成与验证
 
-README 顶部四张功能截图（[work-list.png](../screenshots/work-list.png) / [my-day.png](../screenshots/my-day.png) / [sticky-note.png](../screenshots/sticky-note.png) / [settings.png](../screenshots/settings.png)）由**演示数据**驱动生成，保证内容可复现、可重新截取。
+README 顶部五张功能截图（[work-list.png](../screenshots/work-list.png) / [list-theme.png](../screenshots/list-theme.png) / [my-day.png](../screenshots/my-day.png) / [sticky-note.png](../screenshots/sticky-note.png) / [settings.png](../screenshots/settings.png)）由**演示数据**驱动生成，保证内容可复现、可重新截取。
 
 ## 数据来源
 
 截图不来自真实数据，而是先由 [ToDo.Demo](../ToDo.Demo/) 生成一份演示数据库（工作 / 学习 / 生活 / 健身列表、分组、彩色标签、步骤、截止日期、My Day 任务），应用启动时指向这份临时数据库，因此每次截图内容一致，也不会触碰用户的真实 `%LOCALAPPDATA%\ToDo\todo.db`。
+
+其中「学习」列表自带**主题背景图**（`ToDo.Demo/Assets/demo-theme-bg.jpg`，随 Demo 程序集复制到输出目录，种子时写入本地未同步集合），用于展示列表主题效果；图片仅存本机、不同步，与其他真实列表主题一致。
 
 ## 如何重新生成
 
@@ -26,8 +28,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/screenshots/capture-sc
 1. `dotnet build ToDo.slnx`（可 `-SkipBuild` 跳过）。
 2. 运行 ToDo.Demo 生成临时演示 DB（`%TEMP%\todo-screenshot-<Theme>.db`）。
 3. 备份真实 `settings.json`，写入临时设置（指向演示 DB、指定主题、关闭更新 / 同步 / 提醒）——**结束必恢复**，真实数据全程不被修改。
-4. 启动应用，UIAutomation 驱动界面：点击侧边栏「工作」→ 截图；点击 footer 便笺按钮 → 便笺弹出，按标题（迷你便笺）定位独立置顶窗口 → 截图；便笺「返回主界面」恢复主窗 → 点击「我的一天」→ 截图；打开设置页 → 点击左侧导航「行为」滚动到行为区块（展示任务行显示开关）→ 截图。
-5. 每张截图自动做边缘自检，失败即抛错并退出（退出码 1）。便笺是独立窗口（无标题栏、无投影），边缘采样条带用 3px（而非主窗的 12px），以免把贴边的任务文字误判为阴影。
+4. 启动应用，UIAutomation 驱动界面：点击侧边栏「工作」→ 截图；点击 footer 便笺按钮 → 便笺弹出，按标题（迷你便笺）定位独立置顶窗口 → 截图；便笺「返回主界面」恢复主窗 → 点击「我的一天」→ 截图；点击「学习」（自带主题背景图）→ 截 `list-theme.png`；打开设置页 → 点击左侧导航「行为」滚动到行为区块（展示任务行显示开关）→ 截图。
+5. 每张截图自动做边缘自检，失败即抛错并退出（退出码 1）。便笺是独立窗口（无标题栏、无投影），边缘采样条带用 3px（而非主窗的 12px），以免把贴边的任务文字误判为阴影。主题截图 `list-theme.png` 的背景图铺满内容区直抵右缘，四边不同色、条带内也可能含深色像素，该项检查对**它跳过**（窗口阴影已由扩展帧边界排除，无需再校验）。
 
 ## 两个关键细节（踩过的坑）
 
@@ -58,3 +60,5 @@ Win11 窗口默认圆角，圆角外是透明区域——即使去掉阴影，�
 | 四边边缘 | `#F3F2F1`（与标题栏一致） |
 
 深色主题对应：标题栏 / 内容 `#202020`，侧边栏 `#1B1B1B`，文字 `#FFFFFF`。
+
+上表适用于无列表主题的截图；`list-theme.png` 的右缘是背景图本身（颜色取决于图片），左缘仍是侧边栏色，不做统一色校验。

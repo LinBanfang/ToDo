@@ -73,6 +73,17 @@ db.Lists.Insert(study);
 db.Lists.Insert(life);
 db.Lists.Insert(fitness);
 
+// ─── 列表主题演示：学习 使用内置背景图片（ADR-014）────────────
+// 图片字节仅存本机、不同步；随 Demo 程序集复制到输出目录。标题文字用
+// 自动模式——图片顶部是明亮天空带，推荐深色标题，截图清晰可读。
+var themeBg = Path.Combine(AppContext.BaseDirectory, "Assets", "demo-theme-bg.jpg");
+if (File.Exists(themeBg))
+{
+    study.BackgroundType = ListBackgroundType.Image;
+    db.Lists.Update(study);
+    db.SetListBackground(study.Id, File.ReadAllBytes(themeBg), "demo-theme-bg.jpg");
+}
+
 // ─── Task groups inside 工作 ─────────────────────────────
 var grpDev  = new TaskGroup { Id = "grp-dev",  ListId = work.Id, Name = "开发任务",   Order = 0 };
 var grpMeet = new TaskGroup { Id = "grp-meet", ListId = work.Id, Name = "会议与沟通", Order = 1 };

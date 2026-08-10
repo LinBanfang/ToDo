@@ -13,4 +13,11 @@
     <ProjectReference Include="..\ToDo.Core\ToDo.Core.csproj" />
   </ItemGroup>
 
+  <!-- Demo theme-background image, copied next to the demo DLL so seeding can read its
+       bytes at a stable path (see Program.cs: SetListBackground). -->
+  <ItemGroup>
+    <None Include="Assets\demo-theme-bg.jpg" CopyToOutputDirectory="PreserveNewest"
+          Condition="Exists('Assets\demo-theme-bg.jpg')" />
+  </ItemGroup>
+
 </Project>

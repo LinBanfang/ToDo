@@ -8,6 +8,10 @@ Fluent Design 风格的待办事项桌面应用，基于 WPF (.NET 9) 开发，�
 
 ![工作列表](screenshots/work-list.png)
 
+「列表主题」：背景图片铺满任务区（含标题栏），半透明卡片透出主题，标题文字按背景亮度自动调整深浅
+
+![列表主题](screenshots/list-theme.png)
+
 「我的一天」：今日待办 + 今天到期的任务汇总
 
 ![我的一天](screenshots/my-day.png)
