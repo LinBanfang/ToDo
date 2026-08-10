@@ -2,6 +2,11 @@
 
 本项目遵循[语义化版本](https://semver.org/lang/zh-CN/)。格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [Unreleased]
+
+### 优化
+- **README 截图**：改为透明画布 + 合成软阴影（环堆栈线性衰减，`$blur` 真实控制阴影宽度），阴影直接融进宿主页面背景，浅色 / 深色主题都自然；五张截图全部重新生成（见 [docs/screenshots.md](docs/screenshots.md)）
+
 ## [v1.3.0] - 2026-08-10
 
 ### 新增

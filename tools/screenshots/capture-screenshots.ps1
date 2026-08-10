@@ -17,9 +17,11 @@
 #   6. Composites each shot on a transparent canvas (Margin px, default 12) with a
 #      synthetic soft drop shadow drawn behind the rounded window, so it reads as the
 #      app floating on whatever background hosts the PNG (GitHub light/dark both work).
-#   7. Self-checks every screenshot: the outer strips must be fully transparent (no
-#      shadow overflow past the margin) and free of opaque dark pixels (the small
-#      sticky note uses a 3px strip — content-dense, an overflow would still show).
+#   7. Self-checks every screenshot: each edge's outermost pixels must be fully
+#      transparent (the synthetic shadow must not overflow the margin) and the
+#      shadow's reach into the strip must be symmetric L/R and T/B (±2px AA
+#      tolerance) and non-zero. The small sticky note uses a 3px strip — content-
+#      dense, an overflow would still show.
 #
 # Your real %LOCALAPPDATA%\ToDo\settings.json is backed up first and restored in
 # a finally block; your real DB is never opened. Safe to run at any time.

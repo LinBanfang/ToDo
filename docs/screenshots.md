@@ -21,6 +21,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/screenshots/capture-sc
 
 # 已构建过，跳过编译
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/screenshots/capture-screenshots.ps1 -SkipBuild
+
+# 留白/透明画布 + 合成阴影为默认（-Margin 12）；设 -Margin 0 截原始窗口（无留白阴影，窗口铺满 PNG 边缘）
 ```
 
 脚本流程：
