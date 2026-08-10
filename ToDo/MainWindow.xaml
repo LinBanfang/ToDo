@@ -675,13 +675,14 @@
                       ResizeBehavior="PreviousAndNext" Cursor="SizeWE" ShowsPreview="True"/>
 
         <!-- Per-list background theme (ADR-014). Two layers spanning the splitter + content
-             columns (header + task area + footer), so the theme reaches the sidebar's right
-             edge with no window-color strip in between. When there is no theme
-             ListBackgroundBrush is null → transparent → the splitter's AppBackgroundBrush and
-             the window background show through. Not hit-testable so the splitter stays
-             draggable; hidden in settings mode like the content column. The header title stays
-             readable because its text color adapts to the background (HeaderTitleLight). -->
-        <Grid Grid.Column="1" Grid.ColumnSpan="2"
+             + detail-splitter columns (header + task area + footer), so the theme reaches the
+             sidebar's right edge and the detail pane's left edge with no color strip in
+             between. When there is no theme ListBackgroundBrush is null → transparent → the
+             splitters' AppBackgroundBrush and the window background show through. Not
+             hit-testable so the splitters stay draggable; hidden in settings mode like the
+             content column. The header title stays readable because its text color adapts to
+             the background (HeaderTitleLight). -->
+        <Grid Grid.Column="1" Grid.ColumnSpan="3"
               Visibility="{Binding IsSettingsMode, Converter={StaticResource InverseBoolToVis}}"
               IsHitTestVisible="False">
             <Border Background="{Binding ListBackgroundBrush}"/>
@@ -1083,9 +1084,11 @@
         <!-- ═══════════════ TASK DETAIL PANE (Column 4) ═══════════════ -->
         <!-- Detail pane splitter: drag to resize; the width is persisted via
              SettingsService.DetailPaneWidth. Shown only while the pane is open (toggled in
-             UpdateDetailPane). Painted with the pane's background so there's no transition band. -->
+             UpdateDetailPane). Transparent so the themed background layer (which spans this
+             column) shows through; when there's no theme the window's AppBackgroundBrush
+             reads as part of the content area. -->
         <Border x:Name="DetailSplitter" Grid.Column="3" Width="5" Cursor="SizeWE"
-                Background="{DynamicResource CardBackgroundBrush}" Visibility="Collapsed"
+                Background="Transparent" Visibility="Collapsed"
                 MouseLeftButtonDown="DetailSplitter_MouseDown"
                 MouseMove="DetailSplitter_MouseMove"
                 MouseLeftButtonUp="DetailSplitter_MouseUp"/>
