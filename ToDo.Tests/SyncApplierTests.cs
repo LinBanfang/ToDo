@@ -228,25 +228,30 @@ public sealed class SyncApplierTests : IDisposable
     }
 
     [Fact]
-    public void ApplyListUpsert_NeverWipesLocalOpacity()
+    public void ApplyListUpsert_NeverWipesLocalThemeSettings()
     {
-        _db.SetListBackgroundOpacity("list-1", 60);
+        _db.SetListThemeSettings("list-1", 60, 50);
         _db.ApplySync(new[] { Change(new TaskList { Id = "list-1", Name = "Work", Type = ListType.Custom, ModifiedAt = 200 }) });
 
-        // The opacity setting lives in its own untracked collection, untouched by the upsert.
+        // The display settings (背景强弱 + 卡片不透明度) live in their own untracked
+        // collection, untouched by the whole-entity upsert.
         Assert.Equal("Work", _db.Lists.FindById("list-1").Name);
-        Assert.Equal(60, _db.GetListBackgroundOpacity("list-1"));
+        var (background, card) = _db.GetListThemeSettings("list-1");
+        Assert.Equal(60, background);
+        Assert.Equal(50, card);
     }
 
     [Fact]
-    public void ListTombstone_DeletesLocalOpacitySetting()
+    public void ListTombstone_DeletesLocalThemeSetting()
     {
         _db.ApplySync(new[] { Change(new TaskList { Id = "list-1", Name = "Work", Type = ListType.Custom, ModifiedAt = 100 }) });
-        _db.SetListBackgroundOpacity("list-1", 60);
+        _db.SetListThemeSettings("list-1", 60, 50);
 
         _db.ApplySync(new[] { Tombstone(SyncEntityTypes.List, "list-1", 200) });
 
         Assert.Null(_db.Lists.FindById("list-1"));
-        Assert.Equal(100, _db.GetListBackgroundOpacity("list-1"));   // no orphaned setting row
+        var (background, card) = _db.GetListThemeSettings("list-1");
+        Assert.Equal(100, background);   // no orphaned setting row
+        Assert.Equal(65, card);
     }
 }

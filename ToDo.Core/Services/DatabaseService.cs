@@ -258,7 +258,7 @@ public class DatabaseService : IDisposable
                 _rawGroups.DeleteMany(g => g.ListId == change.Id);
                 _rawLists.Delete(change.Id);
                 DeleteListBackground(change.Id);   // local background image dies with the list
-                DeleteListBackgroundSetting(change.Id);   // ...and so does its opacity setting
+                DeleteListBackgroundSetting(change.Id);   // ...and so do its display settings
                 break;
             case SyncEntityTypes.Group:
                 var group = _rawGroups.FindById(change.Id);
@@ -348,22 +348,33 @@ public class DatabaseService : IDisposable
     /// (the app's DeleteList and ApplySync's list tombstone) so no orphan bytes remain.</summary>
     public void DeleteListBackground(string listId) => _rawListBackgrounds.Delete(listId);
 
-    // ─── List background opacity (local-only per-list preference, ADR-014) ──
+    // ─── List theme display settings (background strength + card opacity, local-only per list, ADR-014) ──
 
-    /// <summary>A list's background opacity (20..100), or the default 100 when unset.</summary>
-    public int GetListBackgroundOpacity(string listId) =>
-        _rawListBackgroundSettings.FindById(listId)?.OpacityPercent ?? 100;
+    /// <summary>A list's display settings (background strength 20..100, card opacity 30..100),
+    /// or their defaults when the list has no row. Both knobs share one row so a whole-entity
+    /// list upsert from sync can never wipe one while updating the other.</summary>
+    public (int Background, int Card) GetListThemeSettings(string listId)
+    {
+        var row = _rawListBackgroundSettings.FindById(listId);
+        if (row == null) return (100, 65);
+        return (row.OpacityPercent, row.CardOpacityPercent > 0 ? row.CardOpacityPercent : 65);
+    }
 
-    /// <summary>Stores a list's background opacity. Upserts by _id = listId so each list
-    /// keeps at most one row.</summary>
-    public void SetListBackgroundOpacity(string listId, int percent) =>
+    /// <summary>Stores both display settings in one row (Upsert by _id = listId). When both
+    /// are at their defaults the row is removed, so the collection only holds non-defaults
+    /// and a missing row reads back as the defaults.</summary>
+    public void SetListThemeSettings(string listId, int background, int card)
+    {
+        if (background == 100 && card == 65) { _rawListBackgroundSettings.Delete(listId); return; }
         _rawListBackgroundSettings.Upsert(new ListBackgroundSetting
         {
             Id = listId,
-            OpacityPercent = percent,
+            OpacityPercent = background,
+            CardOpacityPercent = card,
         });
+    }
 
-    /// <summary>Removes a list's opacity setting (back to the default). Called when a list
+    /// <summary>Removes a list's display settings (back to the defaults). Called when a list
     /// is removed (the app's DeleteList and ApplySync's list tombstone) so no orphan rows
     /// remain.</summary>
     public void DeleteListBackgroundSetting(string listId) => _rawListBackgroundSettings.Delete(listId);

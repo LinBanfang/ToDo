@@ -27,6 +27,8 @@ public partial class ListThemeDialog : Window
     private bool _dirty;
     private int _opacity;
     private bool _opacityDirty;
+    private int _cardOpacity;
+    private bool _cardOpacityDirty;
 
     private string[] _bgColors = new[]
     {
@@ -49,16 +51,25 @@ public partial class ListThemeDialog : Window
             _bytes = Db.GetListBackgroundData(list.Id);
             _fileName = Db.GetListBackgroundFileName(list.Id);
         }
-        _opacity = Math.Clamp(Db.GetListBackgroundOpacity(list.Id), 20, 100);
+        var settings = Db.GetListThemeSettings(list.Id);
+        _opacity = Math.Clamp(settings.Background, 20, 100);
+        _cardOpacity = Math.Clamp(settings.Card, 30, 100);
 
         PreviewTitle.Text = list.DisplayName;
-        OpacitySlider.Value = _opacity;   // fires ValueChanged → label + live preview
+        OpacitySlider.Value = _opacity;         // fires ValueChanged → label + live preview
         OpacityValue.Text = _opacity + "%";
+        CardOpacitySlider.Value = _cardOpacity; // ...and the card slider previews the same way
+        CardOpacityValue.Text = _cardOpacity + "%";
         UpdatePreview();
     }
 
     private void UpdatePreview()
     {
+        // Fires during InitializeComponent too: setting each slider's Minimum coerces its
+        // default Value before the later-named label / preview elements exist — guard it.
+        if (OpacitySlider == null || OpacityValue == null
+            || CardOpacitySlider == null || CardOpacityValue == null) return;
+
         var windowBg = (Brush)Application.Current.FindResource("AppBackgroundBrush");
         var opacity = OpacitySlider.Value / 100.0;
 
@@ -81,6 +92,20 @@ public partial class ListThemeDialog : Window
             ? (Brush)new SolidColorBrush(ColorParser.ParseColor(_color))
             : (Brush)Application.Current.FindResource("TextSecondaryBrush");
         ColorSwatchBtn.Background = swatchColor;
+
+        // Mock task rows: reflect THIS list's card opacity, not the active list's. Take the
+        // current theme's base RGB from the live resource and swap in the dialog's alpha.
+        var card = (int)Math.Round(CardOpacitySlider.Value);
+        var baseCard = ((SolidColorBrush)Application.Current.FindResource("TaskCardBrush")).Color;
+        PreviewCard1.Background = new SolidColorBrush(WithAlpha(baseCard, card));
+        PreviewCard2.Background = new SolidColorBrush(WithAlpha(baseCard, card));
+        PreviewCard3.Background = new SolidColorBrush(WithAlpha(baseCard, Math.Min(card + 20, 100)));
+    }
+
+    private static Color WithAlpha(Color c, int alphaPercent)
+    {
+        c.A = (byte)Math.Round(255 * alphaPercent / 100.0);
+        return c;
     }
 
     private static ImageBrush BuildImageBrush(byte[] data, double opacity)
@@ -170,6 +195,15 @@ public partial class ListThemeDialog : Window
         UpdatePreview();   // live preview, so strength is judged against the real backdrop
     }
 
+    private void CardOpacitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        // Same InitializeComponent caveat as the strength slider — the label later in the
+        // same row doesn't exist yet when Minimum coerces the default Value.
+        if (CardOpacityValue == null) return;
+        CardOpacityValue.Text = (int)Math.Round(CardOpacitySlider.Value) + "%";
+        UpdatePreview();   // live preview: mock rows show this list's card opacity
+    }
+
     private void Ok_Click(object sender, RoutedEventArgs e)
     {
         if (_type == ListBackgroundType.Image && _bytes == null)
@@ -177,8 +211,10 @@ public partial class ListThemeDialog : Window
 
         var opacity = (int)Math.Round(OpacitySlider.Value);
         if (opacity != _opacity) _opacityDirty = true;
-        if (_dirty || _opacityDirty)
-            ViewModel.SetListTheme(_list, _type, _color, _bytes, _fileName, opacity);
+        var cardOpacity = (int)Math.Round(CardOpacitySlider.Value);
+        if (cardOpacity != _cardOpacity) _cardOpacityDirty = true;
+        if (_dirty || _opacityDirty || _cardOpacityDirty)
+            ViewModel.SetListTheme(_list, _type, _color, _bytes, _fileName, opacity, cardOpacity);
         DialogResult = true;
     }
 

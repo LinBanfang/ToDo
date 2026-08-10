@@ -211,6 +211,11 @@ public static class Loc
     public static string BackgroundStrengthLocalHint => Language == AppLanguage.Chinese
         ? "背景强弱仅本设备生效，不同步。"
         : "Background strength is local to this device and won't sync.";
+    public static string CardOpacity => Language == AppLanguage.Chinese
+        ? "卡片不透明度" : "Card opacity";
+    public static string CardOpacityLocalHint => Language == AppLanguage.Chinese
+        ? "卡片不透明度仅本设备生效，不同步；越高越不透明，越能盖住背景。"
+        : "Card opacity is local to this device and won't sync; higher is more solid.";
     public static string PlayReminderSound => Language == AppLanguage.Chinese ? "播放提示音" : "Play reminder sound";
     public static string ReminderRingtone => Language == AppLanguage.Chinese ? "提醒铃声" : "Reminder ringtone";
     public static string DefaultRingtone => Language == AppLanguage.Chinese ? "默认铃声" : "Default ringtone";

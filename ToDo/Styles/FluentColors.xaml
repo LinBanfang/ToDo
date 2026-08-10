@@ -30,10 +30,9 @@
     <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="CardHoverBrush" Color="#F3F2F1"/>
     <SolidColorBrush x:Key="CardSelectedBrush" Color="#E6F2FC"/>
-    <!-- Task-area cards (ADR-014): translucent so a per-list background shows through.
-         Over the plain app background they read as the opaque card (adjacent neutrals). -->
-    <SolidColorBrush x:Key="TaskCardBrush" Color="#A6FFFFFF"/>
-    <SolidColorBrush x:Key="TaskCardHoverBrush" Color="#D9F3F2F1"/>
+    <!-- Task-area card brushes are owned by ThemeService (ADR-014): every Apply/SetCardOpacity
+         overrides TaskCardBrush/TaskCardHoverBrush at the active list's card opacity, so the
+         two brushes live only in the code-built theme dictionary. -->
     <!-- Dimming overlay over an image background so cards/text stay readable. -->
     <SolidColorBrush x:Key="ListBackgroundMaskBrush" Color="#4DFFFFFF"/>
 

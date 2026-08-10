@@ -302,7 +302,8 @@ public sealed class MainViewModelTests : IDisposable
 
         _vm.SetListTheme(list, ListBackgroundType.Solid, "#28A745", null, null, 60);
 
-        Assert.Equal(60, _db.GetListBackgroundOpacity("list-tasks"));
+        var (background, _) = _db.GetListThemeSettings("list-tasks");
+        Assert.Equal(60, background);
         var brush = Assert.IsType<SolidColorBrush>(_vm.ListBackgroundBrush);
         Assert.Equal(0.6, brush.Opacity, precision: 3);   // 60% faded toward the window background
     }
@@ -316,8 +317,25 @@ public sealed class MainViewModelTests : IDisposable
 
         _vm.SetListTheme(list, ListBackgroundType.Solid, "#28A745", null, null, 100);
 
-        // A missing row reads back as the default — the collection only holds non-defaults.
-        Assert.Equal(100, _db.GetListBackgroundOpacity("list-tasks"));
+        // A missing row reads back as the defaults — the collection only holds non-defaults.
+        var (background, card) = _db.GetListThemeSettings("list-tasks");
+        Assert.Equal(100, background);
+        Assert.Equal(65, card);
+    }
+
+    [Fact]
+    public void SetListTheme_PersistsCardOpacity()
+    {
+        _vm.Refresh();
+        _vm.ActiveListId = "list-tasks";
+        var list = _vm.Lists.First(l => l.Id == "list-tasks");
+
+        // Background at its default, card opacity custom — only the card earns a row.
+        _vm.SetListTheme(list, ListBackgroundType.Solid, "#28A745", null, null, 100, 50);
+
+        var (background, card) = _db.GetListThemeSettings("list-tasks");
+        Assert.Equal(100, background);
+        Assert.Equal(50, card);
     }
 
     private sealed class FakeClock : IClock

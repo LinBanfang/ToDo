@@ -104,7 +104,7 @@ public partial class MainViewModel : ObservableObject
             // Per-list opacity ("背景强弱", local-only): lower fades the background toward
             // the window background. Baked into the brush so solid colors and images share
             // one knob; the readability mask is left untouched.
-            var opacity = _db.GetListBackgroundOpacity(ActiveList.Id) / 100.0;
+            var opacity = _db.GetListThemeSettings(ActiveList.Id).Background / 100.0;
             return ActiveList.BackgroundType switch
             {
                 ListBackgroundType.Solid => BuildSolidBrush(ActiveList.BackgroundColor, opacity),
@@ -118,6 +118,11 @@ public partial class MainViewModel : ObservableObject
     /// Hidden during search so the global background shows across lists.</summary>
     public bool ListBackgroundMaskVisible =>
         !IsSearching && ActiveList?.BackgroundType == ListBackgroundType.Image;
+
+    /// <summary>The active list's card opacity (30..100) — the knob applied to the shared
+    /// TaskCardBrush/TaskCardHoverBrush (ADR-014). Default 65 when unset.</summary>
+    private int ActiveCardOpacity =>
+        ActiveList == null ? 65 : _db.GetListThemeSettings(ActiveList.Id).Card;
 
     private Brush? BuildSolidBrush(string hex, double opacity)
     {
@@ -535,6 +540,8 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(HeaderTitle));
         OnPropertyChanged(nameof(ListBackgroundBrush));
         OnPropertyChanged(nameof(ListBackgroundMaskVisible));
+        // The shared card brushes follow the active list's card opacity (ADR-014).
+        ThemeService.SetCardOpacity(ActiveCardOpacity);
         // No need to reload Tasks: the in-place model keeps it current on every
         // mutation, so a list switch only needs the views rebuilt.
         RefreshActiveTasks();
@@ -664,20 +671,25 @@ public partial class MainViewModel : ObservableObject
 
     /// <summary>Applies a list's background theme (called by the theme dialog's OK).
     /// The type + color sync via the tracked Lists collection; the image bytes and the
-    /// opacity are local-only in untracked collections (ADR-014). Raises the background
-    /// properties explicitly — LoadLists won't re-point an in-place-edited ActiveList.</summary>
+    /// display settings (background strength, card opacity) are local-only in untracked
+    /// collections (ADR-014). Raises the background properties explicitly — LoadLists won't
+    /// re-point an in-place-edited ActiveList.</summary>
     public void SetListTheme(TaskList list, ListBackgroundType type, string color,
-                             byte[]? image, string? fileName, int opacityPercent = 100)
+                             byte[]? image, string? fileName, int opacityPercent = 100,
+                             int cardOpacity = 65)
     {
         list.BackgroundType = type;
         list.BackgroundColor = color;
         _db.Lists.Update(list);
         if (image != null) _db.SetListBackground(list.Id, image, fileName);
         else _db.DeleteListBackground(list.Id);
-        // Opacity only earns a row when it differs from the default, so the collection
-        // holds "non-default" settings and a missing row reads back as 100.
-        if (opacityPercent == 100) _db.DeleteListBackgroundSetting(list.Id);
-        else _db.SetListBackgroundOpacity(list.Id, opacityPercent);
+        // Display settings only earn a row when either differs from its default, so the
+        // collection holds "non-default" settings and a missing row reads back as 100/65.
+        _db.SetListThemeSettings(list.Id, opacityPercent, cardOpacity);
+        // The shared card brushes reflect the ACTIVE list's opacity (ADR-014); if the dialog
+        // edited that list apply the new value now, otherwise it lands when the list becomes
+        // active (OnActiveListChanged re-tints).
+        if (list.Id == ActiveList?.Id) ThemeService.SetCardOpacity(cardOpacity);
         OnPropertyChanged(nameof(ListBackgroundBrush));
         OnPropertyChanged(nameof(ListBackgroundMaskVisible));
     }

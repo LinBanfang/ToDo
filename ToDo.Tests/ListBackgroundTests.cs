@@ -65,31 +65,61 @@ public sealed class ListBackgroundTests : IDisposable
         Assert.Null(_db.GetListBackgroundFileName("lst"));
     }
 
-    // ─── Opacity setting (local-only "背景强弱", ADR-014) ──
+    // ─── Theme display settings (背景强弱 + 卡片不透明度, local-only, ADR-014) ──
 
     [Fact]
-    public void GetOpacity_DefaultsTo100_WhenUnset()
+    public void GetSettings_DefaultsWhenUnset()
     {
-        Assert.Equal(100, _db.GetListBackgroundOpacity("nope"));
+        var (background, card) = _db.GetListThemeSettings("nope");
+
+        Assert.Equal(100, background);
+        Assert.Equal(65, card);   // card opacity matches the theme's default look
     }
 
     [Fact]
-    public void SetOpacity_KeepsSingleRow()
+    public void SetSettings_KeepsSingleRow_AndUpdatesBoth()
     {
         // Upsert by _id = listId: the second write overwrites, it does not append.
-        _db.SetListBackgroundOpacity("lst", 60);
-        _db.SetListBackgroundOpacity("lst", 40);
+        _db.SetListThemeSettings("lst", 60, 50);
+        _db.SetListThemeSettings("lst", 40, 55);
 
-        Assert.Equal(40, _db.GetListBackgroundOpacity("lst"));
+        var (background, card) = _db.GetListThemeSettings("lst");
+        Assert.Equal(40, background);
+        Assert.Equal(55, card);
+    }
+
+    [Fact]
+    public void SetSettings_AllDefaults_RemovesRow()
+    {
+        _db.SetListThemeSettings("lst", 60, 50);
+        _db.SetListThemeSettings("lst", 100, 65);   // both at defaults → row dropped
+
+        var (background, card) = _db.GetListThemeSettings("lst");
+        Assert.Equal(100, background);
+        Assert.Equal(65, card);
+    }
+
+    [Fact]
+    public void SetSettings_OneCustomOneDefault_KeepsRow()
+    {
+        // A custom background strength with a default card opacity still earns a row;
+        // the stored card value reads back as the default rather than 0.
+        _db.SetListThemeSettings("lst", 60, 65);
+
+        var (background, card) = _db.GetListThemeSettings("lst");
+        Assert.Equal(60, background);
+        Assert.Equal(65, card);
     }
 
     [Fact]
     public void DeleteSetting_ReturnsToDefault()
     {
-        _db.SetListBackgroundOpacity("lst", 60);
+        _db.SetListThemeSettings("lst", 60, 50);
 
         _db.DeleteListBackgroundSetting("lst");
 
-        Assert.Equal(100, _db.GetListBackgroundOpacity("lst"));
+        var (background, card) = _db.GetListThemeSettings("lst");
+        Assert.Equal(100, background);
+        Assert.Equal(65, card);
     }
 }
