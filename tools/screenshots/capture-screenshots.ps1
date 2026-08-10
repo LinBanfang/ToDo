@@ -14,9 +14,12 @@
 #   5. Captures with DwmGetWindowAttribute(DWMWA_EXTENDED_FRAME_BOUNDS) so the
 #      Windows window shadow (left/right/bottom ~7px, top 0) is NOT included and
 #      the borders stay symmetric — see docs/screenshots.md.
-#   6. Self-checks every screenshot: the outer 12px strips must contain no dark
-#      shadow pixels, and the four edges must share one color (the small sticky
-#      note uses a 3px strip — content-dense, a real edge shadow would still show).
+#   6. Composites each shot on a transparent canvas (Margin px, default 12) with a
+#      synthetic soft drop shadow drawn behind the rounded window, so it reads as the
+#      app floating on whatever background hosts the PNG (GitHub light/dark both work).
+#   7. Self-checks every screenshot: the outer strips must be fully transparent (no
+#      shadow overflow past the margin) and free of opaque dark pixels (the small
+#      sticky note uses a 3px strip — content-dense, an overflow would still show).
 #
 # Your real %LOCALAPPDATA%\ToDo\settings.json is backed up first and restored in
 # a finally block; your real DB is never opened. Safe to run at any time.
@@ -31,6 +34,7 @@ param(
     [string]$Configuration = 'Debug',         # Debug | Release
     [string]$OutputDir,                       # default: <repo>\screenshots
     [string]$DbPath,                          # default: temp DB, deleted afterwards
+    [int]$Margin = 12,                        # px of breathing room around the window (0 = window fills the PNG edge-to-edge)
     [switch]$SkipBuild,
     [switch]$KeepApp                          # leave the app running afterwards (debugging)
 )
@@ -52,6 +56,7 @@ $logPath      = Join-Path $env:TEMP 'todo-screenshots.log'
 $log = New-Object System.Text.StringBuilder
 $proc = $null
 $ok = $false
+$radius = 8   # corner radius (px) applied to the composited window and its shadow
 
 # ---- native helpers (UIA + DWM extended frame bounds) -----------------------------
 Add-Type -AssemblyName System.Drawing
@@ -143,26 +148,105 @@ function Find-SidebarText($root, [string]$name) {
     return $best
 }
 
-# Capture the WINDOW VISIBLE area via DWMWA_EXTENDED_FRAME_BOUNDS (attr 9).
-# GetWindowRect would include the DWM shadow (bottom ~7px, sides ~7px, top 0),
-# which makes README screenshots look uneven.
-function Save-WindowShot($hwnd, [string]$path) {
+# Rounded-rectangle GraphicsPath (float coords, works at any scale).
+function New-RoundedRectPath([single]$x, [single]$y, [single]$w, [single]$h, [single]$r) {
+    $d = 2 * $r
+    $p = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $p.AddArc($x, $y, $d, $d, 180, 90)
+    $p.AddArc($x + $w - $d, $y, $d, $d, 270, 90)
+    $p.AddArc($x + $w - $d, $y + $h - $d, $d, $d, 0, 90)
+    $p.AddArc($x, $y + $h - $d, $d, $d, 90, 90)
+    $p.CloseFigure()
+    return $p
+}
+
+# Draw a soft drop shadow under a w×h rectangle at (x,y) on $g. The Win11 DWM shadow
+# is too faint to read on a light README canvas (and borderless windows like the
+# sticky note barely get one), so we render our own: a stack of concentric rounded
+# rects whose alphas are the differences of a linear falloff profile, so at any offset
+# from the window edge the summed alpha is exactly alpha*(1 - t/blur) — the blur
+# parameter IS the visible shadow width. (The earlier trick of scaling a solid core up
+# with bicubic interpolation made the width fixed by the kernel, not by $blur.)
+# $blur: visible shadow width (px) beyond each edge. $alpha: peak alpha at the edge.
+# The outermost rings carry near-zero alpha, so edges fade cleanly into the canvas.
+function Add-SoftShadow([System.Drawing.Graphics]$g, [int]$x, [int]$y, [int]$w, [int]$h) {
+    $blur = 12; $alpha = 45; $N = 24
+    $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
+    # Outermost -> innermost: ring at expansion $tIn*$blur carries the profile drop
+    # across its span, so concentric overlap adds up to the target linear falloff.
+    for ($i = $N - 1; $i -ge 1; $i--) {
+        $tIn = $i / $N; $tOut = ($i + 1) / $N
+        $a = [int]($alpha * (1 - $tIn)) - [int]($alpha * (1 - $tOut))
+        if ($a -le 0) { continue }
+        # cap expansion just short of the canvas margin so the outermost AA pixels
+        # stay clear of the PNG edge (blur=12 on a 12px margin otherwise touches it)
+        $e = $tIn * ($blur - 2)
+        $brush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($a, 0, 0, 0))
+        # Radius grows with expansion so the silhouette keeps the window's corner.
+        $path = New-RoundedRectPath ([single]($x - $e)) ([single]($y - $e)) ([single]($w + 2*$e)) ([single]($h + 2*$e)) ([single]($radius + $e))
+        $g.FillPath($brush, $path)
+        $path.Dispose(); $brush.Dispose()
+    }
+    # Innermost core: window footprint, carries the profile drop from t=0.
+    $aCore = [int]($alpha * (1 - 0)) - [int]($alpha * (1 - 1.0/$N))
+    $brush2 = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($aCore, 0, 0, 0))
+    $core = New-RoundedRectPath ([single]$x) ([single]$y) ([single]$w) ([single]$h) ([single]$radius)
+    $g.FillPath($brush2, $core)
+    $core.Dispose(); $brush2.Dispose()
+}
+
+# Capture the WINDOW onto a canvas.
+# With $margin = 0: the visible area only, via DWMWA_EXTENDED_FRAME_BOUNDS
+# (attr 9) — no DWM shadow, window runs edge-to-edge of the PNG.
+# With $margin > 0 (default 12): draw the window centered on a $margin-wide canvas
+# filled with the theme's window background, with our own soft drop shadow behind it —
+# the shot reads like the real window floating on a matching canvas (README-friendly).
+function Save-WindowShot($hwnd, [string]$path, [int]$margin = 0) {
     $r = New-Object NativeCap+RECT
     [NativeCap]::DwmGetWindowAttribute($hwnd, 9, [ref]$r, [System.Runtime.InteropServices.Marshal]::SizeOf([type][NativeCap+RECT])) | Out-Null
     $w = $r.Right - $r.Left; $h = $r.Bottom - $r.Top
-    $bmp = New-Object System.Drawing.Bitmap($w, $h)
-    $g = [System.Drawing.Graphics]::FromImage($bmp)
-    $g.CopyFromScreen($r.Left, $r.Top, 0, 0, (New-Object System.Drawing.Size($w, $h)))
-    $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
-    $g.Dispose(); $bmp.Dispose()
-    $log.AppendLine("  $([System.IO.Path]::GetFileName($path)) captured ($w x $h)") | Out-Null
+    if ($margin -gt 0) {
+        # Transparent canvas: the window + soft shadow float on whatever the host page
+        # paints behind the PNG (GitHub light/dark both look natural). A solid canvas
+        # color could never match the window's multi-color edges (F3F2F1 title bar,
+        # FAF9F8 sidebar, FFFFFF content), so transparent avoids any visible frame.
+        $windowShot = New-Object System.Drawing.Bitmap($w, $h)
+        $wg = [System.Drawing.Graphics]::FromImage($windowShot)
+        $wg.CopyFromScreen($r.Left, $r.Top, 0, 0, (New-Object System.Drawing.Size($w, $h)))
+        $wg.Dispose()
+        $cw = $w + 2 * $margin; $ch = $h + 2 * $margin
+        $bmp = New-Object System.Drawing.Bitmap($cw, $ch)
+        $g = [System.Drawing.Graphics]::FromImage($bmp)
+        $g.Clear([System.Drawing.Color]::Transparent)
+        Add-SoftShadow $g $margin $margin $w $h
+        # The capture is square (DoNotRound) so no desktop shows through; round the
+        # corners over the canvas here to match the real Win11 window shape.
+        $clip = New-RoundedRectPath $margin $margin $w $h $radius
+        $g.SetClip($clip)
+        $g.DrawImage($windowShot, $margin, $margin)
+        $g.ResetClip()
+        $clip.Dispose()
+        $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
+        $windowShot.Dispose(); $g.Dispose(); $bmp.Dispose()
+        $log.AppendLine("  $([System.IO.Path]::GetFileName($path)) captured ($cw x $ch, +${margin}px margin, soft shadow)") | Out-Null
+    } else {
+        $bmp = New-Object System.Drawing.Bitmap($w, $h)
+        $g = [System.Drawing.Graphics]::FromImage($bmp)
+        $g.CopyFromScreen($r.Left, $r.Top, 0, 0, (New-Object System.Drawing.Size($w, $h)))
+        $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
+        $g.Dispose(); $bmp.Dispose()
+        $log.AppendLine("  $([System.IO.Path]::GetFileName($path)) captured ($w x $h)") | Out-Null
+    }
     return $path
 }
 
-# Self-check: outer strips of each side must be free of dark shadow pixels and the
-# edge colors must match, so the four borders render symmetrically.
-# $strip: how many outer pixels to scan for shadow (12 = full DWM shadow ~7px; the
-# small sticky note is content-dense, so 3px still catches a real shadow at the edge).
+# Self-check for the composited transparent-canvas shots. The synthetic shadow is
+# drawn black-with-alpha (straight alpha, so stored RGB ~0), which means a "no dark
+# pixels" strip check is meaningless on a transparent canvas — instead we assert the
+# shadow's geometry: it is actually present, it stays inside the margin (all four
+# edges fully transparent), and its reach into the strip is symmetric L/R and T/B.
+# $strip: how many outer pixels to scan (12 for the big windows; the small sticky
+# note is content-dense, so 3 is enough to catch an overflow at the edge).
 function Assert-SymmetricEdges([string]$path, [int]$strip = 12, [switch]$SkipEdgeCheck) {
     if ($SkipEdgeCheck) {
         # Themed list shot: the background image fills the content column out to the
@@ -175,11 +259,17 @@ function Assert-SymmetricEdges([string]$path, [int]$strip = 12, [switch]$SkipEdg
     $bmp = New-Object System.Drawing.Bitmap($path)
     $w = $bmp.Width; $h = $bmp.Height
     $midX = [int]($w / 2); $midY = [int]($h / 2)
-    $dark = 0
-    foreach ($x in 0..($strip-1)) { $c = $bmp.GetPixel($x, $midY);    if ($c.R -lt 40) { $dark++ } }
-    foreach ($x in ($w-$strip)..($w-1)) { $c = $bmp.GetPixel($x, $midY);    if ($c.R -lt 40) { $dark++ } }
-    foreach ($y in 0..($strip-1)) { $c = $bmp.GetPixel($midX, $y);    if ($c.R -lt 40) { $dark++ } }
-    foreach ($y in ($h-$strip)..($h-1)) { $c = $bmp.GetPixel($midX, $y);    if ($c.R -lt 40) { $dark++ } }
+    $reach = @{}
+    foreach ($key in @('left','right','top','bottom')) {
+        $n = 0
+        switch ($key) {
+            'left'   { for ($x = 0; $x -lt $strip; $x++)    { if ($bmp.GetPixel($x, $midY).A  -gt 0) { $n++ } } }
+            'right'  { for ($x = $w-$strip; $x -lt $w; $x++){ if ($bmp.GetPixel($x, $midY).A  -gt 0) { $n++ } } }
+            'top'    { for ($y = 0; $y -lt $strip; $y++)    { if ($bmp.GetPixel($midX, $y).A -gt 0) { $n++ } } }
+            'bottom' { for ($y = $h-$strip; $y -lt $h; $y++){ if ($bmp.GetPixel($midX, $y).A -gt 0) { $n++ } } }
+        }
+        $reach[$key] = $n
+    }
     $hex = @{}
     foreach ($key in @('left','right','top','bottom')) {
         switch ($key) {
@@ -188,11 +278,16 @@ function Assert-SymmetricEdges([string]$path, [int]$strip = 12, [switch]$SkipEdg
             'top'    { $c = $bmp.GetPixel($midX, 0) }
             'bottom' { $c = $bmp.GetPixel($midX, $h-1) }
         }
-        $hex[$key] = ('{0:X2}{1:X2}{2:X2}' -f $c.R, $c.G, $c.B)
+        $hex[$key] = ('{0:X2}{1:X2}{2:X2}{3:X2}' -f $c.A, $c.R, $c.G, $c.B)
     }
     $bmp.Dispose()
-    $ok = ($dark -eq 0) -and (($hex.Values | Select-Object -Unique).Count -eq 1)
-    $log.AppendLine("  edge check: dark=$dark colors=$($hex.left)/$($hex.right)/$($hex.top)/$($hex.bottom) -> $(if($ok){'PASS'}else{'FAIL'})") | Out-Null
+    # Reach may differ by a pixel or two where the faintest ring's AA lands on a
+    # half-pixel boundary — tolerate 2px. A real regression (e.g. the DWM shadow,
+    # ~7px L/R/B vs 0 top) still fails hard.
+    $edgeClear = ($hex.Values | Where-Object { $_ -eq '00000000' }).Count
+    $reachTotal = ($reach.Values | Measure-Object -Sum).Sum
+    $ok = ($edgeClear -eq 4) -and ([Math]::Abs($reach.left - $reach.right) -le 2) -and ([Math]::Abs($reach.top - $reach.bottom) -le 2) -and ($reachTotal -gt 0)
+    $log.AppendLine("  edge check: reach L/R/T/B=$($reach.left)/$($reach.right)/$($reach.top)/$($reach.bottom) clear=$edgeClear/4 rgba=$($hex.left)/$($hex.right)/$($hex.top)/$($hex.bottom) -> $(if($ok){'PASS'}else{'FAIL'})") | Out-Null
     if (-not $ok) { throw "edge symmetry check failed for $([System.IO.Path]::GetFileName($path))" }
 }
 
@@ -254,7 +349,7 @@ try {
     Click-Center $work | Out-Null
     Start-Sleep -Seconds 2
     $p = Join-Path $OutputDir 'work-list.png'
-    Save-WindowShot $hwnd $p | Out-Null
+    Save-WindowShot $hwnd $p $Margin | Out-Null
     Assert-SymmetricEdges $p
 
     # Sticky note: the footer button opens a separate always-on-top window titled
@@ -282,7 +377,7 @@ try {
     [NativeCap]::DwmSetWindowAttribute($shwnd, 33, [ref]$cp, 4) | Out-Null
     Start-Sleep -Milliseconds 600
     $p = Join-Path $OutputDir 'sticky-note.png'
-    Save-WindowShot $shwnd $p | Out-Null
+    Save-WindowShot $shwnd $p $Margin | Out-Null
     Assert-SymmetricEdges $p 3   # 3px: the sticky is small & content-dense; a real edge shadow would still be caught
     # Restore the main window via the sticky's back-to-main button (AutomationId
     # StickyBackToMain), then keep capturing the remaining shots.
@@ -299,7 +394,7 @@ try {
     Click-Center $myday | Out-Null
     Start-Sleep -Seconds 2
     $p = Join-Path $OutputDir 'my-day.png'
-    Save-WindowShot $hwnd $p | Out-Null
+    Save-WindowShot $hwnd $p $Margin | Out-Null
     Assert-SymmetricEdges $p
 
     # Themed list shot: 学习 has the demo background image (seeded by ToDo.Demo from
@@ -310,7 +405,7 @@ try {
     Click-Center $study | Out-Null
     Start-Sleep -Seconds 2
     $p = Join-Path $OutputDir 'list-theme.png'
-    Save-WindowShot $hwnd $p | Out-Null
+    Save-WindowShot $hwnd $p $Margin | Out-Null
     Assert-SymmetricEdges $p -SkipEdgeCheck
 
     $openCond = New-Object System.Windows.Automation.PropertyCondition(
@@ -326,7 +421,7 @@ try {
     Click-Center $behavior | Out-Null
     Start-Sleep -Seconds 1
     $p = Join-Path $OutputDir 'settings.png'
-    Save-WindowShot $hwnd $p | Out-Null
+    Save-WindowShot $hwnd $p $Margin | Out-Null
     Assert-SymmetricEdges $p
 
     $log.AppendLine("done. screenshots written to $OutputDir (theme: $Theme)") | Out-Null
