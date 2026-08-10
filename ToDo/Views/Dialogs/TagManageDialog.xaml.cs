@@ -187,13 +187,28 @@ public partial class TagManageDialog : Window
         public IntPtr Handle { get; }
     }
 
+    private string _tagRenameOriginal = "";
+
+    /// <summary>Snapshots the tag name when editing starts. The rename box binds Name with
+    /// UpdateSourceTrigger=LostFocus, and the binding writes the source BEFORE the LostFocus
+    /// handler runs — so TagName_LostFocus must compare against this captured value, not
+    /// tag.Name (which is already overwritten by then). Mirrors DetailField_GotFocus.</summary>
+    private void TagName_GotFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is TextBox tb)
+            _tagRenameOriginal = tb.Text;
+    }
+
     /// <summary>Persists an inline rename. The Name binding only mutates the in-memory
     /// object, so without this the edit is lost on reload — and a rename that collides
     /// with another tag would hit the unique index and crash. Reject duplicates here
-    /// (with a message) and push every other change through UpdateTag.</summary>
+    /// (with a message) and push every other change through UpdateTag. Mirrors the
+    /// detail pane's DetailField_LostFocus: force the pending binding update first,
+    /// then compare against the captured original to detect a real change.</summary>
     private void TagName_LostFocus(object sender, RoutedEventArgs e)
     {
         if (sender is not TextBox box || box.Tag is not Tag tag) return;
+        box.GetBindingExpression(TextBox.TextProperty)?.UpdateSource(); // reach tag.Name regardless of handler/binding order
         var name = box.Text.Trim();
         if (string.IsNullOrEmpty(name))
         {
@@ -206,7 +221,7 @@ public partial class TagManageDialog : Window
             FluentDialog.Show(this, Loc.TagNameExists(name), Loc.ManageTags, MsgKind.Warning);
             return;
         }
-        if (name != tag.Name)
+        if (name != _tagRenameOriginal)
         {
             tag.Name = name;
             ViewModel.UpdateTagCommand.Execute(tag);

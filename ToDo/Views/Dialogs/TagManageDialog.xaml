@@ -36,6 +36,7 @@
                                 <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=LostFocus}"
                                          Style="{StaticResource FluentTextBox}" FontSize="13"
                                          VerticalAlignment="Center" Tag="{Binding}"
+                                         GotFocus="TagName_GotFocus"
                                          LostFocus="TagName_LostFocus"/>
                                 <!-- Delete -->
                                 <Button Grid.Column="2" Content="&#xE10A;" FontFamily="Segoe MDL2 Assets"
