@@ -1,8 +1,11 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using ToDo.Converters;
 using ToDo.Models;
 using ToDo.Services;
 
@@ -85,6 +88,66 @@ public partial class MainViewModel : ObservableObject
     public string SyncStatusText => App.Sync?.StatusText ?? Loc.SyncStatusDisabled;
     /// <summary>True while a round-trip is in flight — drives the sync icon's spin.</summary>
     public bool SyncIsSyncing => App.Sync?.Status == SyncStatus.Syncing;
+
+    // ─── Active list background theme (ADR-014) ───────────
+    /// <summary>Brush painting the task-area background for the active list's theme.
+    /// Null when there's no theme, searching, or no active list — the window's
+    /// AppBackgroundBrush then shows through. Rebuilt lazily and re-raised explicitly
+    /// (SetListTheme / OnActiveListChanged / OnSearchQueryChanged): LoadLists re-points
+    /// ActiveList only when the instance differs, so an in-place theme edit would not
+    /// re-trigger a converter bound to ActiveList's fields.</summary>
+    public Brush? ListBackgroundBrush
+    {
+        get
+        {
+            if (IsSearching || ActiveList == null) return null;
+            return ActiveList.BackgroundType switch
+            {
+                ListBackgroundType.Solid => BuildSolidBrush(ActiveList.BackgroundColor),
+                ListBackgroundType.Image => BuildImageBrush(ActiveList.Id),
+                _ => null,
+            };
+        }
+    }
+
+    /// <summary>True when the active list has an image background (dimming mask visible).
+    /// Hidden during search so the global background shows across lists.</summary>
+    public bool ListBackgroundMaskVisible =>
+        !IsSearching && ActiveList?.BackgroundType == ListBackgroundType.Image;
+
+    private Brush? BuildSolidBrush(string hex)
+    {
+        if (string.IsNullOrEmpty(hex)) return null;
+        try
+        {
+            var brush = new SolidColorBrush(ColorParser.ParseColor(hex));
+            brush.Freeze();
+            return brush;
+        }
+        catch { return null; }
+    }
+
+    private Brush? BuildImageBrush(string listId)
+    {
+        var bytes = _db.GetListBackgroundData(listId);
+        if (bytes == null || bytes.Length == 0) return null;
+        try
+        {
+            var image = new BitmapImage();
+            using (var stream = new MemoryStream(bytes))
+            {
+                image.BeginInit();
+                image.CacheOption = BitmapCacheOption.OnLoad;   // read fully before the stream closes
+                image.StreamSource = stream;
+                image.EndInit();
+            }
+            image.Freeze();
+            var brush = new ImageBrush(image) { Stretch = Stretch.UniformToFill };
+            brush.Freeze();
+            return brush;
+        }
+        catch { return null; }
+    }
 
     // ─── Dialog state ─────────────────────────────────────
     [ObservableProperty]
@@ -466,6 +529,8 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsCustomList));
         OnPropertyChanged(nameof(IsSystemList));
         OnPropertyChanged(nameof(HeaderTitle));
+        OnPropertyChanged(nameof(ListBackgroundBrush));
+        OnPropertyChanged(nameof(ListBackgroundMaskVisible));
         // No need to reload Tasks: the in-place model keeps it current on every
         // mutation, so a list switch only needs the views rebuilt.
         RefreshActiveTasks();
@@ -504,6 +569,8 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsCustomList));
         OnPropertyChanged(nameof(IsSystemList));
         OnPropertyChanged(nameof(HeaderTitle));
+        OnPropertyChanged(nameof(ListBackgroundBrush));
+        OnPropertyChanged(nameof(ListBackgroundMaskVisible));
         // Tasks is always current in this single-process app (every mutation
         // reloads it), so filter it in memory instead of re-reading the DB
         // and rebuilding the collection on every keystroke.
@@ -591,6 +658,22 @@ public partial class MainViewModel : ObservableObject
         LoadLists();
     }
 
+    /// <summary>Applies a list's background theme (called by the theme dialog's OK).
+    /// The type + color sync via the tracked Lists collection; the image bytes are
+    /// local-only in the untracked collection (ADR-014). Raises the background
+    /// properties explicitly — LoadLists won't re-point an in-place-edited ActiveList.</summary>
+    public void SetListTheme(TaskList list, ListBackgroundType type, string color,
+                             byte[]? image, string? fileName)
+    {
+        list.BackgroundType = type;
+        list.BackgroundColor = color;
+        _db.Lists.Update(list);
+        if (image != null) _db.SetListBackground(list.Id, image, fileName);
+        else _db.DeleteListBackground(list.Id);
+        OnPropertyChanged(nameof(ListBackgroundBrush));
+        OnPropertyChanged(nameof(ListBackgroundMaskVisible));
+    }
+
     [RelayCommand]
     private void DeleteList(TaskList list)
     {
@@ -608,6 +691,7 @@ public partial class MainViewModel : ObservableObject
 
         _db.Groups.DeleteMany(g => g.ListId == list.Id);
         _db.Lists.Delete(list.Id);
+        _db.DeleteListBackground(list.Id);   // local background image dies with the list (ADR-014)
         LoadAll();
         if (ActiveList?.Id == list.Id)
             ActiveList = Lists.FirstOrDefault(l => l.Id == "list-tasks");

@@ -193,4 +193,48 @@ public sealed class OutboxTests : IDisposable
         Assert.Contains(events, e => e.EntityId == "t1" && !e.Deleted);
         Assert.DoesNotContain(events, e => e.EntityId == "list-myday"); // system lists never sync
     }
+
+    [Fact]
+    public void ListPayload_IncludesBackgroundFields()
+    {
+        var list = new TaskList
+        {
+            Id = "lst", Name = "Work", Type = ListType.Custom,
+            BackgroundType = ListBackgroundType.Solid, BackgroundColor = "#28A745",
+        };
+        _db.Lists.Insert(list);
+
+        var json = _db.Tracker.AllPending().Single(e => e.EntityId == "lst").PayloadJson;
+        Assert.Contains("\"BackgroundType\":1", json);              // Solid == 1
+        Assert.Contains("\"BackgroundColor\":\"#28A745\"", json);
+
+        var restored = (TaskList)SyncEntitySerializer.FromChange(new SyncChange
+        {
+            Type = SyncEntityTypes.List, Id = "lst", ModifiedAt = 0, Payload = json,
+        })!;
+        Assert.Equal(ListBackgroundType.Solid, restored.BackgroundType);
+        Assert.Equal("#28A745", restored.BackgroundColor);
+    }
+
+    [Fact]
+    public void ListPayload_BackgroundFields_RoundTrip_EmptyColorIsNull()
+    {
+        var list = new TaskList
+        {
+            Id = "lst", Name = "Work", Type = ListType.Custom,
+            BackgroundType = ListBackgroundType.Image, BackgroundColor = "",   // empty → null in payload
+        };
+        _db.Lists.Insert(list);
+
+        var json = _db.Tracker.AllPending().Single(e => e.EntityId == "lst").PayloadJson;
+        Assert.Contains("\"BackgroundType\":2", json);              // Image == 2
+        Assert.DoesNotContain("BackgroundColor", json);             // empty color is omitted, not "null"
+
+        var restored = (TaskList)SyncEntitySerializer.FromChange(new SyncChange
+        {
+            Type = SyncEntityTypes.List, Id = "lst", ModifiedAt = 0, Payload = json,
+        })!;
+        Assert.Equal(ListBackgroundType.Image, restored.BackgroundType);
+        Assert.Equal("", restored.BackgroundColor);                 // absent field reads back as ""
+    }
 }

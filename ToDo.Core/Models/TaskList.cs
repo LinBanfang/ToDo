@@ -12,6 +12,16 @@ public enum ListType
     Custom
 }
 
+/// <summary>Per-list background theme. The type + color sync (custom lists only); the
+/// image bytes themselves are local-only (ADR-014), stored in a separate untracked
+/// collection so the sync layer's whole-entity LWW overwrite never touches them.</summary>
+public enum ListBackgroundType
+{
+    None,
+    Solid,
+    Image
+}
+
 public partial class TaskList : ObservableObject, IOrdered
 {
     [ObservableProperty]
@@ -22,6 +32,14 @@ public partial class TaskList : ObservableObject, IOrdered
 
     [ObservableProperty]
     private string _icon = "";
+
+    /// <summary>Background theme kind (None/Solid/Image). Synced for custom lists.</summary>
+    [ObservableProperty]
+    private ListBackgroundType _backgroundType;
+
+    /// <summary>Solid background color as "#RRGGBB"; empty when none. Synced for custom lists.</summary>
+    [ObservableProperty]
+    private string _backgroundColor = "";
 
     [ObservableProperty]
     private ListType _type = ListType.Custom;

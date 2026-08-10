@@ -37,7 +37,8 @@ public class CloseRecordSync
     public CloseMode CloseMode { get; set; }
 }
 
-/// <summary>Wire snapshot of a TaskList — excludes the derived TaskCount.</summary>
+/// <summary>Wire snapshot of a TaskList — excludes the derived TaskCount. The background
+/// theme's type + color ride along (custom lists only); the image bytes do not (ADR-014).</summary>
 public class TaskListSync
 {
     public string Id { get; set; } = "";
@@ -47,6 +48,8 @@ public class TaskListSync
     public int Order { get; set; }
     public string? GroupId { get; set; }
     public bool IsSystem { get; set; }
+    public ListBackgroundType BackgroundType { get; set; }
+    public string? BackgroundColor { get; set; }
     public long CreatedAt { get; set; }
     public long ModifiedAt { get; set; }
 }

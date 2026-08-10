@@ -157,6 +157,11 @@ public partial class MainWindow : Window
             list.IsRenaming = true;
         };
         menu.Items.Add(r);
+
+        var t = new MenuItem { Header = Loc.ListTheme, Tag = list };
+        t.Click += (_, _) => OpenListThemeDialog(list);
+        menu.Items.Add(t);
+
         menu.Items.Add(new Separator());
         var d = new MenuItem { Header = Loc.Delete, Tag = list };
         d.Click += (_, _) => { if (FluentDialog.Confirm(this, Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete)) ViewModel.DeleteListCommand.Execute(list); };
@@ -1309,6 +1314,18 @@ public partial class MainWindow : Window
         if (ViewModel.ActiveList is not { } list) return;
         if (FluentDialog.Confirm(this, Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete))
             ViewModel.DeleteListCommand.Execute(list);
+    }
+
+    private void ListMenu_Theme(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.ActiveList is { } list)
+            OpenListThemeDialog(list);
+    }
+
+    private void OpenListThemeDialog(TaskList list)
+    {
+        var dialog = new ListThemeDialog(list) { Owner = this };
+        dialog.ShowDialog();
     }
 
     // ─── Dialogs ──────────────────────────────────────────

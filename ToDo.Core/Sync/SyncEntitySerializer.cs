@@ -39,6 +39,8 @@ public static class SyncEntitySerializer
                 {
                     Id = l.Id, Name = l.Name, Icon = l.Icon, Type = l.Type,
                     Order = l.Order, GroupId = l.GroupId, IsSystem = false,
+                    BackgroundType = l.BackgroundType,
+                    BackgroundColor = string.IsNullOrEmpty(l.BackgroundColor) ? null : l.BackgroundColor,
                     CreatedAt = l.CreatedAt, ModifiedAt = l.ModifiedAt,
                 });
             case TaskGroup g:
@@ -105,6 +107,8 @@ public static class SyncEntitySerializer
         {
             Id = dto.Id, Name = dto.Name, Icon = dto.Icon, Type = dto.Type,
             Order = dto.Order, GroupId = dto.GroupId, IsSystem = dto.IsSystem,
+            BackgroundType = dto.BackgroundType,
+            BackgroundColor = dto.BackgroundColor ?? "",
             CreatedAt = dto.CreatedAt, ModifiedAt = dto.ModifiedAt,
         };
     }

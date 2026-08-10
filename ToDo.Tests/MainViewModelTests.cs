@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Windows.Media;
 using ToDo.Models;
 using ToDo.Services;
 using ToDo.Sync;
@@ -233,6 +234,63 @@ public sealed class MainViewModelTests : IDisposable
         Assert.Equal(3, Task("B").MyDayOrder);   // max surviving My Day order (C=2) + 1
         Assert.True(Task("C").IsMyDay);
         Assert.Equal(2, Task("C").MyDayOrder);
+    }
+
+    // A valid 1x1 PNG so BitmapImage decoding in ListBackgroundBrush succeeds.
+    private static readonly byte[] TinyPng = Convert.FromBase64String(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==");
+
+    [Fact]
+    public void SetListTheme_Solid_PersistsAndRaisesRefresh()
+    {
+        _vm.Refresh();
+        _vm.ActiveListId = "list-tasks";
+        var list = _vm.Lists.First(l => l.Id == "list-tasks");
+
+        var raised = new List<string?>();
+        _vm.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+
+        _vm.SetListTheme(list, ListBackgroundType.Solid, "#28A745", null, null);
+
+        var persisted = _db.Lists.FindById("list-tasks");
+        Assert.Equal(ListBackgroundType.Solid, persisted.BackgroundType);
+        Assert.Equal("#28A745", persisted.BackgroundColor);
+        Assert.IsType<SolidColorBrush>(_vm.ListBackgroundBrush);
+        Assert.False(_vm.ListBackgroundMaskVisible);
+        Assert.Contains(nameof(_vm.ListBackgroundBrush), raised);      // LoadLists won't re-point →
+        Assert.Contains(nameof(_vm.ListBackgroundMaskVisible), raised); // refresh must be explicit
+    }
+
+    [Fact]
+    public void SetListTheme_Image_StoresBytesAndShowsMask()
+    {
+        _vm.Refresh();
+        _vm.ActiveListId = "list-tasks";
+        var list = _vm.Lists.First(l => l.Id == "list-tasks");
+
+        _vm.SetListTheme(list, ListBackgroundType.Image, "", TinyPng, "bg.png");
+
+        Assert.Equal(ListBackgroundType.Image, _db.Lists.FindById("list-tasks").BackgroundType);
+        Assert.Equal(TinyPng, _db.GetListBackgroundData("list-tasks"));
+        Assert.Equal("bg.png", _db.GetListBackgroundFileName("list-tasks"));
+        Assert.True(_vm.ListBackgroundMaskVisible);
+        Assert.IsType<ImageBrush>(_vm.ListBackgroundBrush);
+    }
+
+    [Fact]
+    public void SetListTheme_None_ClearsBytes()
+    {
+        _vm.Refresh();
+        _vm.ActiveListId = "list-tasks";
+        var list = _vm.Lists.First(l => l.Id == "list-tasks");
+
+        _vm.SetListTheme(list, ListBackgroundType.Image, "", TinyPng, "bg.png");
+        _vm.SetListTheme(list, ListBackgroundType.None, "", null, null);
+
+        Assert.Null(_db.GetListBackgroundData("list-tasks"));
+        Assert.Null(_db.GetListBackgroundFileName("list-tasks"));
+        Assert.Null(_vm.ListBackgroundBrush);
+        Assert.False(_vm.ListBackgroundMaskVisible);
     }
 
     private sealed class FakeClock : IClock

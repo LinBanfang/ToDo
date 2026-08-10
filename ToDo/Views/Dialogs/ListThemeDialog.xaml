@@ -1,0 +1,87 @@
+<Window x:Class="ToDo.Views.Dialogs.ListThemeDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:services="clr-namespace:ToDo.Services;assembly=ToDo.Core"
+        Title="{x:Static services:Loc.ListTheme}" Height="440" Width="380"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        Background="{DynamicResource CardBackgroundBrush}"
+        FontFamily="{StaticResource FluentFont}">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Live preview: the chosen background under translucent mock task rows -->
+        <Border x:Name="PreviewBox" Grid.Row="0" Height="150" CornerRadius="8" ClipToBounds="True">
+            <Grid>
+                <!-- Image dimming mask, mirroring the real task area -->
+                <Border x:Name="PreviewMask" Background="{DynamicResource ListBackgroundMaskBrush}" Visibility="Collapsed"/>
+                <StackPanel VerticalAlignment="Center">
+                    <Border Height="34" Margin="20,4" CornerRadius="8" Background="{DynamicResource TaskCardBrush}">
+                        <TextBlock x:Name="PreviewTitle" Margin="14,0" VerticalAlignment="Center" FontSize="13"
+                                   FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </Border>
+                    <Border Height="34" Margin="20,4" CornerRadius="8" Background="{DynamicResource TaskCardBrush}"/>
+                    <Border Height="34" Margin="20,4" CornerRadius="8" Background="{DynamicResource TaskCardHoverBrush}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- No background -->
+        <Button Grid.Row="1" Content="{x:Static services:Loc.NoBackground}" Style="{StaticResource FluentSubtleButton}"
+                FontSize="13" HorizontalAlignment="Left" Margin="0,12,0,0" Padding="8,4"
+                Click="NoBackground_Click"/>
+
+        <!-- Solid color -->
+        <Border Grid.Row="2" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
+                Margin="0,12,0,0" Padding="0,10,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="{x:Static services:Loc.SolidColor}" FontSize="13"
+                           Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                <Button x:Name="ColorSwatchBtn" Grid.Column="1" Width="28" Height="28" HorizontalAlignment="Right"
+                        Background="{DynamicResource TextSecondaryBrush}" BorderThickness="0" Cursor="Hand"
+                        ToolTip="{x:Static services:Loc.MoreColors}" Click="ColorSwatch_Click"/>
+            </Grid>
+        </Border>
+
+        <!-- Background image -->
+        <Border Grid.Row="3" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
+                Margin="0,12,0,0" Padding="0,10,0,0">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{x:Static services:Loc.ChooseImage}" FontSize="13"
+                               Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button Content="{x:Static services:Loc.ChooseImage}" Style="{StaticResource FluentButton}"
+                                FontSize="13" Padding="12,5" Click="ChooseImage_Click"/>
+                        <Button Content="{x:Static services:Loc.RemoveImage}" Style="{StaticResource FluentSubtleButton}"
+                                FontSize="13" Padding="8,5" Margin="8,0,0,0" Click="RemoveImage_Click"/>
+                    </StackPanel>
+                </Grid>
+                <TextBlock Text="{x:Static services:Loc.ListThemeImageLocalHint}" FontSize="11"
+                           Foreground="{DynamicResource TextDisabledBrush}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Footer buttons -->
+        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="{x:Static services:Loc.Cancel}" Style="{StaticResource FluentButton}"
+                    FontSize="13" Padding="16,6" IsCancel="True" Click="Cancel_Click"/>
+            <Button Content="{x:Static services:Loc.OK}" Style="{StaticResource FluentAccentButton}"
+                    FontSize="13" Padding="20,6" Margin="10,0,0,0" IsDefault="True" Click="Ok_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

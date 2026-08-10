@@ -20,6 +20,8 @@ public class DatabaseService : IDisposable
     // Attachments are local-only (ADR-013): a plain collection, deliberately NOT tracked —
     // no outbox, no sync payload, immune to ApplySync's whole-entity Task upsert.
     private readonly ILiteCollection<TaskAttachment> _rawAttachments;
+    // List background images are local-only too (ADR-014), for the same reasons.
+    private readonly ILiteCollection<ListBackground> _rawListBackgrounds;
 
     public ILiteCollection<TaskList> Lists { get; }
     public ILiteCollection<TaskGroup> Groups { get; }
@@ -57,6 +59,7 @@ public class DatabaseService : IDisposable
         _rawTags = _db.GetCollection<Tag>("tags");
         _rawListGroups = _db.GetCollection<ListGroup>("listgroups");
         _rawAttachments = _db.GetCollection<TaskAttachment>("attachments");
+        _rawListBackgrounds = _db.GetCollection<ListBackground>("list_backgrounds");
 
         _tracker = new SyncTracker(_db.GetCollection<SyncEvent>("sync_events"));
 
@@ -250,6 +253,7 @@ public class DatabaseService : IDisposable
                 }
                 _rawGroups.DeleteMany(g => g.ListId == change.Id);
                 _rawLists.Delete(change.Id);
+                DeleteListBackground(change.Id);   // local background image dies with the list
                 break;
             case SyncEntityTypes.Group:
                 var group = _rawGroups.FindById(change.Id);
@@ -315,6 +319,29 @@ public class DatabaseService : IDisposable
         foreach (var t in tasks)
             t.AttachmentCount = GetAttachmentCount(t.Id);
     }
+
+    // ─── List backgrounds (local-only image bytes, ADR-014) ──
+
+    /// <summary>Image bytes of a list's background, or null when it has none.</summary>
+    public byte[]? GetListBackgroundData(string listId) => _rawListBackgrounds.FindById(listId)?.Data;
+
+    /// <summary>Original file name of a list's background image, or null.</summary>
+    public string? GetListBackgroundFileName(string listId) => _rawListBackgrounds.FindById(listId)?.FileName;
+
+    /// <summary>Stores (or replaces) a list's background image. Upserts by _id = listId
+    /// so each list keeps exactly one row.</summary>
+    public void SetListBackground(string listId, byte[] data, string? fileName) =>
+        _rawListBackgrounds.Upsert(new ListBackground
+        {
+            Id = listId,
+            ListId = listId,
+            Data = data,
+            FileName = fileName ?? "",
+        });
+
+    /// <summary>Deletes a list's background image. Called wherever a list is removed
+    /// (the app's DeleteList and ApplySync's list tombstone) so no orphan bytes remain.</summary>
+    public void DeleteListBackground(string listId) => _rawListBackgrounds.Delete(listId);
 
     public void Dispose()
     {

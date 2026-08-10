@@ -200,4 +200,30 @@ public sealed class SyncApplierTests : IDisposable
 
         Assert.Contains(captured, m => m.Contains("failed") && m.Contains("t1"));
     }
+
+    [Fact]
+    public void ApplyListUpsert_NeverWipesLocalBackgroundBytes()
+    {
+        // Local list with an image background, then a newer server copy of the SAME list arrives.
+        _db.SetListBackground("list-1", new byte[] { 1, 2, 3 }, "bg.png");
+        _db.ApplySync(new[] { Change(new TaskList { Id = "list-1", Name = "Work", Type = ListType.Custom, ModifiedAt = 200 }) });
+
+        // Background bytes live in a separate untracked collection, untouched by the upsert.
+        Assert.Equal("Work", _db.Lists.FindById("list-1").Name);
+        Assert.Equal(new byte[] { 1, 2, 3 }, _db.GetListBackgroundData("list-1"));
+        Assert.Equal("bg.png", _db.GetListBackgroundFileName("list-1"));
+    }
+
+    [Fact]
+    public void ListTombstone_DeletesLocalBackgroundBytes()
+    {
+        _db.ApplySync(new[] { Change(new TaskList { Id = "list-1", Name = "Work", Type = ListType.Custom, ModifiedAt = 100 }) });
+        _db.SetListBackground("list-1", new byte[] { 1, 2, 3 }, "bg.png");
+
+        _db.ApplySync(new[] { Tombstone(SyncEntityTypes.List, "list-1", 200) });
+
+        Assert.Null(_db.Lists.FindById("list-1"));
+        Assert.Null(_db.GetListBackgroundData("list-1"));   // no orphaned bytes
+        Assert.Null(_db.GetListBackgroundFileName("list-1"));
+    }
 }

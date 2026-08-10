@@ -192,6 +192,20 @@ public static class Loc
     public static string EnableReminderNotifications => Language == AppLanguage.Chinese ? "启用提醒通知" : "Enable reminder notifications";
     public static string Apply => Language == AppLanguage.Chinese ? "应用" : "Apply";
     public static string MoreColors => Language == AppLanguage.Chinese ? "更多颜色…" : "More colors…";
+    // List theme dialog (ADR-014)
+    public static string ListTheme => Language == AppLanguage.Chinese ? "列表主题" : "List theme";
+    public static string NoBackground => Language == AppLanguage.Chinese ? "无背景" : "No background";
+    public static string SolidColor => Language == AppLanguage.Chinese ? "纯色" : "Solid color";
+    public static string ChooseImage => Language == AppLanguage.Chinese ? "选择图片…" : "Choose image…";
+    public static string RemoveImage => Language == AppLanguage.Chinese ? "移除图片" : "Remove image";
+    public static string ImageTooLarge(int mb) =>
+        Language == AppLanguage.Chinese ? $"图片不能超过 {mb} MB" : $"Image too large (max {mb} MB)";
+    public static string ImageFileFilter => Language == AppLanguage.Chinese
+        ? "图片文件 (*.jpg;*.jpeg;*.png;*.bmp;*.gif)|*.jpg;*.jpeg;*.png;*.bmp;*.gif|所有文件 (*.*)|*.*"
+        : "Images (*.jpg;*.jpeg;*.png;*.bmp;*.gif)|*.jpg;*.jpeg;*.png;*.bmp;*.gif|All files (*.*)|*.*";
+    public static string ListThemeImageLocalHint => Language == AppLanguage.Chinese
+        ? "背景图片仅保存在本设备，不会同步。"
+        : "Background images stay on this device and won't sync.";
     public static string PlayReminderSound => Language == AppLanguage.Chinese ? "播放提示音" : "Play reminder sound";
     public static string ReminderRingtone => Language == AppLanguage.Chinese ? "提醒铃声" : "Reminder ringtone";
     public static string DefaultRingtone => Language == AppLanguage.Chinese ? "默认铃声" : "Default ringtone";

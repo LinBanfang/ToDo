@@ -85,6 +85,9 @@ public static class ThemeService
         d["CardBackgroundBrush"] = Brush("#2B2B2B");
         d["CardHoverBrush"] = Brush("#333333");
         d["CardSelectedBrush"] = Brush("#264F78");
+        d["TaskCardBrush"] = Brush("#A62B2B2B");
+        d["TaskCardHoverBrush"] = Brush("#D9333333");
+        d["ListBackgroundMaskBrush"] = Brush("#4D000000");
         d["TextPrimaryBrush"] = Brush("#FFFFFF");
         d["TextSecondaryBrush"] = Brush("#C8C6C4");
         d["TextDisabledBrush"] = Brush("#797775");
