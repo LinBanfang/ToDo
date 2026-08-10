@@ -54,6 +54,39 @@
         <Setter Property="Padding" Value="8,6"/>
     </Style>
 
+    <!-- Header foreground that adapts to the per-list theme (ADR-014): HeaderTitleLight
+         null = no theme → app-theme text color; true = light title → white; false = dark
+         title → near-black. Applied to the list header's title, emoji, and icon buttons so
+         the whole header stays readable on the themed background. -->
+    <Style x:Key="HeaderAdaptiveText" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding HeaderTitleLight}" Value="True">
+                <Setter Property="Foreground" Value="#FFFFFF"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding HeaderTitleLight}" Value="False">
+                <Setter Property="Foreground" Value="#201F1E"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="HeaderAdaptiveButton" TargetType="Button" BasedOn="{StaticResource FluentSubtleButton}">
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding HeaderTitleLight}" Value="True">
+                <Setter Property="Foreground" Value="#FFFFFF"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding HeaderTitleLight}" Value="False">
+                <Setter Property="Foreground" Value="#201F1E"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Icon variant: keeps the lighter secondary color when there's no theme. -->
+    <Style x:Key="HeaderAdaptiveIcon" TargetType="Button" BasedOn="{StaticResource HeaderAdaptiveButton}">
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+    </Style>
+
     <!-- Fluent TextBox -->
     <Style x:Key="FluentTextBox" TargetType="TextBox">
         <Setter Property="FontFamily" Value="{StaticResource FluentFont}"/>

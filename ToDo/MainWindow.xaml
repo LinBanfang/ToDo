@@ -733,7 +733,8 @@
                             </Button.Style>
                             <Button.Content>
                                 <TextBlock Text="{Binding ActiveList.Icon}" FontSize="26"
-                                           FontFamily="Segoe UI Emoji"/>
+                                           FontFamily="Segoe UI Emoji"
+                                           Style="{StaticResource HeaderAdaptiveText}"/>
                             </Button.Content>
                         </Button>
                         <!-- Read-only icon: system list or searching -->
@@ -762,21 +763,9 @@
                                             <Setter Property="FontSize" Value="26"/>
                                             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                                         </MultiDataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                        <!-- Editable title (click to rename). The header now sits on the
-                             per-list theme background (ADR-014), so the title text flips
-                             light/dark for contrast (HeaderTitleLight); null = no theme →
-                             the app theme's normal text color. -->
-                        <TextBlock x:Name="ListTitleLabel" Text="{Binding HeaderTitle}" FontSize="28"
-                                   FontWeight="Bold" VerticalAlignment="Center" Cursor="Hand"
-                                   MouseLeftButtonDown="ListTitle_Click">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-                                    <Style.Triggers>
+                                        <!-- Foreground follows the list theme's title color
+                                             (white/dark), same as the title; no-op for color
+                                             emoji, applies to monochrome icon glyphs -->
                                         <DataTrigger Binding="{Binding HeaderTitleLight}" Value="True">
                                             <Setter Property="Foreground" Value="#FFFFFF"/>
                                         </DataTrigger>
@@ -787,6 +776,14 @@
                                 </Style>
                             </TextBlock.Style>
                         </TextBlock>
+                        <!-- Editable title (click to rename). The header now sits on the
+                             per-list theme background (ADR-014), so the title text flips
+                             light/dark for contrast (HeaderTitleLight); null = no theme →
+                             the app theme's normal text color. -->
+                        <TextBlock x:Name="ListTitleLabel" Text="{Binding HeaderTitle}" FontSize="28"
+                                   FontWeight="Bold" VerticalAlignment="Center" Cursor="Hand"
+                                   Style="{StaticResource HeaderAdaptiveText}"
+                                   MouseLeftButtonDown="ListTitle_Click"/>
                         <TextBox x:Name="ListTitleEdit" FontSize="28" FontWeight="Bold"
                                  Foreground="{DynamicResource TextPrimaryBrush}"
                                  VerticalAlignment="Center" Visibility="Collapsed"
@@ -798,7 +795,7 @@
                         <Button x:Name="NewGroupBtn" Content="{x:Static services:Loc.NewGroup}"
                                 FontSize="13" Click="NewGroup_Click">
                             <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource FluentSubtleButton}">
+                                <Style TargetType="Button" BasedOn="{StaticResource HeaderAdaptiveButton}">
                                     <Setter Property="Visibility" Value="Visible"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsSearching}" Value="True">
@@ -809,8 +806,7 @@
                             </Button.Style>
                         </Button>
                         <Button Content="&#xE712;" FontFamily="Segoe MDL2 Assets"
-                                Style="{StaticResource FluentSubtleButton}" FontSize="16"
-                                Foreground="{DynamicResource TextSecondaryBrush}"
+                                Style="{StaticResource HeaderAdaptiveIcon}" FontSize="16"
                                 Click="ListMore_Click">
                             <Button.ContextMenu>
                                 <ContextMenu>

@@ -231,8 +231,8 @@ public static class Loc
         ? "未设置背景，标题文字跟随应用主题。"
         : "No theme set — the title follows the app theme.";
     public static string TitleTextRecommend(bool light) => Language == AppLanguage.Chinese
-        ? $"自动：推荐{TitleTextLight}文字"
-        : $"Auto: recommends {TitleTextLight} text";
+        ? $"自动：推荐{(light ? TitleTextLight : TitleTextDark)}文字"
+        : $"Auto: recommends {(light ? TitleTextLight : TitleTextDark)} text";
     public static string PlayReminderSound => Language == AppLanguage.Chinese ? "播放提示音" : "Play reminder sound";
     public static string ReminderRingtone => Language == AppLanguage.Chinese ? "提醒铃声" : "Reminder ringtone";
     public static string DefaultRingtone => Language == AppLanguage.Chinese ? "默认铃声" : "Default ringtone";

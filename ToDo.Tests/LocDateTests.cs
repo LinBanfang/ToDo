@@ -57,4 +57,17 @@ public sealed class LocDateTests : IDisposable
         Loc.SetLanguage(lang);
         Assert.Equal(expected, Loc.JustNow);
     }
+
+    /// <summary>The auto-mode hint must state the recommended color — recommending dark
+    /// text must not still read "推荐浅色".</summary>
+    [Theory]
+    [InlineData(AppLanguage.Chinese, true, "自动：推荐浅色文字")]
+    [InlineData(AppLanguage.Chinese, false, "自动：推荐深色文字")]
+    [InlineData(AppLanguage.English, true, "Auto: recommends Light text")]
+    [InlineData(AppLanguage.English, false, "Auto: recommends Dark text")]
+    public void TitleTextRecommend_ReflectsLightOrDark(AppLanguage lang, bool light, string expected)
+    {
+        Loc.SetLanguage(lang);
+        Assert.Equal(expected, Loc.TitleTextRecommend(light));
+    }
 }
