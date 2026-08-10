@@ -327,6 +327,7 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
         <!-- ═══════════════ SIDEBAR (Column 0) ═══════════════ -->
@@ -1079,15 +1080,24 @@
             <views:SettingsPage Grid.Row="1" DataContext="{Binding Settings}"/>
         </Grid>
 
-        <!-- ═══════════════ TASK DETAIL PANE (Column 2) ═══════════════ -->
-        <!-- Width is code-animated (0→360 open / 360→0 close, see UpdateDetailPane) so the
-             themed task area re-crops smoothly instead of snapping. Content is a fixed-width,
-             left-aligned grid so it stays rendered (clipped) during the slide instead of reflowing. -->
-        <Border x:Name="DetailPane" Grid.Column="3" Width="0" Visibility="Collapsed"
+        <!-- ═══════════════ TASK DETAIL PANE (Column 4) ═══════════════ -->
+        <!-- Detail pane splitter: drag to resize; the width is persisted via
+             SettingsService.DetailPaneWidth. Shown only while the pane is open (toggled in
+             UpdateDetailPane). Painted with the pane's background so there's no transition band. -->
+        <Border x:Name="DetailSplitter" Grid.Column="3" Width="5" Cursor="SizeWE"
+                Background="{DynamicResource CardBackgroundBrush}" Visibility="Collapsed"
+                MouseLeftButtonDown="DetailSplitter_MouseDown"
+                MouseMove="DetailSplitter_MouseMove"
+                MouseLeftButtonUp="DetailSplitter_MouseUp"/>
+
+        <!-- Width is code-animated (0→saved open / saved→0 close, see UpdateDetailPane) so the
+             themed task area re-crops smoothly instead of snapping. Content stretches to the
+             pane's width (resizable), clipped during the slide so it reveals progressively. -->
+        <Border x:Name="DetailPane" Grid.Column="4" Width="0" Visibility="Collapsed"
                 ClipToBounds="True"
                 Background="{DynamicResource CardBackgroundBrush}"
                 BorderBrush="{DynamicResource SidebarBorderBrush}" BorderThickness="1,0,0,0">
-            <Grid Width="360" HorizontalAlignment="Left">
+            <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>

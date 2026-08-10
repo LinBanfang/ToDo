@@ -1347,18 +1347,29 @@ public partial class MainWindow : Window
 
     // ─── Detail Pane ──────────────────────────────────────
 
+    private const double DetailPaneMinWidth = 240;
+    private const double DetailPaneMaxWidth = 560;
+
+    private bool _detailResizing;
+    private double _detailResizeStartWidth;
+    private double _detailResizeStartX;
+
     /// <summary>Opens/closes the detail pane with a width slide so the themed task area
-    /// re-crops smoothly instead of snapping (the horizontal shift when the 360px column
-    /// appears/disappears). Content binds to the pane's DataContext — a snapshot of the
-    /// task — so it stays rendered during slide-out instead of going blank.</summary>
+    /// re-crops smoothly instead of snapping (the horizontal shift when the column
+    /// appears/disappears). The slide targets the persisted width (SettingsService.
+    /// DetailPaneWidth), which the pane's splitter can also resize directly. Content binds to
+    /// the pane's DataContext — a snapshot of the task — so it stays rendered during slide-out
+    /// instead of going blank.</summary>
     private void UpdateDetailPane()
     {
         var task = ViewModel.SelectedTask;
+        var target = Math.Clamp(SettingsService.Current.DetailPaneWidth, DetailPaneMinWidth, DetailPaneMaxWidth);
         if (task == null)
         {
             if (DetailPane.Visibility == Visibility.Visible)
             {
-                var close = new DoubleAnimation(360, 0, TimeSpan.FromMilliseconds(160))
+                DetailSplitter.Visibility = Visibility.Collapsed;   // no lone strip once the pane slides away
+                var close = new DoubleAnimation(target, 0, TimeSpan.FromMilliseconds(160))
                 {
                     EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn },
                 };
@@ -1377,9 +1388,10 @@ public partial class MainWindow : Window
         var wasCollapsed = DetailPane.Visibility == Visibility.Collapsed;
         DetailPane.DataContext = task;                       // snapshot before opening
         DetailPane.Visibility = Visibility.Visible;
+        DetailSplitter.Visibility = Visibility.Visible;
         if (wasCollapsed)
         {
-            var open = new DoubleAnimation(0, 360, TimeSpan.FromMilliseconds(180))
+            var open = new DoubleAnimation(0, target, TimeSpan.FromMilliseconds(180))
             {
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
             };
@@ -1391,11 +1403,40 @@ public partial class MainWindow : Window
             // mid-close (re-opened during slide-out), cancel the slide and snap back to full
             // width instead of finishing the collapse (Completed's SelectedTask guard would
             // leave the pane stuck at width 0 but visible). Set the local value first so
-            // clearing the animation reverts to 360, not the XAML base of 0.
-            DetailPane.Width = 360;
+            // clearing the animation reverts to the saved width, not the XAML base of 0.
+            DetailPane.Width = target;
             DetailPane.BeginAnimation(FrameworkElement.WidthProperty, null);
         }
         RefreshDetailPickers();
+    }
+
+    /// <summary>The splitter is the pane's LEFT edge: dragging left (−delta) widens the pane,
+    /// right narrows it. Capture + drag-cancel so it works mid slide-open.</summary>
+    private void DetailSplitter_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed) return;
+        _detailResizing = true;
+        _detailResizeStartX = e.GetPosition(this).X;
+        _detailResizeStartWidth = DetailPane.Width;
+        DetailPane.BeginAnimation(FrameworkElement.WidthProperty, null);   // cancel any open/close slide
+        DetailSplitter.CaptureMouse();
+        e.Handled = true;
+    }
+
+    private void DetailSplitter_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (!_detailResizing) return;
+        var delta = e.GetPosition(this).X - _detailResizeStartX;
+        DetailPane.Width = Math.Clamp(_detailResizeStartWidth - delta, DetailPaneMinWidth, DetailPaneMaxWidth);
+    }
+
+    private void DetailSplitter_MouseUp(object sender, MouseButtonEventArgs e)
+    {
+        if (!_detailResizing) return;
+        _detailResizing = false;
+        DetailSplitter.ReleaseMouseCapture();
+        SettingsService.Current.DetailPaneWidth = DetailPane.Width;
+        SettingsService.Save();
     }
 
     private void DetailPane_Close(object sender, RoutedEventArgs e)

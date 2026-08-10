@@ -10,6 +10,8 @@ public class AppSettings
     public string DbPath { get; set; } = "";
     public string Theme { get; set; } = "Light"; // Light, Dark
     public double SidebarWidth { get; set; } = 280;
+    /// <summary>Task detail pane width (resizable via its splitter, persisted).</summary>
+    public double DetailPaneWidth { get; set; } = 360;
     public string Language { get; set; } = "Chinese"; // Chinese, English
     public bool CheckForUpdatesOnStartup { get; set; } = true;
     public bool ReminderNotifications { get; set; } = true;
