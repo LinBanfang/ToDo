@@ -293,6 +293,33 @@ public sealed class MainViewModelTests : IDisposable
         Assert.False(_vm.ListBackgroundMaskVisible);
     }
 
+    [Fact]
+    public void SetListTheme_PersistsOpacity_AndBakesIntoBrush()
+    {
+        _vm.Refresh();
+        _vm.ActiveListId = "list-tasks";
+        var list = _vm.Lists.First(l => l.Id == "list-tasks");
+
+        _vm.SetListTheme(list, ListBackgroundType.Solid, "#28A745", null, null, 60);
+
+        Assert.Equal(60, _db.GetListBackgroundOpacity("list-tasks"));
+        var brush = Assert.IsType<SolidColorBrush>(_vm.ListBackgroundBrush);
+        Assert.Equal(0.6, brush.Opacity, precision: 3);   // 60% faded toward the window background
+    }
+
+    [Fact]
+    public void SetListTheme_DefaultOpacity_StoresNoRow()
+    {
+        _vm.Refresh();
+        _vm.ActiveListId = "list-tasks";
+        var list = _vm.Lists.First(l => l.Id == "list-tasks");
+
+        _vm.SetListTheme(list, ListBackgroundType.Solid, "#28A745", null, null, 100);
+
+        // A missing row reads back as the default — the collection only holds non-defaults.
+        Assert.Equal(100, _db.GetListBackgroundOpacity("list-tasks"));
+    }
+
     private sealed class FakeClock : IClock
     {
         public DateTime Today { get; }

@@ -22,6 +22,9 @@ public class DatabaseService : IDisposable
     private readonly ILiteCollection<TaskAttachment> _rawAttachments;
     // List background images are local-only too (ADR-014), for the same reasons.
     private readonly ILiteCollection<ListBackground> _rawListBackgrounds;
+    // List background opacity ("背景强弱") is local-only as well — a display preference
+    // tied to a local-only asset, so a value that can't sync, in its own untracked collection.
+    private readonly ILiteCollection<ListBackgroundSetting> _rawListBackgroundSettings;
 
     public ILiteCollection<TaskList> Lists { get; }
     public ILiteCollection<TaskGroup> Groups { get; }
@@ -60,6 +63,7 @@ public class DatabaseService : IDisposable
         _rawListGroups = _db.GetCollection<ListGroup>("listgroups");
         _rawAttachments = _db.GetCollection<TaskAttachment>("attachments");
         _rawListBackgrounds = _db.GetCollection<ListBackground>("list_backgrounds");
+        _rawListBackgroundSettings = _db.GetCollection<ListBackgroundSetting>("list_background_settings");
 
         _tracker = new SyncTracker(_db.GetCollection<SyncEvent>("sync_events"));
 
@@ -254,6 +258,7 @@ public class DatabaseService : IDisposable
                 _rawGroups.DeleteMany(g => g.ListId == change.Id);
                 _rawLists.Delete(change.Id);
                 DeleteListBackground(change.Id);   // local background image dies with the list
+                DeleteListBackgroundSetting(change.Id);   // ...and so does its opacity setting
                 break;
             case SyncEntityTypes.Group:
                 var group = _rawGroups.FindById(change.Id);
@@ -342,6 +347,26 @@ public class DatabaseService : IDisposable
     /// <summary>Deletes a list's background image. Called wherever a list is removed
     /// (the app's DeleteList and ApplySync's list tombstone) so no orphan bytes remain.</summary>
     public void DeleteListBackground(string listId) => _rawListBackgrounds.Delete(listId);
+
+    // ─── List background opacity (local-only per-list preference, ADR-014) ──
+
+    /// <summary>A list's background opacity (20..100), or the default 100 when unset.</summary>
+    public int GetListBackgroundOpacity(string listId) =>
+        _rawListBackgroundSettings.FindById(listId)?.OpacityPercent ?? 100;
+
+    /// <summary>Stores a list's background opacity. Upserts by _id = listId so each list
+    /// keeps at most one row.</summary>
+    public void SetListBackgroundOpacity(string listId, int percent) =>
+        _rawListBackgroundSettings.Upsert(new ListBackgroundSetting
+        {
+            Id = listId,
+            OpacityPercent = percent,
+        });
+
+    /// <summary>Removes a list's opacity setting (back to the default). Called when a list
+    /// is removed (the app's DeleteList and ApplySync's list tombstone) so no orphan rows
+    /// remain.</summary>
+    public void DeleteListBackgroundSetting(string listId) => _rawListBackgroundSettings.Delete(listId);
 
     public void Dispose()
     {

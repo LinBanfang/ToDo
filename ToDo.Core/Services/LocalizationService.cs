@@ -206,6 +206,11 @@ public static class Loc
     public static string ListThemeImageLocalHint => Language == AppLanguage.Chinese
         ? "背景图片仅保存在本设备，不会同步。"
         : "Background images stay on this device and won't sync.";
+    public static string BackgroundStrength => Language == AppLanguage.Chinese
+        ? "背景强弱" : "Background strength";
+    public static string BackgroundStrengthLocalHint => Language == AppLanguage.Chinese
+        ? "背景强弱仅本设备生效，不同步。"
+        : "Background strength is local to this device and won't sync.";
     public static string PlayReminderSound => Language == AppLanguage.Chinese ? "播放提示音" : "Play reminder sound";
     public static string ReminderRingtone => Language == AppLanguage.Chinese ? "提醒铃声" : "Reminder ringtone";
     public static string DefaultRingtone => Language == AppLanguage.Chinese ? "默认铃声" : "Default ringtone";

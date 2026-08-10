@@ -25,6 +25,8 @@ public partial class ListThemeDialog : Window
     private byte[]? _bytes;
     private string? _fileName;
     private bool _dirty;
+    private int _opacity;
+    private bool _opacityDirty;
 
     private string[] _bgColors = new[]
     {
@@ -47,23 +49,28 @@ public partial class ListThemeDialog : Window
             _bytes = Db.GetListBackgroundData(list.Id);
             _fileName = Db.GetListBackgroundFileName(list.Id);
         }
+        _opacity = Math.Clamp(Db.GetListBackgroundOpacity(list.Id), 20, 100);
 
         PreviewTitle.Text = list.DisplayName;
+        OpacitySlider.Value = _opacity;   // fires ValueChanged → label + live preview
+        OpacityValue.Text = _opacity + "%";
         UpdatePreview();
     }
 
     private void UpdatePreview()
     {
         var windowBg = (Brush)Application.Current.FindResource("AppBackgroundBrush");
+        var opacity = OpacitySlider.Value / 100.0;
 
         Brush? bg = null;
         switch (_type)
         {
             case ListBackgroundType.Solid:
-                bg = new SolidColorBrush(ColorParser.ParseColor(_color));
+                bg = new SolidColorBrush(ColorParser.ParseColor(_color)) { Opacity = opacity };
+                bg.Freeze();
                 break;
             case ListBackgroundType.Image when _bytes is { Length: > 0 }:
-                bg = BuildImageBrush(_bytes!);
+                bg = BuildImageBrush(_bytes!, opacity);
                 break;
         }
 
@@ -76,7 +83,7 @@ public partial class ListThemeDialog : Window
         ColorSwatchBtn.Background = swatchColor;
     }
 
-    private static ImageBrush BuildImageBrush(byte[] data)
+    private static ImageBrush BuildImageBrush(byte[] data, double opacity)
     {
         using var stream = new MemoryStream(data);
         var bitmap = new BitmapImage();
@@ -91,6 +98,7 @@ public partial class ListThemeDialog : Window
             Stretch = Stretch.UniformToFill,
             AlignmentX = AlignmentX.Center,
             AlignmentY = AlignmentY.Center,
+            Opacity = opacity,
         };
         brush.Freeze();
         return brush;
@@ -153,13 +161,21 @@ public partial class ListThemeDialog : Window
         UpdatePreview();
     }
 
+    private void OpacitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        OpacityValue.Text = (int)Math.Round(OpacitySlider.Value) + "%";
+        UpdatePreview();   // live preview, so strength is judged against the real backdrop
+    }
+
     private void Ok_Click(object sender, RoutedEventArgs e)
     {
         if (_type == ListBackgroundType.Image && _bytes == null)
             _type = ListBackgroundType.None;
 
-        if (_dirty)
-            ViewModel.SetListTheme(_list, _type, _color, _bytes, _fileName);
+        var opacity = (int)Math.Round(OpacitySlider.Value);
+        if (opacity != _opacity) _opacityDirty = true;
+        if (_dirty || _opacityDirty)
+            ViewModel.SetListTheme(_list, _type, _color, _bytes, _fileName, opacity);
         DialogResult = true;
     }
 

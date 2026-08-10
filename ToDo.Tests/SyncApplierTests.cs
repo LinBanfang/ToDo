@@ -226,4 +226,27 @@ public sealed class SyncApplierTests : IDisposable
         Assert.Null(_db.GetListBackgroundData("list-1"));   // no orphaned bytes
         Assert.Null(_db.GetListBackgroundFileName("list-1"));
     }
+
+    [Fact]
+    public void ApplyListUpsert_NeverWipesLocalOpacity()
+    {
+        _db.SetListBackgroundOpacity("list-1", 60);
+        _db.ApplySync(new[] { Change(new TaskList { Id = "list-1", Name = "Work", Type = ListType.Custom, ModifiedAt = 200 }) });
+
+        // The opacity setting lives in its own untracked collection, untouched by the upsert.
+        Assert.Equal("Work", _db.Lists.FindById("list-1").Name);
+        Assert.Equal(60, _db.GetListBackgroundOpacity("list-1"));
+    }
+
+    [Fact]
+    public void ListTombstone_DeletesLocalOpacitySetting()
+    {
+        _db.ApplySync(new[] { Change(new TaskList { Id = "list-1", Name = "Work", Type = ListType.Custom, ModifiedAt = 100 }) });
+        _db.SetListBackgroundOpacity("list-1", 60);
+
+        _db.ApplySync(new[] { Tombstone(SyncEntityTypes.List, "list-1", 200) });
+
+        Assert.Null(_db.Lists.FindById("list-1"));
+        Assert.Equal(100, _db.GetListBackgroundOpacity("list-1"));   // no orphaned setting row
+    }
 }

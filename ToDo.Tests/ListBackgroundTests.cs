@@ -64,4 +64,32 @@ public sealed class ListBackgroundTests : IDisposable
         Assert.Null(_db.GetListBackgroundData("lst"));
         Assert.Null(_db.GetListBackgroundFileName("lst"));
     }
+
+    // ─── Opacity setting (local-only "背景强弱", ADR-014) ──
+
+    [Fact]
+    public void GetOpacity_DefaultsTo100_WhenUnset()
+    {
+        Assert.Equal(100, _db.GetListBackgroundOpacity("nope"));
+    }
+
+    [Fact]
+    public void SetOpacity_KeepsSingleRow()
+    {
+        // Upsert by _id = listId: the second write overwrites, it does not append.
+        _db.SetListBackgroundOpacity("lst", 60);
+        _db.SetListBackgroundOpacity("lst", 40);
+
+        Assert.Equal(40, _db.GetListBackgroundOpacity("lst"));
+    }
+
+    [Fact]
+    public void DeleteSetting_ReturnsToDefault()
+    {
+        _db.SetListBackgroundOpacity("lst", 60);
+
+        _db.DeleteListBackgroundSetting("lst");
+
+        Assert.Equal(100, _db.GetListBackgroundOpacity("lst"));
+    }
 }

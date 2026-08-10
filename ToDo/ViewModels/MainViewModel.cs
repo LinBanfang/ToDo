@@ -101,10 +101,14 @@ public partial class MainViewModel : ObservableObject
         get
         {
             if (IsSearching || ActiveList == null) return null;
+            // Per-list opacity ("背景强弱", local-only): lower fades the background toward
+            // the window background. Baked into the brush so solid colors and images share
+            // one knob; the readability mask is left untouched.
+            var opacity = _db.GetListBackgroundOpacity(ActiveList.Id) / 100.0;
             return ActiveList.BackgroundType switch
             {
-                ListBackgroundType.Solid => BuildSolidBrush(ActiveList.BackgroundColor),
-                ListBackgroundType.Image => BuildImageBrush(ActiveList.Id),
+                ListBackgroundType.Solid => BuildSolidBrush(ActiveList.BackgroundColor, opacity),
+                ListBackgroundType.Image => BuildImageBrush(ActiveList.Id, opacity),
                 _ => null,
             };
         }
@@ -115,19 +119,19 @@ public partial class MainViewModel : ObservableObject
     public bool ListBackgroundMaskVisible =>
         !IsSearching && ActiveList?.BackgroundType == ListBackgroundType.Image;
 
-    private Brush? BuildSolidBrush(string hex)
+    private Brush? BuildSolidBrush(string hex, double opacity)
     {
         if (string.IsNullOrEmpty(hex)) return null;
         try
         {
-            var brush = new SolidColorBrush(ColorParser.ParseColor(hex));
+            var brush = new SolidColorBrush(ColorParser.ParseColor(hex)) { Opacity = opacity };
             brush.Freeze();
             return brush;
         }
         catch { return null; }
     }
 
-    private Brush? BuildImageBrush(string listId)
+    private Brush? BuildImageBrush(string listId, double opacity)
     {
         var bytes = _db.GetListBackgroundData(listId);
         if (bytes == null || bytes.Length == 0) return null;
@@ -142,7 +146,7 @@ public partial class MainViewModel : ObservableObject
                 image.EndInit();
             }
             image.Freeze();
-            var brush = new ImageBrush(image) { Stretch = Stretch.UniformToFill };
+            var brush = new ImageBrush(image) { Stretch = Stretch.UniformToFill, Opacity = opacity };
             brush.Freeze();
             return brush;
         }
@@ -659,17 +663,21 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>Applies a list's background theme (called by the theme dialog's OK).
-    /// The type + color sync via the tracked Lists collection; the image bytes are
-    /// local-only in the untracked collection (ADR-014). Raises the background
+    /// The type + color sync via the tracked Lists collection; the image bytes and the
+    /// opacity are local-only in untracked collections (ADR-014). Raises the background
     /// properties explicitly — LoadLists won't re-point an in-place-edited ActiveList.</summary>
     public void SetListTheme(TaskList list, ListBackgroundType type, string color,
-                             byte[]? image, string? fileName)
+                             byte[]? image, string? fileName, int opacityPercent = 100)
     {
         list.BackgroundType = type;
         list.BackgroundColor = color;
         _db.Lists.Update(list);
         if (image != null) _db.SetListBackground(list.Id, image, fileName);
         else _db.DeleteListBackground(list.Id);
+        // Opacity only earns a row when it differs from the default, so the collection
+        // holds "non-default" settings and a missing row reads back as 100.
+        if (opacityPercent == 100) _db.DeleteListBackgroundSetting(list.Id);
+        else _db.SetListBackgroundOpacity(list.Id, opacityPercent);
         OnPropertyChanged(nameof(ListBackgroundBrush));
         OnPropertyChanged(nameof(ListBackgroundMaskVisible));
     }
@@ -692,6 +700,7 @@ public partial class MainViewModel : ObservableObject
         _db.Groups.DeleteMany(g => g.ListId == list.Id);
         _db.Lists.Delete(list.Id);
         _db.DeleteListBackground(list.Id);   // local background image dies with the list (ADR-014)
+        _db.DeleteListBackgroundSetting(list.Id);   // ...and so does its opacity setting
         LoadAll();
         if (ActiveList?.Id == list.Id)
             ActiveList = Lists.FirstOrDefault(l => l.Id == "list-tasks");
