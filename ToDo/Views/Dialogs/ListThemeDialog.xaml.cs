@@ -163,6 +163,9 @@ public partial class ListThemeDialog : Window
 
     private void OpacitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        // Fires during InitializeComponent too: setting Minimum="20" coerces the default
+        // Value (0 → 20) before the later-named OpacityValue TextBlock exists — guard it.
+        if (OpacityValue == null) return;
         OpacityValue.Text = (int)Math.Round(OpacitySlider.Value) + "%";
         UpdatePreview();   // live preview, so strength is judged against the real backdrop
     }
