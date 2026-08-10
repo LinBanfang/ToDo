@@ -667,9 +667,10 @@
         </Border>
 
         <!-- GridSplitter: resize the sidebar, width persisted via SidebarWidth. Painted with
-             the sidebar background so the 4-5px hit area doesn't show the window color behind. -->
+             the content area's base color so the 4-5px hit area doesn't show the window color
+             behind it. -->
         <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch"
-                      VerticalAlignment="Stretch" Background="{DynamicResource SidebarBackgroundBrush}"
+                      VerticalAlignment="Stretch" Background="{DynamicResource AppBackgroundBrush}"
                       ResizeBehavior="PreviousAndNext" Cursor="SizeWE" ShowsPreview="True"/>
 
         <!-- ═══════════════ MAIN CONTENT (Column 2) ═══════════════ -->
