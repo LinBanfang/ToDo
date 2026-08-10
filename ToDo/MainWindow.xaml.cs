@@ -1287,6 +1287,17 @@ public partial class MainWindow : Window
     }
 
     // ─── List Menu ────────────────────────────────────────
+    // WPF opens a ContextMenu on right-click only; the header's three-dot button
+    // opens it on left-click via this handler (same pattern as the other "more" menus).
+    private void ListMore_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.ContextMenu is { } menu)
+        {
+            menu.PlacementTarget = btn;
+            menu.IsOpen = true;
+        }
+    }
+
     private void ListMenu_Rename(object sender, RoutedEventArgs e)
     {
         if (ViewModel.ActiveList != null)
@@ -1295,8 +1306,9 @@ public partial class MainWindow : Window
 
     private void ListMenu_Delete(object sender, RoutedEventArgs e)
     {
-        if (ViewModel.ActiveList != null)
-            ViewModel.DeleteListCommand.Execute(ViewModel.ActiveList);
+        if (ViewModel.ActiveList is not { } list) return;
+        if (FluentDialog.Confirm(this, Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete))
+            ViewModel.DeleteListCommand.Execute(list);
     }
 
     // ─── Dialogs ──────────────────────────────────────────

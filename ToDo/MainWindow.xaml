@@ -775,7 +775,8 @@
                         </Button>
                         <Button Content="&#xE712;" FontFamily="Segoe MDL2 Assets"
                                 Style="{StaticResource FluentSubtleButton}" FontSize="16"
-                                Foreground="{DynamicResource TextSecondaryBrush}">
+                                Foreground="{DynamicResource TextSecondaryBrush}"
+                                Click="ListMore_Click">
                             <Button.ContextMenu>
                                 <ContextMenu>
                                     <MenuItem Header="{x:Static services:Loc.RenameList}" Click="ListMenu_Rename"/>
