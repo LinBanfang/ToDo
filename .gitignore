@@ -13,3 +13,7 @@ obj/
 
 # Deploy local config (real server IP/domain) — never committed
 ToDo.Server/deploy/deploy.local
+
+# Test / coverage artifacts (dotnet test --collect + reportgenerator output)
+TestResults/
+coveragereport/

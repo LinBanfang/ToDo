@@ -2,6 +2,10 @@ name: Build and Test
 
 # 常规质量门禁：每次 push 到 master 或 PR 时构建整个解决方案并跑测试，
 # 提前拦截编译/回归问题（发布仍由 release.yml 的 tag 触发）。
+#
+# 双配置：Debug 跑测试并收集覆盖率；Release 也构建 + 跑测试，
+# 让发布路径（release.yml 用 -c Release publish）在门禁内就被验证，
+# 而不只是打 tag 时才发现 Release 回归。
 on:
   push:
     branches: [master]
@@ -19,8 +23,37 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Build
+      - name: Build (Debug)
         run: dotnet build ToDo.slnx -c Debug
 
-      - name: Test
-        run: dotnet test ToDo.slnx -c Debug --no-build
+      # --collect:"XPlat Code Coverage" 依赖测试项目里的 coverlet.collector 包，
+      # 每个测试项目各产出一份 coverage.cobertura.xml（合并与汇总见下方 reportgenerator 步骤）。
+      - name: Test (Debug, with coverage)
+        run: dotnet test ToDo.slnx -c Debug --no-build --collect:"XPlat Code Coverage" --results-directory TestResults
+
+      - name: Build (Release)
+        run: dotnet build ToDo.slnx -c Release --no-restore
+
+      - name: Test (Release)
+        run: dotnet test ToDo.slnx -c Release --no-build
+
+      - name: Install reportgenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Generate coverage report
+        shell: pwsh
+        run: |
+          $rg = Join-Path $env:USERPROFILE '.dotnet\tools\reportgenerator.exe'
+          & $rg "-reports:TestResults/**/coverage.cobertura.xml" `
+                "-targetdir:coveragereport" `
+                "-reporttypes:Html;MarkdownSummary" `
+                "-assemblyfilters:-ToDo.Tests*;-ToDo.Server.Tests*;-xunit*;-Microsoft*;-System*"
+          Write-Host "`n=== Coverage summary (Debug) ==="
+          Get-Content coveragereport/Summary.md
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coveragereport
+          if-no-files-found: error
