@@ -46,7 +46,7 @@
             <StackPanel Grid.Column="0" Margin="0,0,24,0">
                 <!-- No background -->
                 <Button Content="{x:Static services:Loc.NoBackground}" Style="{StaticResource FluentSubtleButton}"
-                        FontSize="13" HorizontalAlignment="Left" Padding="8,4"
+                        FontSize="13" HorizontalAlignment="Left" Padding="0,4"
                         Click="NoBackground_Click"/>
 
                 <!-- Solid color -->
