@@ -2,7 +2,7 @@
 
 本项目遵循[语义化版本](https://semver.org/lang/zh-CN/)。格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
-## [Unreleased]
+## [v1.3.0] - 2026-08-10
 
 ### 新增
 - **任务列表主题**：每个列表（系统 / 自定义）可设置背景纯色或背景图片，背景铺满整个任务区（含列表标题栏），任务区半透明卡片透出主题、图片自动叠加遮罩；搜索视图保持全局背景。纯色随列表同步，图片字节仅保存在本设备（见 [ADR-014](docs/adr/0014-list-theme.md)）
@@ -14,9 +14,12 @@
 ### 修复
 - **列表三点菜单**：列表头部「⋯」按钮现在可左键打开（重命名 / 删除列表）；删除列表前增加二次确认（任务移入收件箱，不丢失）
 - **对话框标题去重**：标题只保留在跟随主题色的标题栏，内容区不再重复显示大标题
+- **自动推荐文案**：标题文字「自动」模式的推荐提示不再固定显示「浅色」，按实际推荐结果区分浅色 / 深色
+- **详情分割条主题铺满**：任务详情面板左侧的分割条随主题背景铺满，不再露出面板底色过渡带
 
 ### 优化
 - **滚动条**：滑块视觉改细（4px）并保留 10px 命中区，静止半透明、悬停 / 拖动加深，观感更轻盈
+- **标题栏图标跟随深浅**：标题、列表图标、「新建分组」与「⋯」按钮的前景随标题颜色同步变浅 / 变深，深色主题背景上不再看不清
 
 ## [v1.2.5] - 2026-08-10
 
@@ -202,7 +205,10 @@
 - 浅色 / 深色主题（DynamicResource 运行时切换）、中英文切换
 - LiteDB 本地存储（默认 `%LOCALAPPDATA%\ToDo\todo.db`，路径可配置）
 
-[unreleased]: https://github.com/LinBanfang/ToDo/compare/v1.2.3...HEAD
+[unreleased]: https://github.com/LinBanfang/ToDo/compare/v1.3.0...HEAD
+[v1.3.0]: https://github.com/LinBanfang/ToDo/compare/v1.2.5...v1.3.0
+[v1.2.5]: https://github.com/LinBanfang/ToDo/compare/v1.2.4...v1.2.5
+[v1.2.4]: https://github.com/LinBanfang/ToDo/compare/v1.2.3...v1.2.4
 [v1.2.3]: https://github.com/LinBanfang/ToDo/compare/v1.2.2...v1.2.3
 [v1.2.2]: https://github.com/LinBanfang/ToDo/compare/v1.2.1...v1.2.2
 [v1.2.1]: https://github.com/LinBanfang/ToDo/compare/v1.2.0...v1.2.1
