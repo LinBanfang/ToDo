@@ -17,7 +17,7 @@ public partial class UpdateDialog : Window
         InitializeComponent();
         SourceInitialized += (_, _) => TitleBarService.Apply(this);
         _args = args;
-        VersionText.Text = $"{Loc.UpdateAvailable} v{args.CurrentVersion}";
+        VersionText.Text = $"v{args.CurrentVersion}";
         BodyText.Text = string.IsNullOrWhiteSpace(releaseBody) ? "" : releaseBody.Trim();
     }
 

@@ -30,7 +30,6 @@ public partial class FluentDialog : Window
         InitializeComponent();
         SourceInitialized += (_, _) => TitleBarService.Apply(this);
         Title = title;
-        TitleText.Text = title;
         MessageText.Text = message;
 
         switch (kind)

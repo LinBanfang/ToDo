@@ -15,8 +15,8 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="VersionText" Grid.Row="0" FontSize="18" FontWeight="SemiBold"
-                   Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,12"/>
+        <TextBlock x:Name="VersionText" Grid.Row="0" FontSize="13"
+                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,12"/>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,16">
             <TextBlock x:Name="BodyText" TextWrapping="Wrap" FontSize="13"
