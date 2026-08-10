@@ -136,7 +136,7 @@ public partial class StickyWindow : Window
     {
         if (sender is FrameworkElement { DataContext: TaskItem task })
         {
-            App.ViewModel!.CloseTaskCommand.Execute((task, CloseMode.Complete));
+            App.ViewModel!.CloseTaskCommand.Execute((task, CloseMode.Complete, false));
             e.Handled = true;
         }
     }

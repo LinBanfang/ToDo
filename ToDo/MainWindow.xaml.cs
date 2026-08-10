@@ -1161,7 +1161,7 @@ public partial class MainWindow : Window
     {
         if (sender is FrameworkElement fe && fe.DataContext is TaskItem task)
         {
-            ViewModel.CloseTaskCommand.Execute((task, CloseMode.Complete));
+            ViewModel.CloseTaskCommand.Execute((task, CloseMode.Complete, false));
             e.Handled = true;
         }
     }
@@ -1181,13 +1181,30 @@ public partial class MainWindow : Window
             {
                 var completeItem = new MenuItem { Header = Loc.Complete };
                 completeItem.Click += (s, _) =>
-                    ViewModel.CloseTaskCommand.Execute((task, CloseMode.Complete));
+                    ViewModel.CloseTaskCommand.Execute((task, CloseMode.Complete, false));
                 menu.Items.Add(completeItem);
 
-                var cancelItem = new MenuItem { Header = Loc.Cancel };
-                cancelItem.Click += (s, _) =>
-                    ViewModel.CloseTaskCommand.Execute((task, CloseMode.Cancel));
-                menu.Items.Add(cancelItem);
+                if (task.Recurrence != RecurrenceFrequency.None)
+                {
+                    // Recurring task: "cancel" splits into skip-this-occurrence (series
+                    // continues) vs stop-repeating (series ends), per ADR-015.
+                    var skipItem = new MenuItem { Header = Loc.SkipOccurrence };
+                    skipItem.Click += (s, _) =>
+                        ViewModel.CloseTaskCommand.Execute((task, CloseMode.Cancel, false));
+                    menu.Items.Add(skipItem);
+
+                    var endSeriesItem = new MenuItem { Header = Loc.EndSeries };
+                    endSeriesItem.Click += (s, _) =>
+                        ViewModel.CloseTaskCommand.Execute((task, CloseMode.Cancel, true));
+                    menu.Items.Add(endSeriesItem);
+                }
+                else
+                {
+                    var cancelItem = new MenuItem { Header = Loc.Cancel };
+                    cancelItem.Click += (s, _) =>
+                        ViewModel.CloseTaskCommand.Execute((task, CloseMode.Cancel, false));
+                    menu.Items.Add(cancelItem);
+                }
 
                 menu.Items.Add(new Separator());
 
@@ -1709,6 +1726,40 @@ public partial class MainWindow : Window
         RefreshDetailPickers();
     }
 
+    private void RecurrenceBtn_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.SelectedTask == null || sender is not Button btn) return;
+
+        var menu = new ContextMenu { PlacementTarget = btn };
+        foreach (var (freq, header) in new[] {
+            (RecurrenceFrequency.None, Loc.RepeatNone),
+            (RecurrenceFrequency.Daily, Loc.RepeatDaily),
+            (RecurrenceFrequency.Weekdays, Loc.RepeatWeekdays),
+            (RecurrenceFrequency.Weekly, Loc.RepeatWeekly),
+            (RecurrenceFrequency.Monthly, Loc.RepeatMonthly),
+            (RecurrenceFrequency.Yearly, Loc.RepeatYearly),
+        })
+        {
+            var item = new MenuItem { Header = header };
+            var f = freq;
+            item.Click += (_, _) => SetRecurrence(f);
+            menu.Items.Add(item);
+        }
+        menu.IsOpen = true;
+    }
+
+    private void SetRecurrence(RecurrenceFrequency freq)
+    {
+        if (ViewModel.SelectedTask is not { } task) return;
+        task.Recurrence = freq;
+        // Recurring tasks need a due date to schedule the next instance (ADR-015):
+        // picking a rule without one backdates it to today, so generation has an anchor.
+        if (freq != RecurrenceFrequency.None && task.DueDate == null)
+            task.DueDate = new DateTimeOffset(DateTime.Today).ToUnixTimeMilliseconds();
+        ViewModel.UpdateTaskCommand.Execute(task);
+        RefreshDetailPickers();
+    }
+
     private void DetailDueDate_Clear(object sender, RoutedEventArgs e)
     {
         if (ViewModel.SelectedTask == null) return;
@@ -1903,6 +1954,11 @@ public partial class MainWindow : Window
         if (task == null) return;
 
         _suppressDetailEvents = true;
+
+        // Recurrence label
+        RecurrenceLabel.Text = task.Recurrence == RecurrenceFrequency.None
+            ? Loc.AddRecurrence
+            : Loc.RecurrenceName(task.Recurrence);
 
         // Reminder label
         if (task.Reminder != null)

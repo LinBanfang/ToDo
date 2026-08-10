@@ -24,7 +24,9 @@ public static class SyncEntitySerializer
                 {
                     Id = t.Id, Title = t.Title, Note = t.Note, ListId = t.ListId,
                     GroupId = t.GroupId, Order = t.Order, IsImportant = t.IsImportant,
-                    DueDate = t.DueDate, Reminder = t.Reminder, TagIds = t.TagIds,
+                    DueDate = t.DueDate, Reminder = t.Reminder,
+                    Recurrence = t.Recurrence, RecurrenceInterval = t.RecurrenceInterval, RecurrenceSeriesId = t.RecurrenceSeriesId,
+                    TagIds = t.TagIds,
                     Steps = t.Steps.Select(s => new TaskStepSync { Id = s.Id, Title = s.Title, Completed = s.Completed, Order = s.Order }).ToList(),
                     Completed = t.Completed,
                     CloseRecord = t.CloseRecord == null
@@ -89,7 +91,9 @@ public static class SyncEntitySerializer
         {
             Id = dto.Id, Title = dto.Title, Note = dto.Note, ListId = dto.ListId,
             GroupId = dto.GroupId, Order = dto.Order, IsImportant = dto.IsImportant,
-            DueDate = dto.DueDate, Reminder = dto.Reminder, TagIds = dto.TagIds,
+            DueDate = dto.DueDate, Reminder = dto.Reminder,
+            Recurrence = dto.Recurrence, RecurrenceInterval = dto.RecurrenceInterval, RecurrenceSeriesId = dto.RecurrenceSeriesId,
+            TagIds = dto.TagIds,
             Steps = new System.Collections.ObjectModel.ObservableCollection<TaskStep>(
                 dto.Steps.Select(s => new TaskStep { Id = s.Id, Title = s.Title, Completed = s.Completed, Order = s.Order })),
             Completed = dto.Completed,

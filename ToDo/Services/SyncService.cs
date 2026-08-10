@@ -158,6 +158,9 @@ public partial class SyncService : ObservableObject, IDisposable
             await RunOnDbThread(() =>
             {
                 _db.ApplySync(response.Changes ?? new List<SyncChange>());
+                // Enforce the at-most-one-open-instance series invariant on whatever the
+                // round-trip just merged (ADR-015); deletes produce tombstones that sync back.
+                RecurrenceService.DedupeSeries(_db);
                 _db.Tracker.ClearPushed(events);
                 SettingsService.Current.LastSyncServerSeq = response.ServerSeq;
                 SettingsService.Current.LastSyncTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();

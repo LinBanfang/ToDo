@@ -226,6 +226,9 @@ public partial class MainViewModel : ObservableObject
         Theme = SettingsService.Current.Theme;
         SidebarWidth = new GridLength(Math.Max(SettingsService.Current.SidebarWidth, 180));
         Settings = new SettingsViewModel();
+        // Converge duplicate series instances left by offline races BEFORE loading them
+        // into memory, so the UI never shows a series with two open copies (ADR-015).
+        RecurrenceService.DedupeSeries(_db);
         LoadAll();
         DailyMyDayReset();
         if (App.Sync != null) App.Sync.StatusChanged += OnSyncStatusChanged;
@@ -868,8 +871,10 @@ public partial class MainViewModel : ObservableObject
     }
 
     // ─── Closing System ───────────────────────────────────
+    // endSeries distinguishes the recurring-task "cancel the whole series" action
+    // (cancel this occurrence = endSeries false) from a plain cancel (ADR-015).
     [RelayCommand]
-    private void CloseTask((TaskItem task, CloseMode mode) param)
+    private void CloseTask((TaskItem task, CloseMode mode, bool endSeries) param)
     {
         param.task.CloseRecord = new CloseRecord
         {
@@ -879,6 +884,13 @@ public partial class MainViewModel : ObservableObject
         param.task.Completed = param.mode == CloseMode.Complete;
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         param.task.NotifyCloseDisplay();
+
+        // Recurring-task generation (ADR-015): completing or cancel-this-occurrence spawns
+        // the next instance; cancel-the-series clears the rule (persisted by the Update
+        // below) and spawns nothing. The tracked Insert auto-stamps + outboxes it.
+        if (RecurrenceService.TryGenerateNext(_db, param.task, _clock.Today, endSeries: param.endSeries) is { } next)
+            Tasks.Add(next); // keep the in-memory collection in sync for in-place refresh
+
         _db.Tasks.Update(param.task);
         RefreshActiveTasks();
     }

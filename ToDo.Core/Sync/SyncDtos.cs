@@ -15,6 +15,9 @@ public class TaskSync
     public bool IsImportant { get; set; }
     public long? DueDate { get; set; }
     public long? Reminder { get; set; }
+    public RecurrenceFrequency Recurrence { get; set; }
+    public int RecurrenceInterval { get; set; } = 1;
+    public string? RecurrenceSeriesId { get; set; }
     public List<string> TagIds { get; set; } = new();
     public List<TaskStepSync> Steps { get; set; } = new();
     public bool Completed { get; set; }

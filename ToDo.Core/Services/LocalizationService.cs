@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using ToDo.Models;
 
 namespace ToDo.Services;
 
@@ -142,6 +143,25 @@ public static class Loc
     public static string Reminder => Language == AppLanguage.Chinese ? "提醒" : "Reminder";
     public static string AddDueDate => Language == AppLanguage.Chinese ? "添加截止日期" : "Add due date";
     public static string AddReminder => Language == AppLanguage.Chinese ? "添加提醒" : "Add reminder";
+    public static string Recurrence => Language == AppLanguage.Chinese ? "重复" : "Repeat";
+    public static string AddRecurrence => Language == AppLanguage.Chinese ? "添加重复" : "Add recurrence";
+    public static string RepeatNone => Language == AppLanguage.Chinese ? "不重复" : "Doesn't repeat";
+    public static string RepeatDaily => Language == AppLanguage.Chinese ? "每天" : "Daily";
+    public static string RepeatWeekdays => Language == AppLanguage.Chinese ? "每个工作日" : "Every weekday";
+    public static string RepeatWeekly => Language == AppLanguage.Chinese ? "每周" : "Weekly";
+    public static string RepeatMonthly => Language == AppLanguage.Chinese ? "每月" : "Monthly";
+    public static string RepeatYearly => Language == AppLanguage.Chinese ? "每年" : "Yearly";
+    public static string SkipOccurrence => Language == AppLanguage.Chinese ? "取消本次" : "Cancel this occurrence";
+    public static string EndSeries => Language == AppLanguage.Chinese ? "取消定时任务" : "Stop repeating";
+    public static string RecurrenceName(RecurrenceFrequency freq) => freq switch
+    {
+        RecurrenceFrequency.Daily => RepeatDaily,
+        RecurrenceFrequency.Weekdays => RepeatWeekdays,
+        RecurrenceFrequency.Weekly => RepeatWeekly,
+        RecurrenceFrequency.Monthly => RepeatMonthly,
+        RecurrenceFrequency.Yearly => RepeatYearly,
+        _ => RepeatNone,
+    };
     public static string UpdateAvailable => Language == AppLanguage.Chinese ? "发现新版本" : "Update available";
     public static string DownloadUpdate => Language == AppLanguage.Chinese ? "立即更新" : "Update now";
     public static string RemindLater => Language == AppLanguage.Chinese ? "以后再说" : "Remind me later";

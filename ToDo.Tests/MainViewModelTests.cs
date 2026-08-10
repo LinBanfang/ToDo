@@ -395,6 +395,51 @@ public sealed class MainViewModelTests : IDisposable
         Assert.Null(_vm.HeaderTitleLight);    // falls back to the app theme's text color
     }
 
+    // ─── Recurring-task close (ADR-015): complete/skip spawns the next instance,
+    // cancel-the-series clears the rule instead. ─────────────────
+
+    [Fact]
+    public void CloseTask_CompleteRecurring_GeneratesNextInstance_InMemoryAndDb()
+    {
+        _db.Tasks.Insert(new TaskItem
+        {
+            Id = "r1", Title = "喝水", ListId = "list-tasks",
+            Recurrence = RecurrenceFrequency.Daily, DueDate = Ts(Today),
+        });
+        _vm.Refresh();
+        var root = Task("r1");
+
+        _vm.CloseTaskCommand.Execute((root, CloseMode.Complete, false));
+
+        Assert.True(root.IsClosed);
+        var generated = _vm.Tasks.Single(t => t.RecurrenceSeriesId == "r1");
+        Assert.False(generated.IsClosed);
+        Assert.Equal(RecurrenceFrequency.Daily, generated.Recurrence);
+        Assert.Equal("喝水", generated.Title);
+        Assert.Equal(Ts(Today.AddDays(1)), generated.DueDate);   // daily → tomorrow (fake clock pins today)
+        Assert.NotNull(_db.Tasks.FindById(generated.Id));        // persisted + (tracked insert) outboxed
+    }
+
+    [Fact]
+    public void CloseTask_CancelEndSeries_ClearsRule_NoGeneration()
+    {
+        _db.Tasks.Insert(new TaskItem
+        {
+            Id = "r1", Title = "周报", ListId = "list-tasks",
+            Recurrence = RecurrenceFrequency.Weekly, DueDate = Ts(Today),
+        });
+        _vm.Refresh();
+        var root = Task("r1");
+
+        _vm.CloseTaskCommand.Execute((root, CloseMode.Cancel, true));
+
+        Assert.True(root.IsClosed);
+        Assert.Equal(CloseMode.Cancel, root.CloseRecord!.CloseMode);
+        Assert.Equal(RecurrenceFrequency.None, root.Recurrence);   // rule cleared on the instance
+        Assert.DoesNotContain(_vm.Tasks, t => t.RecurrenceSeriesId == "r1");   // nothing spawned
+        Assert.Single(_vm.Tasks);                                   // just the closed root remains
+    }
+
     private sealed class FakeClock : IClock
     {
         public DateTime Today { get; }

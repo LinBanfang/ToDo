@@ -39,6 +39,20 @@ public partial class TaskItem : ObservableObject, IOrdered
     [ObservableProperty]
     private long? _reminder;
 
+    /// <summary>Recurrence rule (ADR-015); None = one-off task. Synced — must be, or
+    /// sync's whole-entity overwrite would wipe it (the ADR-014 trap).</summary>
+    [ObservableProperty]
+    private RecurrenceFrequency _recurrence = RecurrenceFrequency.None;
+
+    /// <summary>Every N days/weeks/months/years (ADR-015). v1 UI fixes 1; field + date math reserved.</summary>
+    [ObservableProperty]
+    private int _recurrenceInterval = 1;
+
+    /// <summary>Id of the series root; generated instances point back to it. The root's
+    /// own value is null. Basis of the at-most-one-open-instance invariant + sync dedup.</summary>
+    [ObservableProperty]
+    private string? _recurrenceSeriesId;
+
     [ObservableProperty]
     private List<string> _tagIds = new();
 
