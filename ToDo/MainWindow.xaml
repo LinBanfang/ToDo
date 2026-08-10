@@ -1056,10 +1056,14 @@
         </Grid>
 
         <!-- ═══════════════ TASK DETAIL PANE (Column 2) ═══════════════ -->
-        <Border Grid.Column="3" Width="360" Background="{DynamicResource CardBackgroundBrush}"
-                BorderBrush="{DynamicResource SidebarBorderBrush}" BorderThickness="1,0,0,0"
-                Visibility="{Binding SelectedTask, Converter={StaticResource NullToVis}}">
-            <Grid>
+        <!-- Width is code-animated (0→360 open / 360→0 close, see UpdateDetailPane) so the
+             themed task area re-crops smoothly instead of snapping. Content is a fixed-width,
+             left-aligned grid so it stays rendered (clipped) during the slide instead of reflowing. -->
+        <Border x:Name="DetailPane" Grid.Column="3" Width="0" Visibility="Collapsed"
+                ClipToBounds="True"
+                Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource SidebarBorderBrush}" BorderThickness="1,0,0,0">
+            <Grid Width="360" HorizontalAlignment="Left">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -1084,7 +1088,7 @@
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="20,16">
                         <TextBox x:Name="DetailTitleBox"
-                                 Text="{Binding SelectedTask.Title, UpdateSourceTrigger=LostFocus}"
+                                 Text="{Binding Title, UpdateSourceTrigger=LostFocus}"
                                  Style="{StaticResource FluentTextBox}" FontSize="18"
                                  FontWeight="SemiBold" BorderThickness="0,0,0,1"
                                  Margin="0,0,0,16"
@@ -1116,7 +1120,7 @@
                                             Foreground="{DynamicResource TextDisabledBrush}"
                                             HorizontalAlignment="Right"
                                             Click="DetailDueDate_Clear"
-                                            Visibility="{Binding SelectedTask.DueDate, Converter={StaticResource NullToVis}}"/>
+                                            Visibility="{Binding DueDate, Converter={StaticResource NullToVis}}"/>
                                 </Grid>
                             </StackPanel>
                         </Border>
@@ -1137,7 +1141,7 @@
                                                Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </StackPanel>
                                 <CheckBox Grid.Column="1" Style="{StaticResource FluentCheckBox}"
-                                          IsChecked="{Binding SelectedTask.IsMyDay, Mode=OneWay}"
+                                          IsChecked="{Binding IsMyDay, Mode=OneWay}"
                                           Click="MyDayToggle_Click"/>
                             </Grid>
                         </Border>
@@ -1167,7 +1171,7 @@
                                             Foreground="{DynamicResource TextDisabledBrush}"
                                             HorizontalAlignment="Right"
                                             Click="ReminderClear_Click"
-                                            Visibility="{Binding SelectedTask.Reminder, Converter={StaticResource NullToVis}}"/>
+                                            Visibility="{Binding Reminder, Converter={StaticResource NullToVis}}"/>
                                 </Grid>
                             </StackPanel>
                         </Border>
@@ -1178,7 +1182,7 @@
                             <StackPanel>
                                 <TextBlock Text="{x:Static services:Loc.Steps}" FontSize="11" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextDisabledBrush}" Margin="0,0,0,8"/>
-                                <ItemsControl ItemsSource="{Binding SelectedTask.Steps}">
+                                <ItemsControl ItemsSource="{Binding Steps}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate DataType="{x:Type models:TaskStep}">
                                             <Border Margin="0,2" AllowDrop="True"
@@ -1320,19 +1324,19 @@
                         <!-- Close Info -->
                         <Border Background="{DynamicResource AppBackgroundBrush}"
                                 CornerRadius="6" Padding="12" Margin="0,0,0,16"
-                                Visibility="{Binding SelectedTask.CloseRecord, Converter={StaticResource NullToVis}}">
+                                Visibility="{Binding CloseRecord, Converter={StaticResource NullToVis}}">
                             <StackPanel>
                                 <TextBlock Text="{x:Static services:Loc.Closed}" FontSize="11" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextDisabledBrush}" Margin="0,0,0,8"/>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                                     <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="16"
-                                               Text="{Binding SelectedTask.CloseRecord.CloseMode, Converter={StaticResource CloseModeToIcon}}"
-                                               Foreground="{Binding SelectedTask.CloseRecord.CloseMode, Converter={StaticResource CloseModeToBrush}}"
+                                               Text="{Binding CloseRecord.CloseMode, Converter={StaticResource CloseModeToIcon}}"
+                                               Foreground="{Binding CloseRecord.CloseMode, Converter={StaticResource CloseModeToBrush}}"
                                                VerticalAlignment="Center" Margin="0,0,8,0"/>
                                     <TextBlock FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"
-                                               Text="{Binding SelectedTask.CloseModeDisplay}"/>
+                                               Text="{Binding CloseModeDisplay}"/>
                                 </StackPanel>
-                                <TextBlock Text="{Binding SelectedTask.CloseRecord.ClosedAt, Converter={StaticResource TimestampToRelative}}"
+                                <TextBlock Text="{Binding CloseRecord.ClosedAt, Converter={StaticResource TimestampToRelative}}"
                                            FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
                                 <Button Content="{x:Static services:Loc.EditCloseTime}"
                                         Style="{StaticResource FluentSubtleButton}" FontSize="12"
@@ -1360,7 +1364,7 @@
                                             Padding="8,3" Foreground="{DynamicResource TextAccentBrush}"
                                             Click="AddAttachment_Click"/>
                                 </Grid>
-                                <ItemsControl ItemsSource="{Binding SelectedTask.Attachments}">
+                                <ItemsControl ItemsSource="{Binding Attachments}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate DataType="{x:Type models:TaskAttachment}">
                                             <Grid Margin="0,2">
@@ -1402,7 +1406,7 @@
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Visibility" Value="Collapsed"/>
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedTask.Attachments.Count}" Value="0">
+                                                <DataTrigger Binding="{Binding Attachments.Count}" Value="0">
                                                     <Setter Property="Visibility" Value="Visible"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
@@ -1419,7 +1423,7 @@
                                 <TextBlock Text="{x:Static services:Loc.Notes}" FontSize="11" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextDisabledBrush}" Margin="0,0,0,8"/>
                                 <TextBox x:Name="DetailNoteBox"
-                                         Text="{Binding SelectedTask.Note, UpdateSourceTrigger=LostFocus}"
+                                         Text="{Binding Note, UpdateSourceTrigger=LostFocus}"
                                          Style="{StaticResource FluentTextBox}" MinHeight="80"
                                          TextWrapping="Wrap" AcceptsReturn="True"
                                          VerticalScrollBarVisibility="Auto"
@@ -1436,7 +1440,7 @@
                     <Grid>
                         <TextBlock FontSize="11" VerticalAlignment="Center"
                                    Foreground="{DynamicResource TextDisabledBrush}"
-                                   Text="{Binding SelectedTask.CreatedAt, Converter={StaticResource TimestampToRelative}}"
+                                   Text="{Binding CreatedAt, Converter={StaticResource TimestampToRelative}}"
                                    HorizontalAlignment="Left"/>
                         <Button Content="{x:Static services:Loc.Delete}" Style="{StaticResource FluentSubtleButton}"
                                 FontSize="13" Foreground="{DynamicResource AccentRedBrush}"

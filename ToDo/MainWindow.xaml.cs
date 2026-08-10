@@ -30,8 +30,9 @@ public partial class MainWindow : Window
         App.ViewModel!.PropertyChanged += (s, e) =>
         {
             if (e.PropertyName == nameof(MainViewModel.SelectedTask))
-                RefreshDetailPickers();
+                UpdateDetailPane();
         };
+        UpdateDetailPane();   // defensive: pane starts collapsed, but covers a pre-set selection
 
         SearchBox.TextChanged += (s, e) =>
         {
@@ -1338,6 +1339,58 @@ public partial class MainWindow : Window
     }
 
     // ─── Detail Pane ──────────────────────────────────────
+
+    /// <summary>Opens/closes the detail pane with a width slide so the themed task area
+    /// re-crops smoothly instead of snapping (the horizontal shift when the 360px column
+    /// appears/disappears). Content binds to the pane's DataContext — a snapshot of the
+    /// task — so it stays rendered during slide-out instead of going blank.</summary>
+    private void UpdateDetailPane()
+    {
+        var task = ViewModel.SelectedTask;
+        if (task == null)
+        {
+            if (DetailPane.Visibility == Visibility.Visible)
+            {
+                var close = new DoubleAnimation(360, 0, TimeSpan.FromMilliseconds(160))
+                {
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn },
+                };
+                close.Completed += (_, _) =>
+                {
+                    if (ViewModel.SelectedTask != null) return;   // re-opened mid-slide
+                    DetailPane.Width = 0;
+                    DetailPane.Visibility = Visibility.Collapsed;
+                    DetailPane.DataContext = null;
+                };
+                DetailPane.BeginAnimation(FrameworkElement.WidthProperty, close);
+            }
+            return;
+        }
+
+        var wasCollapsed = DetailPane.Visibility == Visibility.Collapsed;
+        DetailPane.DataContext = task;                       // snapshot before opening
+        DetailPane.Visibility = Visibility.Visible;
+        if (wasCollapsed)
+        {
+            var open = new DoubleAnimation(0, 360, TimeSpan.FromMilliseconds(180))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+            };
+            DetailPane.BeginAnimation(FrameworkElement.WidthProperty, open);
+        }
+        else
+        {
+            // Pane already visible — task→task switch just repoints DataContext. If it was
+            // mid-close (re-opened during slide-out), cancel the slide and snap back to full
+            // width instead of finishing the collapse (Completed's SelectedTask guard would
+            // leave the pane stuck at width 0 but visible). Set the local value first so
+            // clearing the animation reverts to 360, not the XAML base of 0.
+            DetailPane.Width = 360;
+            DetailPane.BeginAnimation(FrameworkElement.WidthProperty, null);
+        }
+        RefreshDetailPickers();
+    }
+
     private void DetailPane_Close(object sender, RoutedEventArgs e)
     {
         ViewModel.SelectedTask = null;
