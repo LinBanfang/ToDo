@@ -29,6 +29,8 @@ public partial class ListThemeDialog : Window
     private bool _opacityDirty;
     private int _cardOpacity;
     private bool _cardOpacityDirty;
+    private int _titleMode;
+    private bool _titleModeDirty;
 
     private string[] _bgColors = new[]
     {
@@ -54,12 +56,14 @@ public partial class ListThemeDialog : Window
         var settings = Db.GetListThemeSettings(list.Id);
         _opacity = Math.Clamp(settings.Background, 20, 100);
         _cardOpacity = Math.Clamp(settings.Card, 30, 100);
+        _titleMode = Math.Clamp(settings.TitleMode, 0, 2);
 
         PreviewTitle.Text = list.DisplayName;
         OpacitySlider.Value = _opacity;         // fires ValueChanged → label + live preview
         OpacityValue.Text = _opacity + "%";
         CardOpacitySlider.Value = _cardOpacity; // ...and the card slider previews the same way
         CardOpacityValue.Text = _cardOpacity + "%";
+        TitleModeCombo.SelectedIndex = _titleMode; // fires SelectionChanged → hint + preview
         UpdatePreview();
     }
 
@@ -68,7 +72,8 @@ public partial class ListThemeDialog : Window
         // Fires during InitializeComponent too: setting each slider's Minimum coerces its
         // default Value before the later-named label / preview elements exist — guard it.
         if (OpacitySlider == null || OpacityValue == null
-            || CardOpacitySlider == null || CardOpacityValue == null) return;
+            || CardOpacitySlider == null || CardOpacityValue == null
+            || TitleModeCombo == null || TitleModeHint == null) return;
 
         var windowBg = (Brush)Application.Current.FindResource("AppBackgroundBrush");
         var opacity = OpacitySlider.Value / 100.0;
@@ -100,6 +105,31 @@ public partial class ListThemeDialog : Window
         PreviewCard1.Background = new SolidColorBrush(WithAlpha(baseCard, card));
         PreviewCard2.Background = new SolidColorBrush(WithAlpha(baseCard, card));
         PreviewCard3.Background = new SolidColorBrush(WithAlpha(baseCard, Math.Min(card + 20, 100)));
+
+        // Header title text: honor a manual light/dark choice; auto mode asks the estimator,
+        // which judges the current background (solid luminance or the image band behind the
+        // header) and falls back to the app theme's normal text color when there's nothing
+        // to judge. The hint mirrors what auto would pick, so the user can fix it manually.
+        var mode = TitleModeCombo.SelectedIndex;
+        if (mode < 0) mode = 0;
+        bool? rec = mode == 0
+            ? TitleTextEstimator.Recommend(SettingsService.Current.Theme == "Dark", _type, _color, _bytes)
+            : null;
+
+        PreviewTitle.Foreground = mode switch
+        {
+            1 => new SolidColorBrush(Color.FromRgb(0x20, 0x1F, 0x1E)),
+            2 => new SolidColorBrush(Colors.White),
+            _ => rec switch
+            {
+                true => new SolidColorBrush(Colors.White),
+                false => new SolidColorBrush(Color.FromRgb(0x20, 0x1F, 0x1E)),
+                _ => (Brush)Application.Current.FindResource("TextPrimaryBrush"),
+            },
+        };
+        TitleModeHint.Text = mode == 0
+            ? (rec is bool light ? Loc.TitleTextRecommend(light) : Loc.TitleTextNoRecommend)
+            : Loc.TitleTextPickHint;
     }
 
     private static Color WithAlpha(Color c, int alphaPercent)
@@ -204,6 +234,14 @@ public partial class ListThemeDialog : Window
         UpdatePreview();   // live preview: mock rows show this list's card opacity
     }
 
+    private void TitleModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        // Fires when the ctor sets SelectedIndex (after InitializeComponent, so the hint
+        // exists) and on every user pick — refresh the header strip + recommendation hint.
+        if (TitleModeCombo == null || TitleModeHint == null) return;
+        UpdatePreview();
+    }
+
     private void Ok_Click(object sender, RoutedEventArgs e)
     {
         if (_type == ListBackgroundType.Image && _bytes == null)
@@ -213,8 +251,10 @@ public partial class ListThemeDialog : Window
         if (opacity != _opacity) _opacityDirty = true;
         var cardOpacity = (int)Math.Round(CardOpacitySlider.Value);
         if (cardOpacity != _cardOpacity) _cardOpacityDirty = true;
-        if (_dirty || _opacityDirty || _cardOpacityDirty)
-            ViewModel.SetListTheme(_list, _type, _color, _bytes, _fileName, opacity, cardOpacity);
+        var titleMode = Math.Max(0, TitleModeCombo.SelectedIndex);
+        if (titleMode != _titleMode) _titleModeDirty = true;
+        if (_dirty || _opacityDirty || _cardOpacityDirty || _titleModeDirty)
+            ViewModel.SetListTheme(_list, _type, _color, _bytes, _fileName, opacity, cardOpacity, titleMode);
         DialogResult = true;
     }
 

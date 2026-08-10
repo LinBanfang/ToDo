@@ -124,6 +124,28 @@ public partial class MainViewModel : ObservableObject
     private int ActiveCardOpacity =>
         ActiveList == null ? 65 : _db.GetListThemeSettings(ActiveList.Id).Card;
 
+    /// <summary>Header title text color for the active list: true = light (white) text,
+    /// false = dark (near-black) text, null = no themed background → the app theme's normal
+    /// text color. Auto mode (the default) recommends from the background — solid luminance
+    /// or the image band behind the header (TitleTextEstimator); a fixed 深色/浅色 choice
+    /// overrides it. Re-raised on list switch / search / theme edit / theme change.</summary>
+    public bool? HeaderTitleLight
+    {
+        get
+        {
+            if (IsSearching || ActiveList == null) return null;
+            if (ActiveList.BackgroundType == ListBackgroundType.None) return null;
+            var mode = _db.GetListThemeSettings(ActiveList.Id).TitleMode;
+            if (mode == 1) return false;   // 深色文字
+            if (mode == 2) return true;    // 浅色文字
+            var darkTheme = SettingsService.Current.Theme == "Dark";
+            var image = ActiveList.BackgroundType == ListBackgroundType.Image
+                ? _db.GetListBackgroundData(ActiveList.Id) : null;
+            return TitleTextEstimator.Recommend(darkTheme, ActiveList.BackgroundType,
+                ActiveList.BackgroundColor, image);
+        }
+    }
+
     private Brush? BuildSolidBrush(string hex, double opacity)
     {
         if (string.IsNullOrEmpty(hex)) return null;
@@ -220,6 +242,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowTaskReminder));
         OnPropertyChanged(nameof(ShowTaskNote));
         OnPropertyChanged(nameof(ShowTaskAttachments));
+        OnPropertyChanged(nameof(HeaderTitleLight));   // app theme changed → image-mask recommendation may flip
     }
 
     private void OnSyncStatusChanged()
@@ -540,6 +563,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(HeaderTitle));
         OnPropertyChanged(nameof(ListBackgroundBrush));
         OnPropertyChanged(nameof(ListBackgroundMaskVisible));
+        OnPropertyChanged(nameof(HeaderTitleLight));
         // The shared card brushes follow the active list's card opacity (ADR-014).
         ThemeService.SetCardOpacity(ActiveCardOpacity);
         // No need to reload Tasks: the in-place model keeps it current on every
@@ -582,6 +606,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(HeaderTitle));
         OnPropertyChanged(nameof(ListBackgroundBrush));
         OnPropertyChanged(nameof(ListBackgroundMaskVisible));
+        OnPropertyChanged(nameof(HeaderTitleLight));
         // Tasks is always current in this single-process app (every mutation
         // reloads it), so filter it in memory instead of re-reading the DB
         // and rebuilding the collection on every keystroke.
@@ -676,22 +701,23 @@ public partial class MainViewModel : ObservableObject
     /// re-point an in-place-edited ActiveList.</summary>
     public void SetListTheme(TaskList list, ListBackgroundType type, string color,
                              byte[]? image, string? fileName, int opacityPercent = 100,
-                             int cardOpacity = 65)
+                             int cardOpacity = 65, int titleMode = 0)
     {
         list.BackgroundType = type;
         list.BackgroundColor = color;
         _db.Lists.Update(list);
         if (image != null) _db.SetListBackground(list.Id, image, fileName);
         else _db.DeleteListBackground(list.Id);
-        // Display settings only earn a row when either differs from its default, so the
-        // collection holds "non-default" settings and a missing row reads back as 100/65.
-        _db.SetListThemeSettings(list.Id, opacityPercent, cardOpacity);
+        // Display settings only earn a row when any of them differs from its default, so the
+        // collection holds "non-default" settings and a missing row reads back as 100/65/auto.
+        _db.SetListThemeSettings(list.Id, opacityPercent, cardOpacity, titleMode);
         // The shared card brushes reflect the ACTIVE list's opacity (ADR-014); if the dialog
         // edited that list apply the new value now, otherwise it lands when the list becomes
         // active (OnActiveListChanged re-tints).
         if (list.Id == ActiveList?.Id) ThemeService.SetCardOpacity(cardOpacity);
         OnPropertyChanged(nameof(ListBackgroundBrush));
         OnPropertyChanged(nameof(ListBackgroundMaskVisible));
+        OnPropertyChanged(nameof(HeaderTitleLight));
     }
 
     [RelayCommand]

@@ -1,8 +1,9 @@
 namespace ToDo.Models;
 
 /// <summary>
-/// A list's per-list theme display settings — background strength ("背景强弱") and card
-/// opacity ("卡片不透明度"), keyed by list id. Local-only, never synced (ADR-014): the row
+/// A list's per-list theme display settings — background strength ("背景强弱"), card
+/// opacity ("卡片不透明度") and header title text color ("标题文字颜色"), keyed by list id.
+/// Local-only, never synced (ADR-014): the row
 /// lives in its own untracked collection because a field on TaskList would be overwritten
 /// by the sync layer's whole-entity list upsert — and because both knobs are display
 /// preferences tied to local-only assets (image bytes, or a locally-chosen color), so they
@@ -24,4 +25,10 @@ public class ListBackgroundSetting
     /// more solid. Only stored when it differs from the default (0 = a row written before
     /// this field existed, read back as 65).</summary>
     public int CardOpacityPercent { get; set; } = 65;
+
+    /// <summary>Header title text color (0 auto / 1 dark / 2 light). In auto mode the
+    /// recommendation is computed from the list's background: solid color luminance, or the
+    /// image region behind the header (see TitleTextEstimator). 0 = a row written before
+    /// this field existed, read back as auto.</summary>
+    public int TitleTextMode { get; set; }
 }

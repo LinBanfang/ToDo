@@ -350,27 +350,29 @@ public class DatabaseService : IDisposable
 
     // ─── List theme display settings (background strength + card opacity, local-only per list, ADR-014) ──
 
-    /// <summary>A list's display settings (background strength 20..100, card opacity 30..100),
-    /// or their defaults when the list has no row. Both knobs share one row so a whole-entity
-    /// list upsert from sync can never wipe one while updating the other.</summary>
-    public (int Background, int Card) GetListThemeSettings(string listId)
+    /// <summary>A list's display settings (background strength 20..100, card opacity 30..100,
+    /// title text mode 0 auto / 1 dark / 2 light), or their defaults when the list has no row.
+    /// All three share one row so a whole-entity list upsert from sync can never wipe one
+    /// while updating the others.</summary>
+    public (int Background, int Card, int TitleMode) GetListThemeSettings(string listId)
     {
         var row = _rawListBackgroundSettings.FindById(listId);
-        if (row == null) return (100, 65);
-        return (row.OpacityPercent, row.CardOpacityPercent > 0 ? row.CardOpacityPercent : 65);
+        if (row == null) return (100, 65, 0);
+        return (row.OpacityPercent, row.CardOpacityPercent > 0 ? row.CardOpacityPercent : 65, row.TitleTextMode);
     }
 
-    /// <summary>Stores both display settings in one row (Upsert by _id = listId). When both
-    /// are at their defaults the row is removed, so the collection only holds non-defaults
+    /// <summary>Stores all display settings in one row (Upsert by _id = listId). When every
+    /// one is at its default the row is removed, so the collection only holds non-defaults
     /// and a missing row reads back as the defaults.</summary>
-    public void SetListThemeSettings(string listId, int background, int card)
+    public void SetListThemeSettings(string listId, int background, int card, int titleMode)
     {
-        if (background == 100 && card == 65) { _rawListBackgroundSettings.Delete(listId); return; }
+        if (background == 100 && card == 65 && titleMode == 0) { _rawListBackgroundSettings.Delete(listId); return; }
         _rawListBackgroundSettings.Upsert(new ListBackgroundSetting
         {
             Id = listId,
             OpacityPercent = background,
             CardOpacityPercent = card,
+            TitleTextMode = titleMode,
         });
     }
 

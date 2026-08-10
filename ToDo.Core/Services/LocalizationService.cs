@@ -216,6 +216,23 @@ public static class Loc
     public static string CardOpacityLocalHint => Language == AppLanguage.Chinese
         ? "卡片不透明度仅本设备生效，不同步；越高越不透明，越能盖住背景。"
         : "Card opacity is local to this device and won't sync; higher is more solid.";
+    public static string TitleTextColor => Language == AppLanguage.Chinese
+        ? "标题文字颜色" : "Title text color";
+    public static string TitleTextAuto => Language == AppLanguage.Chinese
+        ? "自动（推荐）" : "Auto (recommended)";
+    public static string TitleTextDark => Language == AppLanguage.Chinese
+        ? "深色" : "Dark";
+    public static string TitleTextLight => Language == AppLanguage.Chinese
+        ? "浅色" : "Light";
+    public static string TitleTextPickHint => Language == AppLanguage.Chinese
+        ? "标题栏随列表主题铺满背景，文字深浅按背景调整以保证可读。"
+        : "The header follows the list theme; text light/dark keeps it readable.";
+    public static string TitleTextNoRecommend => Language == AppLanguage.Chinese
+        ? "未设置背景，标题文字跟随应用主题。"
+        : "No theme set — the title follows the app theme.";
+    public static string TitleTextRecommend(bool light) => Language == AppLanguage.Chinese
+        ? $"自动：推荐{TitleTextLight}文字"
+        : $"Auto: recommends {TitleTextLight} text";
     public static string PlayReminderSound => Language == AppLanguage.Chinese ? "播放提示音" : "Play reminder sound";
     public static string ReminderRingtone => Language == AppLanguage.Chinese ? "提醒铃声" : "Reminder ringtone";
     public static string DefaultRingtone => Language == AppLanguage.Chinese ? "默认铃声" : "Default ringtone";

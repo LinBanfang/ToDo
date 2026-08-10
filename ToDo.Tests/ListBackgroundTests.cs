@@ -65,61 +65,78 @@ public sealed class ListBackgroundTests : IDisposable
         Assert.Null(_db.GetListBackgroundFileName("lst"));
     }
 
-    // ─── Theme display settings (背景强弱 + 卡片不透明度, local-only, ADR-014) ──
+    // ─── Theme display settings (背景强弱 + 卡片不透明度 + 标题文字, local-only, ADR-014) ──
 
     [Fact]
     public void GetSettings_DefaultsWhenUnset()
     {
-        var (background, card) = _db.GetListThemeSettings("nope");
+        var (background, card, title) = _db.GetListThemeSettings("nope");
 
         Assert.Equal(100, background);
         Assert.Equal(65, card);   // card opacity matches the theme's default look
+        Assert.Equal(0, title);   // 0 = auto title text
     }
 
     [Fact]
-    public void SetSettings_KeepsSingleRow_AndUpdatesBoth()
+    public void SetSettings_KeepsSingleRow_AndUpdatesAll()
     {
         // Upsert by _id = listId: the second write overwrites, it does not append.
-        _db.SetListThemeSettings("lst", 60, 50);
-        _db.SetListThemeSettings("lst", 40, 55);
+        _db.SetListThemeSettings("lst", 60, 50, 0);
+        _db.SetListThemeSettings("lst", 40, 55, 2);
 
-        var (background, card) = _db.GetListThemeSettings("lst");
+        var (background, card, title) = _db.GetListThemeSettings("lst");
         Assert.Equal(40, background);
         Assert.Equal(55, card);
+        Assert.Equal(2, title);
     }
 
     [Fact]
     public void SetSettings_AllDefaults_RemovesRow()
     {
-        _db.SetListThemeSettings("lst", 60, 50);
-        _db.SetListThemeSettings("lst", 100, 65);   // both at defaults → row dropped
+        _db.SetListThemeSettings("lst", 60, 50, 1);
+        _db.SetListThemeSettings("lst", 100, 65, 0);   // all at defaults → row dropped
 
-        var (background, card) = _db.GetListThemeSettings("lst");
+        var (background, card, title) = _db.GetListThemeSettings("lst");
         Assert.Equal(100, background);
         Assert.Equal(65, card);
+        Assert.Equal(0, title);
     }
 
     [Fact]
-    public void SetSettings_OneCustomOneDefault_KeepsRow()
+    public void SetSettings_OneCustomTwoDefaults_KeepsRow()
     {
-        // A custom background strength with a default card opacity still earns a row;
-        // the stored card value reads back as the default rather than 0.
-        _db.SetListThemeSettings("lst", 60, 65);
+        // A custom background strength with default card opacity and title mode still earns
+        // a row; the stored card/title values read back as defaults rather than 0.
+        _db.SetListThemeSettings("lst", 60, 65, 0);
 
-        var (background, card) = _db.GetListThemeSettings("lst");
+        var (background, card, title) = _db.GetListThemeSettings("lst");
         Assert.Equal(60, background);
         Assert.Equal(65, card);
+        Assert.Equal(0, title);
+    }
+
+    [Fact]
+    public void SetSettings_TitleModeAlone_KeepsRow()
+    {
+        // Only the title text mode differs from default — the row must still be kept.
+        _db.SetListThemeSettings("lst", 100, 65, 2);
+
+        var (background, card, title) = _db.GetListThemeSettings("lst");
+        Assert.Equal(100, background);
+        Assert.Equal(65, card);
+        Assert.Equal(2, title);
     }
 
     [Fact]
     public void DeleteSetting_ReturnsToDefault()
     {
-        _db.SetListThemeSettings("lst", 60, 50);
+        _db.SetListThemeSettings("lst", 60, 50, 2);
 
         _db.DeleteListBackgroundSetting("lst");
 
-        var (background, card) = _db.GetListThemeSettings("lst");
+        var (background, card, title) = _db.GetListThemeSettings("lst");
         Assert.Equal(100, background);
         Assert.Equal(65, card);
+        Assert.Equal(0, title);
     }
 }

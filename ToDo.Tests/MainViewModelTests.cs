@@ -302,7 +302,7 @@ public sealed class MainViewModelTests : IDisposable
 
         _vm.SetListTheme(list, ListBackgroundType.Solid, "#28A745", null, null, 60);
 
-        var (background, _) = _db.GetListThemeSettings("list-tasks");
+        var (background, _, _) = _db.GetListThemeSettings("list-tasks");
         Assert.Equal(60, background);
         var brush = Assert.IsType<SolidColorBrush>(_vm.ListBackgroundBrush);
         Assert.Equal(0.6, brush.Opacity, precision: 3);   // 60% faded toward the window background
@@ -318,9 +318,10 @@ public sealed class MainViewModelTests : IDisposable
         _vm.SetListTheme(list, ListBackgroundType.Solid, "#28A745", null, null, 100);
 
         // A missing row reads back as the defaults — the collection only holds non-defaults.
-        var (background, card) = _db.GetListThemeSettings("list-tasks");
+        var (background, card, title) = _db.GetListThemeSettings("list-tasks");
         Assert.Equal(100, background);
         Assert.Equal(65, card);
+        Assert.Equal(0, title);
     }
 
     [Fact]
@@ -333,9 +334,65 @@ public sealed class MainViewModelTests : IDisposable
         // Background at its default, card opacity custom — only the card earns a row.
         _vm.SetListTheme(list, ListBackgroundType.Solid, "#28A745", null, null, 100, 50);
 
-        var (background, card) = _db.GetListThemeSettings("list-tasks");
+        var (background, card, _) = _db.GetListThemeSettings("list-tasks");
         Assert.Equal(100, background);
         Assert.Equal(50, card);
+    }
+
+    [Fact]
+    public void SetListTheme_PersistsTitleMode()
+    {
+        _vm.Refresh();
+        _vm.ActiveListId = "list-tasks";
+        var list = _vm.Lists.First(l => l.Id == "list-tasks");
+
+        // Background and card at defaults, title mode custom — only the mode earns a row.
+        _vm.SetListTheme(list, ListBackgroundType.Solid, "#28A745", null, null, 100, 65, 2);
+
+        var (background, card, title) = _db.GetListThemeSettings("list-tasks");
+        Assert.Equal(100, background);
+        Assert.Equal(65, card);
+        Assert.Equal(2, title);
+    }
+
+    [Fact]
+    public void HeaderTitleLight_FollowsManualMode()
+    {
+        _vm.Refresh();
+        _vm.ActiveListId = "list-tasks";
+        var list = _vm.Lists.First(l => l.Id == "list-tasks");
+
+        _vm.SetListTheme(list, ListBackgroundType.Solid, "#28A745", null, null, 100, 65, 2);
+        Assert.True(_vm.HeaderTitleLight);    // mode 2 = force light text
+
+        _vm.SetListTheme(list, ListBackgroundType.Solid, "#28A745", null, null, 100, 65, 1);
+        Assert.False(_vm.HeaderTitleLight);   // mode 1 = force dark text
+    }
+
+    [Fact]
+    public void HeaderTitleLight_Auto_JudgesSolidLuminance()
+    {
+        _vm.Refresh();
+        _vm.ActiveListId = "list-tasks";
+        var list = _vm.Lists.First(l => l.Id == "list-tasks");
+
+        // #000000 is dark → light text recommended; #FFFFFF is light → dark text.
+        _vm.SetListTheme(list, ListBackgroundType.Solid, "#000000", null, null, 100, 65, 0);
+        Assert.True(_vm.HeaderTitleLight);
+
+        _vm.SetListTheme(list, ListBackgroundType.Solid, "#FFFFFF", null, null, 100, 65, 0);
+        Assert.False(_vm.HeaderTitleLight);
+    }
+
+    [Fact]
+    public void HeaderTitleLight_NoBackground_IsNull()
+    {
+        _vm.Refresh();
+        _vm.ActiveListId = "list-tasks";
+        var list = _vm.Lists.First(l => l.Id == "list-tasks");
+        list.BackgroundType = ListBackgroundType.None;
+
+        Assert.Null(_vm.HeaderTitleLight);    // falls back to the app theme's text color
     }
 
     private sealed class FakeClock : IClock

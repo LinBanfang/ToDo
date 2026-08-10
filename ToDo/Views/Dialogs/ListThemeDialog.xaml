@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:services="clr-namespace:ToDo.Services;assembly=ToDo.Core"
-        Title="{x:Static services:Loc.ListTheme}" Height="600" Width="380"
+        Title="{x:Static services:Loc.ListTheme}" Height="656" Width="380"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         Background="{DynamicResource CardBackgroundBrush}"
         FontFamily="{StaticResource FluentFont}">
@@ -14,24 +14,27 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Live preview: the chosen background under translucent mock task rows -->
-        <Border x:Name="PreviewBox" Grid.Row="0" Height="150" CornerRadius="8" ClipToBounds="True">
+        <!-- Live preview: the chosen background under translucent mock task rows, with a
+             header strip mirroring the real title bar (its text color follows the choice) -->
+        <Border x:Name="PreviewBox" Grid.Row="0" Height="172" CornerRadius="8" ClipToBounds="True">
             <Grid>
-                <!-- Image dimming mask, mirroring the real task area -->
+                <!-- Image dimming mask, mirroring the full-bleed real background -->
                 <Border x:Name="PreviewMask" Background="{DynamicResource ListBackgroundMaskBrush}" Visibility="Collapsed"/>
-                <StackPanel VerticalAlignment="Center">
-                    <Border x:Name="PreviewCard1" Height="34" Margin="20,4" CornerRadius="8"
-                            Background="{DynamicResource TaskCardBrush}">
-                        <TextBlock x:Name="PreviewTitle" Margin="14,0" VerticalAlignment="Center" FontSize="13"
-                                   FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                <StackPanel>
+                    <Border Height="56" Background="Transparent">
+                        <TextBlock x:Name="PreviewTitle" Margin="20,0" VerticalAlignment="Center" FontSize="28"
+                                   FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                     </Border>
-                    <Border x:Name="PreviewCard2" Height="34" Margin="20,4" CornerRadius="8"
+                    <Border x:Name="PreviewCard1" Height="32" Margin="20,6,20,4" CornerRadius="8"
                             Background="{DynamicResource TaskCardBrush}"/>
-                    <Border x:Name="PreviewCard3" Height="34" Margin="20,4" CornerRadius="8"
+                    <Border x:Name="PreviewCard2" Height="32" Margin="20,4" CornerRadius="8"
+                            Background="{DynamicResource TaskCardBrush}"/>
+                    <Border x:Name="PreviewCard3" Height="32" Margin="20,4" CornerRadius="8"
                             Background="{DynamicResource TaskCardHoverBrush}"/>
                 </StackPanel>
             </Grid>
@@ -131,8 +134,32 @@
             </StackPanel>
         </Border>
 
+        <!-- Title text color (local-only per list, ADR-014) -->
+        <Border Grid.Row="6" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
+                Margin="0,12,0,0" Padding="0,10,0,0">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{x:Static services:Loc.TitleTextColor}" FontSize="13"
+                               Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="TitleModeCombo" Grid.Column="1" Style="{StaticResource FluentComboBox}"
+                              Width="150" FontSize="13" HorizontalAlignment="Right"
+                              SelectionChanged="TitleModeCombo_SelectionChanged">
+                        <ComboBoxItem Content="{x:Static services:Loc.TitleTextAuto}"/>
+                        <ComboBoxItem Content="{x:Static services:Loc.TitleTextDark}"/>
+                        <ComboBoxItem Content="{x:Static services:Loc.TitleTextLight}"/>
+                    </ComboBox>
+                </Grid>
+                <TextBlock x:Name="TitleModeHint" FontSize="11"
+                           Foreground="{DynamicResource TextDisabledBrush}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
         <!-- Footer buttons -->
-        <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
             <Button Content="{x:Static services:Loc.Cancel}" Style="{StaticResource FluentButton}"
                     FontSize="13" Padding="16,6" IsCancel="True" Click="Cancel_Click"/>
             <Button Content="{x:Static services:Loc.OK}" Style="{StaticResource FluentAccentButton}"

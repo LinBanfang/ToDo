@@ -408,6 +408,13 @@ public partial class MainWindow : Window
     private void ListTitle_Click(object sender, MouseButtonEventArgs e)
     {
         if (ViewModel.ActiveList == null || ViewModel.ActiveList.IsSystem) return;
+        // Match the title label's adaptive color on the themed header (ADR-014).
+        ListTitleEdit.Foreground = ViewModel.HeaderTitleLight switch
+        {
+            true => new SolidColorBrush(Colors.White),
+            false => new SolidColorBrush(Color.FromRgb(0x20, 0x1F, 0x1E)),
+            _ => (Brush)Application.Current.FindResource("TextPrimaryBrush"),
+        };
         ListTitleLabel.Visibility = Visibility.Collapsed;
         ListTitleEdit.Text = ViewModel.ActiveList.Name;
         ListTitleEdit.Visibility = Visibility.Visible;

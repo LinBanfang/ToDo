@@ -679,13 +679,14 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- Per-list background theme (ADR-014). Two full-bleed layers behind the task
-                 area + footer (NOT the header, which stays on the global background so its
-                 title is always readable): the theme brush itself, plus a dimming mask shown
-                 only for images. When there is no theme ListBackgroundBrush is null →
-                 transparent → the window's AppBackgroundBrush shows through. -->
-            <Border Grid.Row="1" Grid.RowSpan="2" Background="{Binding ListBackgroundBrush}"/>
-            <Border Grid.Row="1" Grid.RowSpan="2" Background="{DynamicResource ListBackgroundMaskBrush}"
+            <!-- Per-list background theme (ADR-014). Two full-bleed layers behind the whole
+                 main column (header + task area + footer): the theme brush itself, plus a
+                 dimming mask shown only for images. When there is no theme ListBackgroundBrush
+                 is null → transparent → the window's AppBackgroundBrush shows through. The
+                 header title stays readable because its text color adapts to the background
+                 (HeaderTitleLight), see ListTitleLabel below. -->
+            <Border Grid.Row="0" Grid.RowSpan="3" Background="{Binding ListBackgroundBrush}"/>
+            <Border Grid.Row="0" Grid.RowSpan="3" Background="{DynamicResource ListBackgroundMaskBrush}"
                     Visibility="{Binding ListBackgroundMaskVisible, Converter={StaticResource BoolToVis}}"/>
 
             <!-- List header -->
@@ -756,11 +757,27 @@
                                 </Style>
                             </TextBlock.Style>
                         </TextBlock>
-                        <!-- Editable title (click to rename) -->
+                        <!-- Editable title (click to rename). The header now sits on the
+                             per-list theme background (ADR-014), so the title text flips
+                             light/dark for contrast (HeaderTitleLight); null = no theme →
+                             the app theme's normal text color. -->
                         <TextBlock x:Name="ListTitleLabel" Text="{Binding HeaderTitle}" FontSize="28"
-                                   FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"
-                                   VerticalAlignment="Center" Cursor="Hand"
-                                   MouseLeftButtonDown="ListTitle_Click"/>
+                                   FontWeight="Bold" VerticalAlignment="Center" Cursor="Hand"
+                                   MouseLeftButtonDown="ListTitle_Click">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HeaderTitleLight}" Value="True">
+                                            <Setter Property="Foreground" Value="#FFFFFF"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding HeaderTitleLight}" Value="False">
+                                            <Setter Property="Foreground" Value="#201F1E"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                         <TextBox x:Name="ListTitleEdit" FontSize="28" FontWeight="Bold"
                                  Foreground="{DynamicResource TextPrimaryBrush}"
                                  VerticalAlignment="Center" Visibility="Collapsed"
