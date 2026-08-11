@@ -40,6 +40,8 @@ public sealed class ReminderServiceTests : IDisposable
 
     private static long Past() => DateTimeOffset.UtcNow.AddMinutes(-5).ToUnixTimeMilliseconds();
     private static long Future() => DateTimeOffset.UtcNow.AddMinutes(5).ToUnixTimeMilliseconds();
+    // Older than the default 24h catch-up window, so ctor pre-marks it (silent on launch).
+    private static long LongPast() => DateTimeOffset.UtcNow.AddHours(-25).ToUnixTimeMilliseconds();
 
     private static HashSet<string> Fired(ReminderService svc) =>
         (HashSet<string>)typeof(ReminderService).GetField("_fired", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(svc)!;
@@ -54,14 +56,14 @@ public sealed class ReminderServiceTests : IDisposable
     [Fact]
     public void Constructor_PreMarksAlreadyDueOpenReminders_ButNotFutureOrClosed()
     {
-        var dueRem = Past();
+        var dueRem = LongPast();   // older than the catch-up window → silent at startup
         _db.Tasks.Insert(new TaskItem { Id = "due", ListId = "list-tasks", Reminder = dueRem });
         _db.Tasks.Insert(new TaskItem { Id = "future", ListId = "list-tasks", Reminder = Future() });
         _db.Tasks.Insert(new TaskItem
         {
             Id = "closed",
             ListId = "list-tasks",
-            Reminder = Past(),
+            Reminder = LongPast(),
             CloseRecord = new CloseRecord { ClosedAt = Past() },
         });
 
@@ -92,7 +94,7 @@ public sealed class ReminderServiceTests : IDisposable
     [Fact]
     public void Check_CompletedThenReopened_FiresAgain()
     {
-        var rem = Past();
+        var rem = LongPast();   // outside the window → pre-marked on launch (asserted below)
         _db.Tasks.Insert(new TaskItem { Id = "due", ListId = "list-tasks", Reminder = rem });
         using var svc = new ReminderService(_db);
         Assert.Contains($"due|{rem}", Fired(svc));     // pre-marked on launch
@@ -114,12 +116,13 @@ public sealed class ReminderServiceTests : IDisposable
     [Fact]
     public void Check_RescheduledReminder_PrunesOldKeyAndFiresNewOne()
     {
-        var oldRem = Past();
+        var oldRem = LongPast();   // outside the window → pre-marked on launch (asserted below)
         _db.Tasks.Insert(new TaskItem { Id = "due", ListId = "list-tasks", Reminder = oldRem });
         using var svc = new ReminderService(_db);
         Assert.Contains($"due|{oldRem}", Fired(svc));
 
         // Push the reminder to another (still past) time → the old marker must not block it.
+        // The new time lands inside the window, exercising the "within-window → first poll fires" path.
         var newRem = Past();
         var t = _db.Tasks.FindById("due")!;
         t.Reminder = newRem;
@@ -128,6 +131,65 @@ public sealed class ReminderServiceTests : IDisposable
 
         Assert.DoesNotContain($"due|{oldRem}", Fired(svc));
         Assert.Contains($"due|{newRem}", Fired(svc));
+    }
+
+    // ─── Catch-up window (v1.3.2): only reminders older than the window are pre-marked
+    // at startup; within-window ones fire on the first poll instead of being nagged early
+    // or skipped entirely. ─────────────────────────────────────
+
+    [Fact]
+    public void Ctor_DueReminderWithinWindow_NotPreMarked()
+    {
+        var rem = Past();   // now - 5min, inside the default 24h window
+        _db.Tasks.Insert(new TaskItem { Id = "due", ListId = "list-tasks", Reminder = rem });
+
+        using var svc = new ReminderService(_db);
+
+        Assert.DoesNotContain($"due|{rem}", Fired(svc));   // left for the first poll
+    }
+
+    [Fact]
+    public void Ctor_DueReminderOlderThanWindow_PreMarked()
+    {
+        var rem = LongPast();   // now - 25h, outside the window
+        _db.Tasks.Insert(new TaskItem { Id = "due", ListId = "list-tasks", Reminder = rem });
+
+        using var svc = new ReminderService(_db);
+
+        Assert.Contains($"due|{rem}", Fired(svc));   // silent — no startup nag
+    }
+
+    [Fact]
+    public void Check_FiresWithinWindowReminder_Once()
+    {
+        // Seeded BEFORE the ctor but within the window → not pre-marked, so the first
+        // poll fires it exactly once and a second poll does not re-fire.
+        var rem = Past();
+        _db.Tasks.Insert(new TaskItem { Id = "due", ListId = "list-tasks", Reminder = rem });
+        using var svc = new ReminderService(_db);
+        Assert.DoesNotContain($"due|{rem}", Fired(svc));
+
+        Check(svc);
+        Assert.Contains($"due|{rem}", Fired(svc));
+
+        Check(svc);
+        Assert.Single(Fired(svc));
+    }
+
+    [Theory]
+    [InlineData(2, true)]    // window 2min < age 5min → older than window → pre-marked
+    [InlineData(60, false)]  // window 60min > age 5min → within window → not pre-marked
+    public void Ctor_ParameterizedCatchUpWindow(double windowMinutes, bool expectedPreMarked)
+    {
+        var rem = Past();
+        _db.Tasks.Insert(new TaskItem { Id = "due", ListId = "list-tasks", Reminder = rem });
+
+        using var svc = new ReminderService(_db, TimeSpan.FromMinutes(windowMinutes));
+
+        if (expectedPreMarked)
+            Assert.Contains($"due|{rem}", Fired(svc));
+        else
+            Assert.DoesNotContain($"due|{rem}", Fired(svc));
     }
 
     [Fact]

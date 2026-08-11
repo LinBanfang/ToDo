@@ -7,25 +7,31 @@ namespace ToDo.Services;
 /// <summary>
 /// Periodically checks tasks for due reminders and raises an in-app Fluent toast
 /// (bottom-right card, replaces the WinForms balloon that Windows 11 no longer shows)
-/// plus a sound, once per reminder. Reminders that were already due before this session
-/// started are skipped so the app doesn't nag on launch.
+/// plus a sound, once per reminder. Catch-up strategy: only reminders older than the
+/// catch-up window (default 24h) are pre-marked so the app doesn't nag on launch;
+/// reminders that came due within the window fire on the first poll instead.
 /// </summary>
 public class ReminderService : IDisposable
 {
+    private const double DefaultCatchUpHours = 24;
+
     private readonly DatabaseService _db;
     private readonly DispatcherTimer _timer;
     private readonly HashSet<string> _fired = new();
     private bool _disposed;
 
-    public ReminderService(DatabaseService db)
+    public ReminderService(DatabaseService db, TimeSpan? catchUpWindow = null)
     {
         _db = db;
 
-        // Pre-mark reminders that are already due so they don't all fire at startup.
-        // Only open tasks are marked (mirroring the poll filter): a task completed before
-        // shutdown must be able to fire again when the user reopens it this session.
+        // Pre-mark only reminders older than the catch-up window — anything due within it
+        // is left for the first Check() (15s later) to fire, so a reminder missed by a few
+        // hours still nags once. Only open tasks are marked (mirroring the poll filter):
+        // a task completed before shutdown must be able to fire again when the user reopens
+        // it this session.
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        foreach (var t in db.Tasks.Find(t => t.Reminder != null && t.Reminder <= now && t.CloseRecord == null))
+        var window = (catchUpWindow ?? TimeSpan.FromHours(DefaultCatchUpHours)).TotalMilliseconds;
+        foreach (var t in db.Tasks.Find(t => t.Reminder != null && t.Reminder < now - window && t.CloseRecord == null))
         {
             _fired.Add($"{t.Id}|{t.Reminder}");
         }
@@ -66,7 +72,7 @@ public class ReminderService : IDisposable
             {
                 // Respect the settings toggles on each poll so changes apply live
                 if (SettingsService.Current.ReminderNotifications)
-                    ReminderToast.Show(t.Title, ResolveListIcon(t));
+                    ReminderToast.Show(t.Id, t.Title, ResolveListIcon(t));
                 if (SettingsService.Current.ReminderSound)
                     ReminderSoundPlayer.Play();
             }

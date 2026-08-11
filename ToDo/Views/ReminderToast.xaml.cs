@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using ToDo.Services;
@@ -17,20 +18,48 @@ public partial class ReminderToast : Window
     /// <summary>Open toasts, so each new one sits above the previous.</summary>
     private static readonly List<ReminderToast> Open = new();
 
-    public ReminderToast(string message, string icon)
+    private readonly string _taskId;
+
+    public ReminderToast(string taskId, string title, string icon)
     {
         InitializeComponent();
-        MessageText.Text = message;
+        _taskId = taskId;
+        MessageText.Text = title;
         IconText.Text = icon;
     }
 
     /// <summary>Shows a reminder toast for one task (caller owns lifetime via the stack).
-    /// <paramref name="icon"/> is the task's list emoji, resolved by the caller.</summary>
-    public static void Show(string message, string icon)
+    /// <paramref name="taskId"/> routes the action buttons to the ViewModel; <paramref name="icon"/>
+    /// is the task's list emoji, resolved by the caller.</summary>
+    public static void Show(string taskId, string title, string icon)
     {
-        var toast = new ReminderToast(message, icon);
+        var toast = new ReminderToast(taskId, title, icon);
         Open.Add(toast);
         toast.PopUp();
+    }
+
+    /// <summary>Stop a button click from bubbling up to the card's Toast_Click (which would
+    /// dismiss + bring the app forward on top of the button's own action). ButtonBase fires
+    /// Click first; marking the mouse-up handled here keeps the bubble from reaching the Border.</summary>
+    private void Button_SuppressToastClick(object sender, MouseButtonEventArgs e) => e.Handled = true;
+
+    private void Snooze_Click(object sender, RoutedEventArgs e)
+    {
+        Dismiss();
+        App.ViewModel?.SnoozeReminder(_taskId);
+    }
+
+    private void Open_Click(object sender, RoutedEventArgs e)
+    {
+        Dismiss();
+        App.ViewModel?.OpenReminderTask(_taskId);
+        WindowManager.ShowMain();   // bring the app forward so the user sees the selected task
+    }
+
+    private void Complete_Click(object sender, RoutedEventArgs e)
+    {
+        Dismiss();
+        App.ViewModel?.CompleteReminderTask(_taskId);
     }
 
     private void PopUp()

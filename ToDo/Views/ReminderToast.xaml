@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:services="clr-namespace:ToDo.Services;assembly=ToDo.Core"
         Title="提醒"
-        Width="320" SizeToContent="Height"
+        Width="380" SizeToContent="Height"
         WindowStyle="None" ShowInTaskbar="False" Topmost="True"
         ShowActivated="False" ResizeMode="NoResize"
         AllowsTransparency="True" Background="Transparent"
@@ -11,7 +11,10 @@
     <!-- Bottom-right reminder card. Replaces the WinForms tray balloon, which Windows 11
          no longer displays. Drawn with DynamicResource brushes so it follows the theme.
          Height adapts to the content (SizeToContent=Height); Position() re-reads the real
-         size after Show(). -->
+         size after Show(), so the action-button row is measured automatically. Buttons are
+         thin forwarders into App.ViewModel (SnoozeReminder / OpenReminderTask /
+         CompleteReminderTask); each marks MouseLeftButtonUp handled so the click doesn't
+         bubble to the card's Toast_Click. -->
     <Border Background="{DynamicResource CardBackgroundBrush}"
             BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1"
             CornerRadius="8" Padding="14,12" Cursor="Hand"
@@ -21,17 +24,33 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
             <!-- Icon = the task's list emoji (same as the sidebar/header); caller supplies it. -->
-            <TextBlock x:Name="IconText" Grid.Column="0" Text=""
+            <TextBlock x:Name="IconText" Grid.Column="0" Grid.RowSpan="2" Text=""
                        FontFamily="Segoe UI Emoji"
                        FontSize="22" VerticalAlignment="Center" Margin="0,0,12,0"/>
-            <StackPanel Grid.Column="1">
+            <StackPanel Grid.Column="1" Grid.Row="0">
                 <TextBlock Text="{x:Static services:Loc.Reminder}" FontSize="12"
                            Foreground="{DynamicResource TextSecondaryBrush}"
                            FontWeight="SemiBold"/>
                 <TextBlock x:Name="MessageText" Text="" FontSize="14" Margin="0,2,0,0"
                            Foreground="{DynamicResource TextPrimaryBrush}"
                            TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Grid.Row="1" Orientation="Horizontal"
+                        Margin="0,10,0,0" HorizontalAlignment="Left">
+                <Button Content="{x:Static services:Loc.SnoozeReminder}"
+                        Style="{StaticResource FluentSubtleButton}" Padding="8,4"
+                        Click="Snooze_Click" MouseLeftButtonUp="Button_SuppressToastClick"/>
+                <Button Content="{x:Static services:Loc.OpenTask}"
+                        Style="{StaticResource FluentSubtleButton}" Padding="8,4" Margin="8,0,0,0"
+                        Click="Open_Click" MouseLeftButtonUp="Button_SuppressToastClick"/>
+                <Button Content="{x:Static services:Loc.Complete}"
+                        Style="{StaticResource FluentSubtleButton}" Padding="8,4" Margin="8,0,0,0"
+                        Click="Complete_Click" MouseLeftButtonUp="Button_SuppressToastClick"/>
             </StackPanel>
         </Grid>
     </Border>

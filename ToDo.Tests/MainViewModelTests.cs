@@ -440,6 +440,84 @@ public sealed class MainViewModelTests : IDisposable
         Assert.Single(_vm.Tasks);                                   // just the closed root remains
     }
 
+    // ─── Reminder toast actions (v1.3.2): 稍后提醒 / 打开任务 / 完成 are plain
+    // MainViewModel methods, so the button logic is testable without an STA toast. ────
+
+    [Fact]
+    public void SnoozeReminder_SetsReminderTenMinutesFromNow_Persisted()
+    {
+        _vm.CreateTaskCommand.Execute("喝水");
+        var t = _vm.Tasks.Single(x => x.Title == "喝水");
+
+        _vm.SnoozeReminder(t.Id);
+
+        // FakeClock pins UtcNow to 2026-08-09T00:00:00Z → +10min is 00:10Z. Pin the same
+        // absolute instant (explicit UTC, not the local-time Ts() helper, which would shift
+        // by the machine's timezone offset).
+        var expected = new DateTimeOffset(2026, 8, 9, 0, 10, 0, TimeSpan.Zero).ToUnixTimeMilliseconds();
+        Assert.Equal(expected, t.Reminder);
+        Assert.Equal(expected, _db.Tasks.FindById(t.Id)!.Reminder);   // persisted
+    }
+
+    [Fact]
+    public void OpenReminderTask_SetsSelectedTask()
+    {
+        _vm.CreateTaskCommand.Execute("打开我");
+        var t = _vm.Tasks.Single(x => x.Title == "打开我");
+
+        _vm.OpenReminderTask(t.Id);
+
+        Assert.Equal(t.Id, _vm.SelectedTask?.Id);
+    }
+
+    [Fact]
+    public void CompleteReminderTask_ClosesTask()
+    {
+        _vm.CreateTaskCommand.Execute("完成我");
+        var t = _vm.Tasks.Single(x => x.Title == "完成我");
+
+        _vm.CompleteReminderTask(t.Id);
+
+        Assert.True(t.IsClosed);
+        Assert.Equal(CloseMode.Complete, t.CloseRecord!.CloseMode);
+        Assert.Contains(t, _vm.CompletedTasks);
+    }
+
+    [Fact]
+    public void CompleteReminderTask_Recurring_GeneratesNext()
+    {
+        _db.Tasks.Insert(new TaskItem
+        {
+            Id = "r1", Title = "喝水", ListId = "list-tasks",
+            Recurrence = RecurrenceFrequency.Daily, DueDate = Ts(Today),
+        });
+        _vm.Refresh();
+        var root = _vm.Tasks.First(t => t.Id == "r1");
+
+        _vm.CompleteReminderTask("r1");
+
+        Assert.True(root.IsClosed);
+        var generated = _vm.Tasks.Single(t => t.RecurrenceSeriesId == "r1");
+        Assert.False(generated.IsClosed);
+    }
+
+    [Fact]
+    public void ReminderActions_UnknownTask_NoOp()
+    {
+        _vm.CreateTaskCommand.Execute("不动");
+        var t = _vm.Tasks.Single(x => x.Title == "不动");
+        var reminderBefore = t.Reminder;
+        var selectedBefore = _vm.SelectedTask;
+
+        _vm.SnoozeReminder("no-such-id");
+        _vm.OpenReminderTask("no-such-id");
+        _vm.CompleteReminderTask("no-such-id");
+
+        Assert.Equal(reminderBefore, t.Reminder);   // untouched
+        Assert.Equal(selectedBefore, _vm.SelectedTask);
+        Assert.False(t.IsClosed);
+    }
+
     private sealed class FakeClock : IClock
     {
         public DateTime Today { get; }
