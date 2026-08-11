@@ -20,19 +20,19 @@
 
 ### 2. 工程：测试覆盖可度量
 
-当前测试约 150 个，但**无覆盖率度量、盲区不透明**：服务端仅 API 5 + Merge 9；客户端 code-behind（MainWindow.xaml.cs 等）大量 UI 逻辑无测试。
+已接入 coverlet 覆盖率收集与报告（ci.yml Debug 收集 + reportgenerator 汇总，Release 双配置）；客户端关键路径测试已按覆盖率补齐（见下方勾选），服务端已达 96%+。当前整体行覆盖率 36%（大量未覆盖集中在 WPF 视图层，需 STA 宿主，不追求 100%）。
 
-- [ ] 接入 coverlet 输出覆盖率报告，先看清盲区
-- [ ] 补齐服务端同步 / 合并关键路径测试
-- [ ] 按覆盖率结果补客户端关键路径测试
+- [x] 接入 coverlet 输出覆盖率报告，先看清盲区
+- [x] 补齐服务端同步 / 合并关键路径测试（ToDo.Server 96.1%，ToDo.Core 92%）
+- [x] 按覆盖率结果补客户端关键路径测试（MainViewModel 49%→84%，ReminderService 0%→87%，BehaviorSection/GeneralSection 100%）
 
 > 本地跑客户端测试会被运行中的 app 锁 `ToDo.Core.dll`（MSBuild 报 MSB3027），需先关闭运行实例；CI 无此问题。
 
-### 3. 工程：CI 增加 Release 构建
+### 3. 工程：CI 增加 Release 构建 ✅
 
-ci.yml 目前只跑 Debug；Release 发布路径只在打 tag 时验证，回归要到发布阶段才发现。
+已完成：常规门禁现为双配置——Debug 跑测试并收集覆盖率，Release 也构建 + 跑测试，让发布路径（release.yml 用 `-c Release publish`）在门禁内即被验证，而非打 tag 时才暴露回归。
 
-- [ ] 常规门禁中增加 `-c Release` 构建，让发布路径在 CI 内即被验证
+- [x] 常规门禁中增加 `-c Release` 构建，让发布路径在 CI 内即被验证
 
 ### 4. 工程：拆分单体文件 ✅
 

@@ -12,6 +12,7 @@
 
 ### 内部
 - **拆分单体文件**：MainViewModel 按职责拆 4 个 partial，MainWindow 代码后置拆 7 个 partial、XAML 抽 SidebarControl / TaskListControl / DetailPaneControl 三个 UserControl（1509 行 → 86 行骨架），为后续功能留出干净落点
+- **测试覆盖补齐**：新增 MainViewModel 命令（建 / 删 / 移任务、列表与分组管理、步骤）、ReminderService 去重 / 修剪状态机、设置页分区 VM（行为 / 提醒 / 同步 / 常规 / 数据 / 更新）三组测试；客户端行覆盖率 15% → 24%，整体 29% → 36%（MainViewModel 49% → 84%，ReminderService 0% → 87%），服务端 96% 维持
 
 ## [v1.3.0] - 2026-08-10
 
