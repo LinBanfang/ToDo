@@ -1,0 +1,343 @@
+﻿<UserControl x:Class="ToDo.Views.SidebarControl"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="clr-namespace:ToDo.Models;assembly=ToDo.Core"
+        xmlns:vm="clr-namespace:ToDo.ViewModels"
+        xmlns:services="clr-namespace:ToDo.Services;assembly=ToDo.Core"
+        Focusable="False">
+        <Border Background="{DynamicResource SidebarBackgroundBrush}"
+                BorderBrush="{DynamicResource SidebarBorderBrush}" BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <StackPanel Grid.Row="0" Margin="14,14,14,0">
+                    <!-- Search box -->
+                    <Grid Height="32" Margin="0,0,0,2">
+                        <TextBox x:Name="SearchBox" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource SearchTextBox}" Padding="12,0,28,0"
+                                 VerticalContentAlignment="Center"/>
+                        <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                   Foreground="{DynamicResource TextDisabledBrush}"
+                                   VerticalAlignment="Center" Margin="8,0,0,0" IsHitTestVisible="False"/>
+                        <TextBlock x:Name="SearchPlaceholder"
+                                   Text="{x:Static services:Loc.Search}" FontSize="13"
+                                   Foreground="{DynamicResource TextDisabledBrush}"
+                                   VerticalAlignment="Center" Margin="24,0,0,0" IsHitTestVisible="False"/>
+                        <!-- X clear button -->
+                        <Button Content="&#xE10A;" FontFamily="Segoe MDL2 Assets"
+                                Style="{StaticResource FluentSubtleButton}" FontSize="10"
+                                Width="22" Height="22" Padding="0"
+                                Foreground="{DynamicResource TextDisabledBrush}"
+                                HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,4,0"
+                                Click="SearchClear_Click"
+                                Visibility="Collapsed" x:Name="SearchClearBtn"/>
+                    </Grid>
+                    <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,10,0,4"/>
+                </StackPanel>
+
+                <!-- Scrollable area -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- System Lists -->
+                        <ListBox ItemsSource="{Binding SystemLists}"
+                                 SelectedValue="{Binding ActiveListId}"
+                                 SelectedValuePath="Id"
+                                 BorderThickness="0" Background="Transparent"
+                                 ItemContainerStyle="{StaticResource SidebarNavItem}" Margin="0,4,0,4"
+                                 DragEnter="SidebarList_DragEnter" DragOver="SidebarList_DragOver" DragLeave="SidebarList_DragLeave"
+                                 Drop="SidebarList_Drop">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:TaskList}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="36"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="16" FontFamily="Segoe UI Emoji"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="14"
+                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                   MouseLeftButtonDown="SidebarListName_DoubleClick"
+                                                   Visibility="{Binding IsRenaming, Converter={StaticResource InverseBoolToVis}}"/>
+                                        <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
+                                                 FontSize="14" VerticalAlignment="Center"
+                                                 Visibility="{Binding IsRenaming, Converter={StaticResource BoolToVis}}"
+                                                 Style="{StaticResource FluentInlineEditBox}"
+                                                 KeyDown="SidebarRename_KeyDown"
+                                                 LostFocus="SidebarRename_LostFocus"
+                                                 IsVisibleChanged="SidebarRename_IsVisibleChanged"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding TaskCount}" VerticalAlignment="Center"
+                                                   Margin="8,0,0,0" FontSize="12"
+                                                   Foreground="{DynamicResource TextDisabledBrush}"
+                                                   Visibility="{Binding TaskCount, Converter={StaticResource CountToVis}}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <!-- Divider -->
+                        <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="14,4"/>
+
+                        <!-- Custom List Groups -->
+                        <ItemsControl ItemsSource="{Binding GroupedCustomLists}" Margin="0,4,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:ListGroupDisplay}">
+                                    <StackPanel>
+                                        <Border Margin="4,2" Padding="14,6" CornerRadius="6" Background="Transparent" Cursor="Hand"
+                                                PreviewMouseLeftButtonDown="RecordDragStart"
+                                                PreviewMouseMove="ListGroupHeader_PreviewMouseMove"
+                                                MouseLeftButtonUp="ListGroupHeader_Click"
+                                                ContextMenuOpening="ListGroup_ContextMenuOpening"
+                                                AllowDrop="True" DragEnter="ListGroupHeader_DragEnter" DragOver="ListGroupHeader_DragOver"
+                                                DragLeave="ListGroupHeader_DragLeave" Drop="ListGroupHeader_Drop">
+                                            <Border.ContextMenu><ContextMenu /></Border.ContextMenu>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value="&#xE70D;"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Group.Collapsed}" Value="True">
+                                                                    <Setter Property="Text" Value="&#xE76C;"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <TextBlock Grid.Column="1" Text="{Binding Group.Name}" FontSize="14" FontWeight="SemiBold"
+                                                           VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"
+                                                           Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVis}}"
+                                                           Tag="ListGroupName"
+                                                           MouseLeftButtonDown="ListGroupName_DoubleClick"/>
+                                                <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
+                                                         FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"
+                                                         Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}"
+                                                         Style="{StaticResource FluentInlineEditBox}"
+                                                         KeyDown="ListGroupName_KeyDown"
+                                                         LostFocus="ListGroupName_LostFocus"/>
+                                            </Grid>
+                                        </Border>
+                                        <ListBox ItemsSource="{Binding Lists}" PreviewMouseLeftButtonDown="RecordDragStart"
+                                                 PreviewMouseMove="SidebarList_PreviewMouseMove"
+                                                 SelectedValue="{Binding DataContext.ActiveListId, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                 SelectedValuePath="Id" BorderThickness="0" Background="Transparent"
+                                                 ItemContainerStyle="{StaticResource SidebarNavItem}"
+                                                 Visibility="{Binding TaskListVisible, Converter={StaticResource BoolToVis}}"
+                                                 Margin="16,0,0,0"
+                                                 DragEnter="SidebarList_DragEnter" DragOver="SidebarList_DragOver" DragLeave="SidebarList_DragLeave"
+                                                 Drop="SidebarList_Drop">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type models:TaskList}">
+                                                    <Grid ContextMenuOpening="SidebarGrid_ContextMenuOpening"><Grid.ContextMenu><ContextMenu Loaded="SidebarGrid_MenuLoaded"/></Grid.ContextMenu>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="36"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="16" FontFamily="Segoe UI Emoji"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="14" VerticalAlignment="Center"
+                                                                   MouseLeftButtonDown="SidebarListName_DoubleClick"
+                                                                   Visibility="{Binding IsRenaming, Converter={StaticResource InverseBoolToVis}}"/>
+                                                        <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
+                                                                 FontSize="14" VerticalAlignment="Center"
+                                                                 Visibility="{Binding IsRenaming, Converter={StaticResource BoolToVis}}"
+                                                                 Style="{StaticResource FluentInlineEditBox}"
+                                                                 KeyDown="SidebarRename_KeyDown"
+                                                                 LostFocus="SidebarRename_LostFocus"
+                                                                 IsVisibleChanged="SidebarRename_IsVisibleChanged"/>
+                                                        <TextBlock Grid.Column="2" Text="{Binding TaskCount}" FontSize="11" Foreground="{DynamicResource TextDisabledBrush}" Margin="4,0,0,0"
+                                                                   VerticalAlignment="Center"
+                                                                   Visibility="{Binding TaskCount, Converter={StaticResource CountToVis}}"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <!-- Ungrouped -->
+                        <ListBox ItemsSource="{Binding UngroupedCustomLists}"
+                                 PreviewMouseLeftButtonDown="RecordDragStart"
+                                 PreviewMouseMove="SidebarList_PreviewMouseMove"
+                                 SelectedValue="{Binding ActiveListId}"
+                                 SelectedValuePath="Id"
+                                 BorderThickness="0" Background="Transparent"
+                                 ItemContainerStyle="{StaticResource SidebarNavItem}" Margin="0,0,0,4"
+                                 DragEnter="SidebarList_DragEnter" DragOver="SidebarList_DragOver" DragLeave="SidebarList_DragLeave"
+                                 Drop="SidebarList_Drop">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:TaskList}">
+                                    <Grid ContextMenuOpening="SidebarGrid_ContextMenuOpening"><Grid.ContextMenu><ContextMenu Loaded="SidebarGrid_MenuLoaded"/></Grid.ContextMenu>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="36"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="16" FontFamily="Segoe UI Emoji"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Icon}" Value="">
+                                                            <Setter Property="Text" Value="📋"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource TextDisabledBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="14"
+                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                   MouseLeftButtonDown="SidebarListName_DoubleClick"
+                                                   Visibility="{Binding IsRenaming, Converter={StaticResource InverseBoolToVis}}"/>
+                                        <TextBox Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
+                                                 FontSize="14" VerticalAlignment="Center"
+                                                 Visibility="{Binding IsRenaming, Converter={StaticResource BoolToVis}}"
+                                                 Style="{StaticResource FluentInlineEditBox}"
+                                                 KeyDown="SidebarRename_KeyDown"
+                                                 LostFocus="SidebarRename_LostFocus"
+                                                 IsVisibleChanged="SidebarRename_IsVisibleChanged"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding TaskCount}" VerticalAlignment="Center"
+                                                   Margin="8,0,0,0" FontSize="12"
+                                                   Foreground="{DynamicResource TextDisabledBrush}"
+                                                   Visibility="{Binding TaskCount, Converter={StaticResource CountToVis}}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- New list input (between scroll and footer) -->
+                <Border Grid.Row="2" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
+                        Padding="14,6">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Style="{StaticResource FluentSubtleButton}"
+                                FontSize="15" Foreground="{DynamicResource TextSecondaryBrush}"
+                                Click="NewList_Click" Padding="6,3" Margin="0,0,4,0"
+                                HorizontalContentAlignment="Left">
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="+" FontSize="18" Margin="0,0,4,0"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Text="{x:Static services:Loc.NewListText}"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
+                        <Button Grid.Column="1" Style="{StaticResource FluentSubtleButton}"
+                                Width="36" Height="36" Padding="0"
+                                Click="NewListGroup_Click"
+                                ToolTip="{x:Static services:Loc.NewListGroup}">
+                            <Viewbox Width="18" Height="18">
+                                <Path Fill="{DynamicResource TextSecondaryBrush}">
+                                    <Path.Data>
+                                        <GeometryGroup FillRule="Nonzero">
+                                            <PathGeometry Figures="M832.940638 198.486734 v-72.025959 h-48.864288 v72.025959 h-72.025959 v48.864287 h72.025959 v72.025959 h48.864288 v-72.025959 h72.025959 v-48.864287 h-72.025959 z M552.166444 401.078068 H218.423363 c-38.602787 0 -70.071388 31.468601 -70.071387 70.071388 v333.743081 c0 38.700515 31.468601 70.169116 70.071387 70.169116 H552.166444 c38.700515 0 70.169116 -31.468601 70.169116 -70.169116 V471.149456 c0 -38.602787 -31.468601 -70.071388 -70.169116 -70.071388 z m21.304829 403.814469 c0 11.727429 -9.5774 21.304829 -21.304829 21.304829 H218.423363 c-11.727429 0 -21.207101 -9.5774 -21.2071 -21.304829 V471.149456 c0 -11.727429 9.479672 -21.207101 21.2071 -21.207101 H552.166444 c11.727429 0 21.304829 9.479672 21.304829 21.207101 v333.743081 z"/>
+                                            <PathGeometry Figures="M654.879175 301.004008 H321.233823 c-38.700515 0 -70.169116 31.468601 -70.169116 70.169117 h48.864287 c0 -11.727429 9.5774 -21.304829 21.304829 -21.30483 h333.645352 c11.727429 0 21.304829 9.5774 21.30483 21.30483 v333.74308 c0 11.727429 -9.5774 21.207101 -21.30483 21.207101 v48.864287 c38.700515 0 70.169116 -31.468601 70.169117 -70.071388 v-333.74308 c0 -38.700515 -31.468601 -70.169116 -70.169117 -70.169117 z M783.783165 599.271617 c0 11.727429 -9.5774 21.304829 -21.304829 21.304829 v48.864287 c38.700515 0 70.169116 -31.468601 70.169116 -70.169116 v-233.473564 h-48.864287 z M427.757969 247.351021 h233.766749 v-48.864287 H427.757969 c-38.700515 0 -70.169116 31.468601 -70.169116 70.071388 h48.864287 c0 -11.727429 9.5774 -21.207101 21.304829 -21.207101 z"/>
+                                        </GeometryGroup>
+                                    </Path.Data>
+                                </Path>
+                            </Viewbox>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Footer: settings gear + sync status dot on the right (hover for details) -->
+                <Border Grid.Row="3" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
+                        Padding="14,10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal">
+                            <Button Content="&#xE713;" FontFamily="Segoe MDL2 Assets"
+                                    Style="{StaticResource FluentSubtleButton}" FontSize="16"
+                                    Width="28" Height="24" Padding="0"
+                                    Command="{Binding OpenSettingsCommand}"
+                                    Foreground="{DynamicResource TextSecondaryBrush}"
+                                    AutomationProperties.AutomationId="OpenSettings"
+                                    AutomationProperties.Name="{x:Static services:Loc.Settings}"
+                                    ToolTip="{x:Static services:Loc.Settings}"/>
+                            <Button Content="&#xE70B;" FontFamily="Segoe Fluent Icons"
+                                    Style="{StaticResource FluentSubtleButton}" FontSize="16"
+                                    Width="28" Height="24" Padding="0" Margin="4,0,0,0"
+                                    Click="StickyNote_Click"
+                                    Foreground="{DynamicResource TextSecondaryBrush}"
+                                    AutomationProperties.AutomationId="StickyNote"
+                                    AutomationProperties.Name="{x:Static services:Loc.StickyNote}"
+                                    ToolTip="{x:Static services:Loc.StickyNote}"/>
+                        </StackPanel>
+                        <!-- Sync indicator: hand-drawn two-arrow sync glyph. Segoe MDL2's
+                             E895 is a hairline monoline glyph that can't be thickened, so
+                             this Path draws the same two chasing circular arrows with a
+                             thick stroke (2/16 units ≈ 2x the MDL2 stroke) at the same
+                             on-screen size. Colored by state, spins while a round-trip is
+                             in flight. Click = sync now; hover shows the full status text. -->
+                        <Button Grid.Column="1" Style="{StaticResource FluentSubtleButton}"
+                                Command="{Binding SyncNowCommand}"
+                                HorizontalAlignment="Right" VerticalAlignment="Center"
+                                Padding="10,4" Cursor="Hand"
+                                ToolTip="{Binding SyncStatusText}"
+                                AutomationProperties.AutomationId="SyncStatus"
+                                AutomationProperties.Name="{x:Static services:Loc.SyncNow}">
+                            <Viewbox Width="16" Height="16" RenderTransformOrigin="0.5,0.5">
+                                <Grid Width="16" Height="16">
+                                    <Path Stroke="{Binding SyncStatusBrush}" StrokeThickness="2"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                          Data="M 14.01,10.49 A 6.5,6.5 0 0 1 1.99,10.49
+                                                M 1.99,5.51 A 6.5,6.5 0 0 1 14.01,5.51
+                                                M 1.99,10.49 L 1.77,12.96
+                                                M 1.99,10.49 L 3.9,12.08
+                                                M 14.01,5.51 L 14.23,3.04
+                                                M 14.01,5.51 L 12.1,3.92"/>
+                                </Grid>
+                                <Viewbox.RenderTransform>
+                                    <RotateTransform/>
+                                </Viewbox.RenderTransform>
+                                <Viewbox.Style>
+                                    <Style TargetType="Viewbox">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SyncIsSyncing}" Value="True">
+                                                <DataTrigger.EnterActions>
+                                                    <BeginStoryboard x:Name="SyncSpinStoryboard">
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                                             From="0" To="360" Duration="0:0:1"
+                                                                             RepeatBehavior="Forever"/>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </DataTrigger.EnterActions>
+                                                <DataTrigger.ExitActions>
+                                                    <RemoveStoryboard BeginStoryboardName="SyncSpinStoryboard"/>
+                                                </DataTrigger.ExitActions>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Viewbox.Style>
+                            </Viewbox>
+                        </Button>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+</UserControl>

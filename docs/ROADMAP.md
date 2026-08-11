@@ -34,12 +34,12 @@ ci.yml 目前只跑 Debug；Release 发布路径只在打 tag 时验证，回归
 
 - [ ] 常规门禁中增加 `-c Release` 构建，让发布路径在 CI 内即被验证
 
-### 4. 工程：拆分单体文件
+### 4. 工程：拆分单体文件 ✅
 
-三个文件偏大：MainWindow.xaml.cs（2061 行）、MainWindow.xaml（1487 行）、MainViewModel.cs（1141 行）。当前最大的可维护性风险，后续每加功能都在撕大文件。
+已完成：MainViewModel.cs → 4 个 partial（主题 / 列表 / 任务 / 标签）；MainWindow.xaml.cs（2117 行）→ 7 个 partial → 100 行；MainWindow.xaml（1509 行）→ 抽 SidebarControl / TaskListControl / DetailPaneControl 三个 UserControl，骨架缩至 86 行，6 个已清空的 partial 已删除。
 
-- [ ] 拖放 / 主题 / 同步 / 便笺各自抽成独立 service 或 partial
-- [ ] 目标：文件行数减半，为 P0 大功能创造干净落点
+- [x] MainViewModel / MainWindow 代码后置拆分
+- [x] MainWindow.xaml 拆分为三个 UserControl
 
 ### 5. 撤销完成 / 删除
 

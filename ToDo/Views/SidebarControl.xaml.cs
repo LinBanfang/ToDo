@@ -8,10 +8,24 @@ using ToDo.Services;
 using ToDo.ViewModels;
 using ToDo.Views.Dialogs;
 
-namespace ToDo;
+namespace ToDo.Views;
 
-public partial class MainWindow
+public partial class SidebarControl : UserControl
 {
+    private MainViewModel ViewModel => DataContext as MainViewModel ?? App.ViewModel!;
+    private Point _dragStartPoint;
+
+    public SidebarControl()
+    {
+        InitializeComponent();
+        SearchBox.TextChanged += (s, e) =>
+        {
+            var hasText = !string.IsNullOrEmpty(SearchBox.Text);
+            SearchPlaceholder.Visibility = hasText ? Visibility.Collapsed : Visibility.Visible;
+            SearchClearBtn.Visibility = hasText ? Visibility.Visible : Visibility.Collapsed;
+        };
+    }
+
     // ─── Sidebar ──────────────────────────────────────────
     private void SearchClear_Click(object sender, RoutedEventArgs e)
     {
@@ -73,7 +87,7 @@ public partial class MainWindow
             var delete = new MenuItem { Header = Loc.DeleteGroup };
             delete.Click += (s, _) =>
             {
-                if (FluentDialog.Confirm(this, Loc.ConfirmDeleteGroupMsg(lgd.Group.Name), Loc.DeleteGroup))
+                if (FluentDialog.Confirm(Window.GetWindow(this), Loc.ConfirmDeleteGroupMsg(lgd.Group.Name), Loc.DeleteGroup))
                     ViewModel.DeleteListGroupCommand.Execute(lgd.Group);
             };
             menu.Items.Add(delete);
@@ -134,7 +148,7 @@ public partial class MainWindow
 
         menu.Items.Add(new Separator());
         var d = new MenuItem { Header = Loc.Delete, Tag = list };
-        d.Click += (_, _) => { if (FluentDialog.Confirm(this, Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete)) ViewModel.DeleteListCommand.Execute(list); };
+        d.Click += (_, _) => { if (FluentDialog.Confirm(Window.GetWindow(this), Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete)) ViewModel.DeleteListCommand.Execute(list); };
         menu.Items.Add(d);
     }
 
@@ -181,15 +195,6 @@ public partial class MainWindow
             ViewModel.NotifyHeaderTitleChanged();
         }
         list.IsRenaming = false;
-    }
-
-    private void SidebarCtx_Delete(object sender, RoutedEventArgs e)
-    {
-        if ((sender as MenuItem)?.DataContext is TaskList list)
-        {
-            if (FluentDialog.Confirm(this, Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete))
-                ViewModel.DeleteListCommand.Execute(list);
-        }
     }
 
     // ─── List group rename handlers ───────────────────────
@@ -328,131 +333,154 @@ public partial class MainWindow
         }
     }
 
-    // ─── List Header: emoji + rename ─────────────────────
-    private void ListEmoji_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is not Button btn || ViewModel.ActiveList == null) return;
-
-        var emojis = new[] {
-            "📋","📝","📌","📎","📁","📂","📊","📈","📅","📆",
-            "💼","🏠","🏢","🏪","🛒","🛍️","📚","📖","✏️","🖊️",
-            "🎯","🎯","💡","⭐","🌟","❤️","💚","💙","💛","💜",
-            "🎵","🎶","🏃","🚶","🚗","✈️","🚲","💻","📱","🖥️",
-            "🎮","🎨","🎬","🎭","📷","📸","💰","💳","💵","🔧",
-            "🔨","🔑","🔔","📢","💬","🗨️","✅","❌","⚠️","⏰",
-            "⌛","☕","🍔","🍕","🌮","🎂","🍺","🥤","🌍","🏖️",
-            "⛰️","🌲","🐱","🐶","🦊","🐼","👤","👥","💪","🧠",
-            "≡","☰","⋯","∷"
-        };
-        var popup = new System.Windows.Controls.Primitives.Popup
-        {
-            PlacementTarget = btn,
-            Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom,
-            StaysOpen = false,
-        };
-        var panel = new WrapPanel
-        {
-            Width = 400,
-            Background = (Brush)Application.Current.FindResource("CardBackgroundBrush"),
-        };
-        foreach (var em in emojis)
-        {
-            var embtn = new Button { Content = em, FontSize = 20, Width = 38, Height = 38,
-                Margin = new Thickness(2), FontFamily = new FontFamily("Segoe UI Emoji"),
-                Background = Brushes.Transparent, BorderThickness = new Thickness(0),
-                Cursor = System.Windows.Input.Cursors.Hand };
-            var captured = em;
-            embtn.Click += (s, _) =>
-            {
-                ViewModel.ActiveList!.Icon = captured;
-                App.Database!.Lists.Update(ViewModel.ActiveList);
-                popup.IsOpen = false;
-            };
-            panel.Children.Add(embtn);
-        }
-        popup.Child = panel;
-        popup.IsOpen = true;
-    }
-
-    private void ListTitle_Click(object sender, MouseButtonEventArgs e)
-    {
-        if (ViewModel.ActiveList == null || ViewModel.ActiveList.IsSystem) return;
-        // Match the title label's adaptive color on the themed header (ADR-014).
-        ListTitleEdit.Foreground = ViewModel.HeaderTitleLight switch
-        {
-            true => new SolidColorBrush(Colors.White),
-            false => new SolidColorBrush(Color.FromRgb(0x20, 0x1F, 0x1E)),
-            _ => (Brush)Application.Current.FindResource("TextPrimaryBrush"),
-        };
-        ListTitleLabel.Visibility = Visibility.Collapsed;
-        ListTitleEdit.Text = ViewModel.ActiveList.Name;
-        ListTitleEdit.Visibility = Visibility.Visible;
-        ListTitleEdit.Focus();
-        ListTitleEdit.SelectAll();
-    }
-
-    private void ListTitleEdit_KeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key == Key.Enter) { CommitListTitle(); e.Handled = true; }
-        else if (e.Key == Key.Escape) { CancelListTitle(); e.Handled = true; }
-    }
-
-    private void ListTitleEdit_LostFocus(object sender, RoutedEventArgs e) => CommitListTitle();
-
-    private void CommitListTitle()
-    {
-        if (ViewModel.ActiveList == null) return;
-        var newName = ListTitleEdit.Text.Trim();
-        if (!string.IsNullOrEmpty(newName) && newName != ViewModel.ActiveList.Name)
-        {
-            ViewModel.ActiveList.Name = newName;
-            ViewModel.RenameListCommand.Execute(ViewModel.ActiveList);
-            ViewModel.NotifyHeaderTitleChanged();
-        }
-        CancelListTitle();
-    }
-
-    private void CancelListTitle()
-    {
-        ListTitleEdit.Visibility = Visibility.Collapsed;
-        ListTitleLabel.Visibility = Visibility.Visible;
-    }
-
-    // ─── List Menu ────────────────────────────────────────
-    // WPF opens a ContextMenu on right-click only; the header's three-dot button
-    // opens it on left-click via this handler (same pattern as the other "more" menus).
-    private void ListMore_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is Button btn && btn.ContextMenu is { } menu)
-        {
-            menu.PlacementTarget = btn;
-            menu.IsOpen = true;
-        }
-    }
-
-    private void ListMenu_Rename(object sender, RoutedEventArgs e)
-    {
-        if (ViewModel.ActiveList != null)
-            ViewModel.RenameListCommand.Execute(ViewModel.ActiveList);
-    }
-
-    private void ListMenu_Delete(object sender, RoutedEventArgs e)
-    {
-        if (ViewModel.ActiveList is not { } list) return;
-        if (FluentDialog.Confirm(this, Loc.ConfirmDeleteMsg(list.Name), Loc.ConfirmDelete))
-            ViewModel.DeleteListCommand.Execute(list);
-    }
-
-    private void ListMenu_Theme(object sender, RoutedEventArgs e)
-    {
-        if (ViewModel.ActiveList is { } list)
-            OpenListThemeDialog(list);
-    }
-
+    // ─── List Theme Dialog ────────────────────────────────
     private void OpenListThemeDialog(TaskList list)
     {
-        var dialog = new ListThemeDialog(list) { Owner = this };
+        var dialog = new ListThemeDialog(list) { Owner = Window.GetWindow(this) };
         dialog.ShowDialog();
     }
 
+    // ─── Sidebar List Drag & Drop ────────────────────────
+    // TaskItem → move the task to the target list
+    // TaskList → reorder the list within its sidebar area (half-zone insertion)
+    private ListBoxItem? _lastSidebarDropItem;
+
+    private void SidebarList_DragEnter(object sender, DragEventArgs e)
+    {
+        if (sender is ListBox listBox)
+            UpdateSidebarDragState(listBox, e);
+        e.Handled = true;
+    }
+
+    private void SidebarList_DragOver(object sender, DragEventArgs e)
+    {
+        if (sender is ListBox listBox)
+            UpdateSidebarDragState(listBox, e);
+        e.Handled = true;
+    }
+
+    private void UpdateSidebarDragState(ListBox listBox, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(typeof(TaskItem)))
+        {
+            e.Effects = DragDropEffects.Move;
+            return;
+        }
+
+        if (e.Data.GetDataPresent(typeof(TaskList)) && e.Data.GetData(typeof(TaskList)) is TaskList dragged)
+        {
+            // Lists can only be reordered within the same sidebar area
+            bool sameArea = listBox.Items.Cast<TaskList>().Contains(dragged) && !dragged.IsSystem;
+            if (sameArea)
+            {
+                e.Effects = DragDropEffects.Move;
+                UpdateSidebarDropIndicator(listBox, e);
+            }
+        }
+    }
+
+    private void SidebarList_DragLeave(object sender, DragEventArgs e)
+    {
+        ClearSidebarDropIndicator();
+        e.Handled = true;
+    }
+
+    private void SidebarList_Drop(object sender, DragEventArgs e)
+    {
+        ClearSidebarDropIndicator();
+        if (sender is not ListBox listBox) { e.Handled = true; return; }
+
+        var item = HitTestSidebarItem(listBox, e);
+        if (item?.DataContext is not TaskList targetList) { e.Handled = true; return; }
+
+        if (e.Data.GetDataPresent(typeof(TaskItem)) && e.Data.GetData(typeof(TaskItem)) is TaskItem task)
+        {
+            // Move a task to this list
+            if (targetList.Id != task.ListId)
+                ViewModel.MoveTaskToListCommand.Execute((task, targetList));
+        }
+        else if (e.Data.GetDataPresent(typeof(TaskList)) && e.Data.GetData(typeof(TaskList)) is TaskList draggedList)
+        {
+            // Reorder a sidebar list within the same area (half-zone insertion)
+            if (draggedList.Id != targetList.Id)
+                ReorderSidebarList(listBox, e, draggedList, item!);
+        }
+        e.Handled = true;
+    }
+
+    private static ListBoxItem? HitTestSidebarItem(ListBox listBox, DragEventArgs e)
+    {
+        var pos = e.GetPosition(listBox);
+        var element = listBox.InputHitTest(pos) as DependencyObject;
+        while (element != null && element is not ListBoxItem)
+            element = VisualTreeHelper.GetParent(element);
+        return element as ListBoxItem;
+    }
+
+    private void UpdateSidebarDropIndicator(ListBox listBox, DragEventArgs e)
+    {
+        ClearSidebarDropIndicator();
+        // Only lists show an insert position; task drops are a plain "move to list"
+        if (!e.Data.GetDataPresent(typeof(TaskList))) return;
+        var item = HitTestSidebarItem(listBox, e);
+        if (item == null) return;
+
+        bool lowerHalf = e.GetPosition(item).Y > item.ActualHeight / 2;
+        item.BorderBrush = (Brush)Application.Current.FindResource("AccentBlue");
+        item.BorderThickness = new Thickness(0, lowerHalf ? 0 : 2, 0, lowerHalf ? 2 : 0);
+        _lastSidebarDropItem = item;
+    }
+
+    private void ClearSidebarDropIndicator()
+    {
+        if (_lastSidebarDropItem != null)
+        {
+            _lastSidebarDropItem.BorderBrush = Brushes.Transparent;
+            _lastSidebarDropItem.BorderThickness = new Thickness(0);
+            _lastSidebarDropItem = null;
+        }
+    }
+
+    private void ReorderSidebarList(ListBox listBox, DragEventArgs e, TaskList dragged, ListBoxItem targetItem)
+    {
+        var siblings = listBox.Items.Cast<TaskList>()
+            .Where(l => !l.IsSystem) // system lists stay in fixed order
+            .OrderBy(l => l.Order)
+            .ToList();
+
+        // Upper half of the target row inserts before it, lower half after it
+        bool lowerHalf = e.GetPosition(targetItem).Y > targetItem.ActualHeight / 2;
+        if (!ReorderService.Reorder(siblings, dragged, (TaskList)targetItem.DataContext!, lowerHalf)) return;
+
+        foreach (var l in siblings)
+            App.Database!.Lists.Update(l);
+
+        ViewModel.Refresh();
+    }
+
+    // ─── Drag helpers ─────────────────────────────────────
+    private void RecordDragStart(object sender, MouseButtonEventArgs e)
+    {
+        if (e.LeftButton == MouseButtonState.Pressed)
+            _dragStartPoint = e.GetPosition(null);
+    }
+
+    private bool DragThresholdExceeded(MouseEventArgs e)
+    {
+        var pos = e.GetPosition(null);
+        return Math.Abs(pos.X - _dragStartPoint.X) >= SystemParameters.MinimumHorizontalDragDistance
+            || Math.Abs(pos.Y - _dragStartPoint.Y) >= SystemParameters.MinimumVerticalDragDistance;
+    }
+
+    /// <summary>True if the event source lies inside an element tagged with the given value.</summary>
+    private static bool IsInsideTaggedElement(object? source, string tag)
+    {
+        var el = source as DependencyObject;
+        while (el != null)
+        {
+            if (el is FrameworkElement fe && fe.Tag is string s && s == tag) return true;
+            el = VisualTreeHelper.GetParent(el);
+        }
+        return false;
+    }
 }

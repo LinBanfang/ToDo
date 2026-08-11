@@ -1,20 +1,14 @@
 using System.ComponentModel;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
-using ToDo.Models;
 using ToDo.Services;
 using ToDo.ViewModels;
-using ToDo.Views.Dialogs;
 
 namespace ToDo;
 
 public partial class MainWindow : Window
 {
     private MainViewModel ViewModel => (MainViewModel)DataContext;
-    private bool _suppressDetailEvents;
-    private bool _suppressTaskClick;
-    private Point _dragStartPoint;
 
     public MainWindow()
     {
@@ -24,27 +18,9 @@ public partial class MainWindow : Window
         App.ViewModel!.PropertyChanged += (s, e) =>
         {
             if (e.PropertyName == nameof(MainViewModel.SelectedTask))
-                UpdateDetailPane();
+                DetailPaneControl.UpdateForSelectedTask();
         };
-        UpdateDetailPane();   // defensive: pane starts collapsed, but covers a pre-set selection
-
-        SearchBox.TextChanged += (s, e) =>
-        {
-            var hasText = !string.IsNullOrEmpty(SearchBox.Text);
-            SearchPlaceholder.Visibility = hasText ? Visibility.Collapsed : Visibility.Visible;
-            SearchClearBtn.Visibility = hasText ? Visibility.Visible : Visibility.Collapsed;
-        };
-        UpdateAddTaskPlaceholder();
-    }
-
-
-    // ─── Dialogs ──────────────────────────────────────────
-    private void OpenEditCloseTimeDialog(TaskItem task)
-    {
-        if (task.CloseRecord == null) return;
-        var dialog = new DateTimeDialog(task.CloseRecord.ClosedAt) { Owner = this };
-        if (dialog.ShowDialog() == true && dialog.Saved)
-            ViewModel.EditCloseTimeCommand.Execute((task, dialog.ResultTimestamp));
+        DetailPaneControl.UpdateForSelectedTask();   // defensive: pane starts collapsed, but covers a pre-set selection
     }
 
 
@@ -59,7 +35,7 @@ public partial class MainWindow : Window
         }
         if (e.Key == Key.N && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
         {
-            AddTaskBox.Focus();
+            TaskListControl.FocusNewTaskBox();
             e.Handled = true;
         }
     }
@@ -74,10 +50,7 @@ public partial class MainWindow : Window
     protected override void OnClosing(CancelEventArgs e)
     {
         // Flush any pending detail-pane title/note edits before exiting
-        DetailTitleBox?.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
-        DetailNoteBox?.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
-        if (ViewModel.SelectedTask != null)
-            ViewModel.UpdateTaskCommand.Execute(ViewModel.SelectedTask);
+        DetailPaneControl.FlushPendingEdits();
 
         // X closes to the tray (default); with the toggle off it exits the app.
         // While actually quitting (tray "退出" / session end) let the window close.

@@ -10,6 +10,9 @@
 ### 优化
 - **README 截图**：改为透明画布 + 合成软阴影（环堆栈线性衰减，`$blur` 真实控制阴影宽度），阴影直接融进宿主页面背景，浅色 / 深色主题都自然；五张截图全部重新生成（见 [docs/screenshots.md](docs/screenshots.md)）
 
+### 内部
+- **拆分单体文件**：MainViewModel 按职责拆 4 个 partial，MainWindow 代码后置拆 7 个 partial、XAML 抽 SidebarControl / TaskListControl / DetailPaneControl 三个 UserControl（1509 行 → 86 行骨架），为后续功能留出干净落点
+
 ## [v1.3.0] - 2026-08-10
 
 ### 新增
