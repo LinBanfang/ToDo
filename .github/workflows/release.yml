@@ -1,8 +1,9 @@
 name: Build and Release
 
 # 触发方式：
-#   git tag v1.0.0 && git push origin v1.0.0   → 自动构建并发布
-#   或在 GitHub Actions 页面手动 "Run workflow"（workflow_dispatch 填 tag 可重跑 / 补同步）
+#   git tag v1.0.0 && git push origin v1.0.0   → 自动构建并发布 GitHub Release
+#   或在 GitHub Actions 页面手动 "Run workflow"（workflow_dispatch 填 tag 可重跑）
+# Gitee 镜像（tag / 正文 / zip 附件）不在 CI 同步，由 Claude 手动完成（见 docs/gitee-mirror.md）。
 on:
   push:
     tags:
@@ -10,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: '要发布 / 同步的 tag（如 v1.2.2）。push tag 触发时留空即可。'
+        description: '要发布的 tag（如 v1.2.2）。push tag 触发时留空即可。'
         required: false
         type: string
 
@@ -44,8 +45,7 @@ jobs:
 
       # Release body comes from the matching CHANGELOG section (## [v1.2.3]), so the
       # description follows the curated changelog instead of auto-generated PR noise.
-      # Extracted before the artifact upload so the same body feeds both the GitHub Release
-      # and the Gitee mirror release.
+      # 正文仅用于 GitHub Release；Gitee 镜像由 Claude 手动同步（见 docs/gitee-mirror.md）。
       - name: Extract changelog for release body
         shell: pwsh
         run: |
@@ -85,157 +85,3 @@ jobs:
           body_path: release-body.md
           update_release: true # 重跑同 tag 时更新而非报错
 
-  # Gitee 镜像独立成 job：Gitee API 偶发 DNS / 网络抖动时，可在 Actions 页面
-  # 对本 job 单独 "Re-run failed jobs"，无需重跑构建与 GitHub Release。
-  gitee:
-    runs-on: windows-latest
-    needs: release
-    env:
-      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
-    steps:
-      - name: Download zip artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: release-zip
-          path: .
-
-      - name: Sync release to Gitee
-        shell: pwsh
-        env:
-          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $tag = $env:RELEASE_TAG
-          $owner = 'wu-bin-921'
-          $repo = 'ToDo'
-          $base = "https://gitee.com/api/v5/repos/$owner/$repo"
-          $token = $env:GITEE_TOKEN
-
-          # Gitee 偶发 "No such host is known"（DNS 抖动）：指数退避重试吸收瞬时故障
-          function Invoke-Gitee {
-            param([string]$Method, [string]$Uri, [hashtable]$Body = @{}, [hashtable]$Form, [int]$MaxRetries = 5)
-            $delay = 3
-            for ($i = 1; $i -le $MaxRetries; $i++) {
-              try {
-                if ($Form) { return Invoke-RestMethod -Method $Method -Uri $Uri -Form $Form -ErrorAction Stop }
-                # Invoke-RestMethod 只对 POST 自动设置 form-urlencoded；PATCH/PUT 不带 body 时
-                # Content-Type 为空，Gitee 会拒绝并返回 406。非空 body 显式指定（GET 无 body 不走此分支）。
-                if ($Body -and $Body.Count -gt 0) {
-                    return Invoke-RestMethod -Method $Method -Uri $Uri -Body $Body -ContentType 'application/x-www-form-urlencoded' -ErrorAction Stop
-                }
-                return Invoke-RestMethod -Method $Method -Uri $Uri -Body $Body -ErrorAction Stop
-              } catch {
-                Write-Host "Gitee 调用失败(第 $i/$MaxRetries 次): $($_.Exception.Message)"
-                $detail = $_.ErrorDetails.Message
-                if ($detail) { Write-Host "  响应详情: $detail" }
-                if ($i -eq $MaxRetries) { throw }
-                Start-Sleep -Seconds $delay
-                $delay *= 2
-              }
-            }
-          }
-
-          # 1. Ensure the tag exists on Gitee (release creation requires it)
-          try {
-            Invoke-Gitee -Method Post -Uri "$base/tags?access_token=$token" -Body @{ tag_name = $tag; refs = 'master' } | Out-Null
-            Write-Host "Created Gitee tag $tag"
-          } catch {
-            Write-Host "Gitee tag $tag already exists or create failed: $($_.ErrorDetails.Message)"
-          }
-
-          # 2. Create the release with the CHANGELOG-derived body (Gitee expects form-encoded
-          #    params; "body" is required). Re-runs on an existing tag fail here — that's fine,
-          #    step 4 patches the existing release.
-          $releaseBody = Get-Content -Raw -Encoding UTF8 release-body.md
-          if (-not $releaseBody) { $releaseBody = "Release $tag" }
-          try {
-            Invoke-Gitee -Method Post -Uri "$base/releases?access_token=$token" -Body @{
-              tag_name = $tag
-              name = "Release $tag"
-              body = $releaseBody
-              target_commitish = 'master'
-            } | Out-Null
-            Write-Host "Created Gitee release $tag"
-          } catch {
-            Write-Host "Gitee release $tag create failed (可能已存在): $($_.ErrorDetails.Message)"
-          }
-
-          # 3. Find the release id by listing releases and matching the tag
-          # (Gitee's releases/tags/{tag} returns null when called with a token)
-          Start-Sleep -Seconds 2
-          $releases = Invoke-Gitee -Method Get -Uri "$base/releases?access_token=$token&per_page=100"
-          $match = $releases | Where-Object { $_.tag_name -eq $tag }
-          if (-not $match) { throw "No Gitee release for tag $tag in releases list" }
-          $id = $match.id
-          Write-Host "Found Gitee release id $id for $tag"
-
-          # 4. Always refresh the release body from the CHANGELOG (idempotent — also fixes
-          #    releases created before this step read the changelog, like the current v1.2.3)
-          #    URL 必须用 ${id} 限定变量名：PowerShell 会把 $id?access_token 解析成单个空变量，
-          #    导致 URL 变成 .../releases/=TOKEN、release id 与 access_token 丢失，Gitee 返回 401。
-          #    本步失败仅告警不阻断 zip 上传（创建 release 时已写入 CHANGELOG 正文）。
-          try {
-            # Gitee 的 PATCH /releases/{id} 必须带 tag_name，否则返回 "tag_name is missing"
-            Invoke-Gitee -Method Patch -Uri "$base/releases/${id}?access_token=$token" -Body @{
-              tag_name = $tag
-              name = "Release $tag"
-              body = $releaseBody
-            } | Out-Null
-            Write-Host "Updated Gitee release $tag body from CHANGELOG"
-          } catch {
-            Write-Host "WARN: 未能更新 Gitee release $tag 正文（不影响 zip 上传）: $($_.Exception.Message)"
-          }
-
-          # 5. Prune old release attachments to stay under Gitee's 1 GB free quota.
-          #    Gitee 免费仓库发布附件配额 1GB，而每个 self-contained zip 约 72MB，
-          #    约 14 个即占满（v1.2.4 曾因此返回 "文件大小已超出仓库附件配额"）。
-          #    策略：保留最新 $keep 个 release 的附件，删除更老 release 的 ToDo-*.zip。
-          #    v*.zip / v*.tar.gz 是 Gitee 自动生成的源码包，不属于我们上传的附件，不动。
-          $keep = 3
-          $all = @(Invoke-Gitee -Method Get -Uri "$base/releases?access_token=$token&per_page=100")
-          $sorted = $all | Sort-Object id -Descending
-          $keepIds = @($sorted | Select-Object -First $keep | ForEach-Object { $_.id })
-          $pruned = 0
-          foreach ($rel in $sorted) {
-            if ($rel.id -in $keepIds -or $rel.id -eq $id) { continue }
-            $atts = @(Invoke-Gitee -Method Get -Uri "$base/releases/$($rel.id)/attach_files?access_token=$token")
-            foreach ($att in $atts) {
-              if ($att.name -notlike 'ToDo-*') { continue }
-              try {
-                Invoke-Gitee -Method Delete -Uri "$base/releases/$($rel.id)/attach_files/$($att.id)?access_token=$token" | Out-Null
-                Write-Host "Pruned $($rel.tag_name)/$($att.name)"
-                $pruned++
-              } catch {
-                Write-Host "WARN: 未能删除 $($rel.tag_name)/$($att.name): $($_.Exception.Message)"
-              }
-            }
-          }
-          Write-Host "Pruned $pruned old attachment(s), keeping latest $keep release(s)"
-
-          # 6. Upload the zip asset
-          # v1.2.0-v1.2.2 的成功经验：access_token 放查询串 + file 走 multipart body。
-          # 上次 curl -F 把 access_token 挪进 form 字段导致 400，回归查询串方式。
-          # 不用 -f：失败时能连同响应体一起带回，便于诊断。
-          $zip = "ToDo-$tag.zip"
-          $uploadUri = "$base/releases/$id/attach_files?access_token=$token"
-          $uploaded = $false
-          $delay = 3
-          for ($i = 1; $i -le 5; $i++) {
-            try {
-              # -w 把 HTTP 状态码拼到输出末尾；不用 -f，失败时响应体会留在输出里便于诊断。
-              $resp = (& curl.exe -sS -X POST $uploadUri -F "file=@$zip" -w "`nHTTP_CODE:%{http_code}" 2>&1 | Out-String).Trim()
-              $code = [regex]::Match($resp, 'HTTP_CODE:(\d+)').Groups[1].Value
-              if (-not $code -or [int]$code -notin 200..299) {
-                throw "curl exit $LASTEXITCODE, HTTP $code : $resp"
-              }
-              Write-Host "Uploaded $zip to Gitee release $tag"
-              $uploaded = $true
-              break
-            } catch {
-              Write-Host "Gitee 上传失败(第 $i/5 次): $($_.Exception.Message)"
-              if ($i -eq 5) { throw }
-              Start-Sleep -Seconds $delay
-              $delay *= 2
-            }
-          }
-          if (-not $uploaded) { throw "Failed to upload $zip to Gitee release $tag" }

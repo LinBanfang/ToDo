@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+### 内部
+- **发布流程**：release.yml 移除 Gitee 同步 job——CI 传 Gitee 的 curl 无超时会永久挂起（v1.3.1 实测挂 50+ 分钟、烧 Windows runner 分钟），Gitee 镜像（tag / 正文 / zip / 配额）改为 Claude 手动同步（见 [docs/gitee-mirror.md](docs/gitee-mirror.md)）
+
 ## [v1.3.1] - 2026-08-11
 
 ### 新增
