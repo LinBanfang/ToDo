@@ -233,6 +233,21 @@
                 <TextBlock FontSize="12" Foreground="{DynamicResource TextDisabledBrush}"
                            Margin="0,6,0,0" TextWrapping="Wrap"
                            Text="{x:Static services:Loc.SoundFileHint}"/>
+
+                <TextBlock Style="{StaticResource SettingSectionHeader}" Margin="0,20,0,8"
+                           Text="{x:Static services:Loc.ReminderToastDuration}"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <ComboBox Grid.Column="0" Style="{StaticResource FluentComboBox}" Width="150"
+                              ItemsSource="{Binding ToastOptions}" DisplayMemberPath="Label"
+                              SelectedValue="{Binding ToastSeconds}" SelectedValuePath="Seconds"
+                              AutomationProperties.AutomationId="ReminderToastSeconds"/>
+                    <TextBlock Grid.Column="1" Style="{StaticResource SettingHint}"
+                               Text="{x:Static services:Loc.ReminderToastPauseHint}"/>
+                </Grid>
             </StackPanel>
         </DataTemplate>
 

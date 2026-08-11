@@ -271,11 +271,29 @@ public sealed class UpdateSourceRow : ObservableObject
     public event Action? Changed;
 }
 
-/// <summary>提醒：通知 + 提示音开关 + 铃声试听/选择（轮询即时生效）。</summary>
+/// <summary>提醒：通知 + 提示音开关 + 铃声试听/选择 + 卡片显示时长（轮询即时生效）。</summary>
 public sealed partial class ReminderSection : SettingsSection
 {
     private bool _notifications;
     private bool _sound;
+    private int _toastSeconds;
+
+    /// <summary>提醒卡片自动关闭时长（秒）；0 = 不自动关闭（悬停时暂停倒计时）。</summary>
+    public int ToastSeconds
+    {
+        get => _toastSeconds;
+        set
+        {
+            if (SetProperty(ref _toastSeconds, value))
+            {
+                SettingsService.Current.ReminderToastSeconds = value;
+                SettingsService.Save();
+            }
+        }
+    }
+
+    /// <summary>可选时长下拉项（本地化标签 → 秒数）。</summary>
+    public IReadOnlyList<ToastDurationOption> ToastOptions { get; }
 
     public bool ReminderNotifications
     {
@@ -353,8 +371,19 @@ public sealed partial class ReminderSection : SettingsSection
     {
         _notifications = SettingsService.Current.ReminderNotifications;
         _sound = SettingsService.Current.ReminderSound;
+        _toastSeconds = SettingsService.Current.ReminderToastSeconds;
+        ToastOptions =
+        [
+            new(Loc.ToastSeconds5, 5),
+            new(Loc.ToastSeconds10, 10),
+            new(Loc.ToastSeconds30, 30),
+            new(Loc.ToastNeverAutoClose, 0),
+        ];
     }
 }
+
+/// <summary>提醒卡片时长下拉的一项：本地化标签与对应的秒数（0 = 不自动关闭）。</summary>
+public sealed record ToastDurationOption(string Label, int Seconds);
 
 /// <summary>关于：应用名称、版本、简介、项目主页与第三方组件许可。</summary>
 public sealed class AboutSection : SettingsSection

@@ -129,6 +129,14 @@ public static class Loc
     public static string SnoozeReminder => Language == AppLanguage.Chinese ? "稍后提醒" : "Snooze";
     public static string OpenTask => Language == AppLanguage.Chinese ? "打开任务" : "Open task";
 
+    // Reminder toast auto-close duration (settings)
+    public static string ReminderToastDuration => Language == AppLanguage.Chinese ? "提醒显示时长" : "Toast duration";
+    public static string ToastSeconds5 => Language == AppLanguage.Chinese ? "5 秒" : "5s";
+    public static string ToastSeconds10 => Language == AppLanguage.Chinese ? "10 秒" : "10s";
+    public static string ToastSeconds30 => Language == AppLanguage.Chinese ? "30 秒" : "30s";
+    public static string ToastNeverAutoClose => Language == AppLanguage.Chinese ? "不自动关闭" : "Keep open";
+    public static string ReminderToastPauseHint => Language == AppLanguage.Chinese ? "悬停卡片时暂停倒计时" : "Hovering the card pauses the countdown";
+
     // Relative time (TimestampToRelativeStringConverter)
     public static string JustNow => Language == AppLanguage.Chinese ? "刚刚" : "just now";
     public static string MinutesAgo(int n) => Language == AppLanguage.Chinese ? $"{n} 分钟前" : $"{n}m ago";

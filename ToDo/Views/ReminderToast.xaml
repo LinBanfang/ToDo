@@ -7,7 +7,8 @@
         WindowStyle="None" ShowInTaskbar="False" Topmost="True"
         ShowActivated="False" ResizeMode="NoResize"
         AllowsTransparency="True" Background="Transparent"
-        FontFamily="{StaticResource FluentFont}">
+        FontFamily="{StaticResource FluentFont}"
+        MouseEnter="Toast_MouseEnter" MouseLeave="Toast_MouseLeave">
     <!-- Bottom-right reminder card. Replaces the WinForms tray balloon, which Windows 11
          no longer displays. Drawn with DynamicResource brushes so it follows the theme.
          Height adapts to the content (SizeToContent=Height); Position() re-reads the real

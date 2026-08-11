@@ -41,6 +41,7 @@ public sealed class SettingsServiceTests : IDisposable
         SettingsService.Current.Language = "English";
         SettingsService.Current.Theme = "Dark";
         SettingsService.Current.SidebarWidth = 360;
+        SettingsService.Current.ReminderToastSeconds = 30;
         SettingsService.Save();
 
         SettingsService.UseDirectory(_dir); // reset cached state so Load re-reads from disk
@@ -49,6 +50,7 @@ public sealed class SettingsServiceTests : IDisposable
         Assert.Equal("English", SettingsService.Current.Language);
         Assert.Equal("Dark", SettingsService.Current.Theme);
         Assert.Equal(360, SettingsService.Current.SidebarWidth);
+        Assert.Equal(30, SettingsService.Current.ReminderToastSeconds);
     }
 
     [Fact]
@@ -101,7 +103,7 @@ public sealed class SettingsServiceTests : IDisposable
 
         SettingsService.Load();
 
-        Assert.Equal(6, SettingsService.Current.SchemaVersion);
+        Assert.Equal(7, SettingsService.Current.SchemaVersion);
         Assert.Equal("Dark", SettingsService.Current.Theme);
         Assert.Equal("English", SettingsService.Current.Language);
         Assert.Equal(SettingsService.DefaultDbPath, SettingsService.Current.DbPath);
@@ -109,6 +111,7 @@ public sealed class SettingsServiceTests : IDisposable
         Assert.True(SettingsService.Current.MinimizeToTrayOnClose);
         Assert.True(SettingsService.Current.StickyShowTags);
         Assert.Equal("", SettingsService.Current.ReminderSoundPath);
+        Assert.Equal(5, SettingsService.Current.ReminderToastSeconds);
     }
 
     [Fact]

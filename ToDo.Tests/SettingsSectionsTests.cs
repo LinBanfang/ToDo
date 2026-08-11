@@ -79,6 +79,21 @@ public sealed class SettingsSectionsTests : IDisposable
     }
 
     [Fact]
+    public void ReminderSection_ToastSeconds_Persists()
+    {
+        var section = new ReminderSection();
+        Assert.Equal(5, section.ToastSeconds);                       // default
+        Assert.Equal(5, SettingsService.Current.ReminderToastSeconds);
+        Assert.Equal(4, section.ToastOptions.Count);                 // 5s / 10s / 30s / never
+
+        section.ToastSeconds = 0;                                    // 不自动关闭
+        Assert.Equal(0, SettingsService.Current.ReminderToastSeconds);
+
+        SettingsService.UseDirectory(_dir);                          // round-trip from the saved file
+        Assert.Equal(0, SettingsService.Current.ReminderToastSeconds);
+    }
+
+    [Fact]
     public void ReminderSection_SoundLabel_NoPath_ShowsDefaultRingtone()
     {
         SettingsService.Current.ReminderSoundPath = "";
