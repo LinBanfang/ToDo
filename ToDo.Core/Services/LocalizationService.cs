@@ -120,6 +120,13 @@ public static class Loc
     public static string MarkIncomplete => Language == AppLanguage.Chinese ? "标记为未完成" : "Mark incomplete";
     public static string PromoteToTask => Language == AppLanguage.Chinese ? "升级为任务" : "Promote to task";
 
+    // Undo bar
+    public static string Undo => Language == AppLanguage.Chinese ? "撤销" : "Undo";
+    public static string UndoCompleteMsg(string title) =>
+        Language == AppLanguage.Chinese ? $"已完成「{title}」" : $"Completed \"{title}\"";
+    public static string UndoDeleteMsg(string title) =>
+        Language == AppLanguage.Chinese ? $"已删除「{title}」" : $"Deleted \"{title}\"";
+
     // Relative time (TimestampToRelativeStringConverter)
     public static string JustNow => Language == AppLanguage.Chinese ? "刚刚" : "just now";
     public static string MinutesAgo(int n) => Language == AppLanguage.Chinese ? $"{n} 分钟前" : $"{n}m ago";

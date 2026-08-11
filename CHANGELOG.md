@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+### 新增
+- **撤销完成 / 删除**：完成任务或删除任务后，底部浮现撤销条（约 5 秒自动消失，新操作覆盖旧撤销）；「撤销」可重开刚完成的任务（重复任务同时删掉自动生成的下一实例），或原样恢复被删除的任务（含本地附件，自定义列表回原位）。仅任务支持撤销，删除列表 / 分组仍走确认框
+
 ### 内部
 - **发布流程**：release.yml 移除 Gitee 同步 job——CI 传 Gitee 的 curl 无超时会永久挂起（v1.3.1 实测挂 50+ 分钟、烧 Windows runner 分钟），Gitee 镜像（tag / 正文 / zip / 配额）改为 Claude 手动同步（见 [docs/gitee-mirror.md](docs/gitee-mirror.md)）
 

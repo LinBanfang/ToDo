@@ -128,4 +128,44 @@ public partial class TaskItem : ObservableObject, IOrdered
         OnPropertyChanged(nameof(IsClosed));
         OnPropertyChanged(nameof(CloseModeDisplay));
     }
+
+    /// <summary>
+    /// Deep copy for undo-delete: a fresh instance with new collection / reference
+    /// members (TagIds, Steps, CloseRecord), so the restored row never shares mutable
+    /// state with the original. Id / ListId / GroupId / Order / timestamps are preserved —
+    /// undo re-inserts the same id, which collapses the sync-outbox delete tombstone into
+    /// the re-insert (single-slot upsert). UI-only [BsonIgnore] fields are not copied:
+    /// attachment count is recomputed on load, attachments reload on selection.
+    /// </summary>
+    public TaskItem Clone()
+    {
+        return new TaskItem
+        {
+            Id = Id,
+            Title = Title,
+            Note = Note,
+            ListId = ListId,
+            GroupId = GroupId,
+            Order = Order,
+            IsImportant = IsImportant,
+            IsMyDay = IsMyDay,
+            MyDayOrder = MyDayOrder,
+            DueDate = DueDate,
+            Reminder = Reminder,
+            Recurrence = Recurrence,
+            RecurrenceInterval = RecurrenceInterval,
+            RecurrenceSeriesId = RecurrenceSeriesId,
+            TagIds = new List<string>(TagIds),
+            Steps = new System.Collections.ObjectModel.ObservableCollection<TaskStep>(
+                Steps.Select(s => new TaskStep
+                {
+                    Id = s.Id, Title = s.Title, Completed = s.Completed, Order = s.Order,
+                })),
+            Completed = Completed,
+            CloseRecord = CloseRecord == null ? null
+                : new CloseRecord { ClosedAt = CloseRecord.ClosedAt, CloseMode = CloseRecord.CloseMode },
+            CreatedAt = CreatedAt,
+            ModifiedAt = ModifiedAt,
+        };
+    }
 }

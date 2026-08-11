@@ -570,6 +570,155 @@ public sealed class MainViewModelCommandsTests : IDisposable
         Assert.Equal(new[] { "new", "mid", "old" }, _vm.ActiveTasks.Select(t => t.Id));
     }
 
+    // ─── Undo bar (v1.3.2): 完成/删除 push a single-slot undo; Undo reopens the task
+    // (deleting any generated recurring next-instance) or restores the deleted task +
+    // attachments. ────────────────────────────────────────────
+
+    [Fact]
+    public void CloseTask_Complete_PushesUndo()
+    {
+        _vm.CreateTaskCommand.Execute("一次性");
+        var t = _vm.Tasks.Single(x => x.Title == "一次性");
+
+        _vm.CloseTaskCommand.Execute((t, CloseMode.Complete, false));
+
+        Assert.NotNull(_vm.CurrentUndo);
+        Assert.Contains("一次性", _vm.CurrentUndo.Message);
+    }
+
+    [Fact]
+    public void CloseTask_Cancel_DoesNotPushUndo()
+    {
+        _vm.CreateTaskCommand.Execute("取消");
+        var t = _vm.Tasks.Single(x => x.Title == "取消");
+
+        _vm.CloseTaskCommand.Execute((t, CloseMode.Cancel, false));
+        Assert.Null(_vm.CurrentUndo);   // plain cancel
+
+        _vm.CreateTaskCommand.Execute("停掉系列");
+        var r = _vm.Tasks.Single(x => x.Title == "停掉系列");
+        _vm.CloseTaskCommand.Execute((r, CloseMode.Cancel, true));
+        Assert.Null(_vm.CurrentUndo);   // cancel-the-series
+    }
+
+    [Fact]
+    public void Undo_AfterComplete_ReopensTask()
+    {
+        _vm.CreateTaskCommand.Execute("再开");
+        var t = _vm.Tasks.Single(x => x.Title == "再开");
+        _vm.CloseTaskCommand.Execute((t, CloseMode.Complete, false));
+        Assert.True(t.IsClosed);
+
+        _vm.UndoCommand.Execute(null);
+
+        Assert.False(t.IsClosed);
+        Assert.Null(t.CloseRecord);
+        Assert.Contains(t, _vm.ActiveTasks);
+        Assert.Null(_vm.CurrentUndo);   // slot consumed by the undo itself
+    }
+
+    [Fact]
+    public void Undo_WhenNoPendingUndo_NoOp()
+    {
+        _vm.UndoCommand.Execute(null);   // must not throw
+        Assert.Null(_vm.CurrentUndo);
+    }
+
+    [Fact]
+    public void NewOperation_ReplacesPendingUndo()
+    {
+        _vm.CreateTaskCommand.Execute("A");
+        _vm.CreateTaskCommand.Execute("B");
+        var a = _vm.Tasks.Single(x => x.Title == "A");
+        var b = _vm.Tasks.Single(x => x.Title == "B");
+
+        _vm.CloseTaskCommand.Execute((a, CloseMode.Complete, false));
+        var firstUndo = _vm.CurrentUndo;
+        Assert.NotNull(firstUndo);
+
+        _vm.CloseTaskCommand.Execute((b, CloseMode.Complete, false));
+        Assert.NotSame(firstUndo, _vm.CurrentUndo);   // newest wins
+
+        _vm.UndoCommand.Execute(null);
+        Assert.False(b.IsClosed);   // B reopened
+        Assert.True(a.IsClosed);    // A untouched
+    }
+
+    [Fact]
+    public void CloseTask_CompleteRecurring_Undo_RemovesGeneratedNext()
+    {
+        _db.Tasks.Insert(new TaskItem
+        {
+            Id = "r1", Title = "喝水", ListId = "list-tasks",
+            Recurrence = RecurrenceFrequency.Daily, DueDate = Ts(Today),
+        });
+        _vm.Refresh();
+        var root = _vm.Tasks.First(t => t.Id == "r1");
+
+        _vm.CloseTaskCommand.Execute((root, CloseMode.Complete, false));
+
+        var generated = _vm.Tasks.Single(t => t.RecurrenceSeriesId == "r1");
+        Assert.Equal(2, _vm.Tasks.Count);
+
+        _vm.UndoCommand.Execute(null);
+
+        Assert.False(root.IsClosed);
+        Assert.Null(root.CloseRecord);
+        Assert.Single(_vm.Tasks);                            // generated instance removed
+        Assert.Null(_db.Tasks.FindById(generated.Id));
+    }
+
+    [Fact]
+    public void DeleteTask_PushesUndo_AndUndo_RestoresTask()
+    {
+        CustomList("list-custom", "工作", 1);
+        _db.Tasks.Insert(new TaskItem { Id = "t1", ListId = "list-custom", Title = "恢复", Order = 3 });
+        _vm.Refresh();
+        _vm.ActiveListId = "list-custom";
+        var t = _vm.Tasks.First(x => x.Id == "t1");
+        _vm.SelectedTask = t;
+
+        _vm.DeleteTaskCommand.Execute(t);
+
+        Assert.Null(_db.Tasks.FindById("t1"));
+        Assert.Null(_vm.SelectedTask);
+        Assert.NotNull(_vm.CurrentUndo);
+
+        _vm.UndoCommand.Execute(null);
+
+        var restored = _db.Tasks.FindById("t1");
+        Assert.NotNull(restored);
+        Assert.Equal("恢复", restored.Title);
+        Assert.Equal("list-custom", restored.ListId);   // list / order preserved → lands back in place
+        Assert.Equal(3, restored.Order);
+        Assert.Contains(_vm.Tasks, x => x.Id == "t1");
+        Assert.Null(_vm.SelectedTask);   // undo does not re-select
+    }
+
+    [Fact]
+    public void DeleteTask_WithAttachments_Undo_RestoresAttachments()
+    {
+        _vm.CreateTaskCommand.Execute("带附件");
+        var t = _vm.Tasks.Single(x => x.Title == "带附件");
+        _db.AddAttachment(new TaskAttachment
+        {
+            Id = "att1", TaskId = t.Id, FileName = "a.txt", Size = 3, Data = new byte[] { 1, 2, 3 },
+        });
+        _db.AddAttachment(new TaskAttachment
+        {
+            Id = "att2", TaskId = t.Id, FileName = "b.bin", Size = 2, Data = new byte[] { 9, 8 },
+        });
+
+        _vm.DeleteTaskCommand.Execute(t);
+        Assert.Empty(_db.GetAttachments(t.Id));
+
+        _vm.UndoCommand.Execute(null);
+
+        var restored = _db.GetAttachments(t.Id);
+        Assert.Equal(new[] { "a.txt", "b.bin" }, restored.OrderBy(a => a.Id).Select(a => a.FileName));
+        Assert.Equal(new byte[] { 1, 2, 3 }, restored.Single(a => a.Id == "att1").Data);   // original bytes back
+    }
+
     private static long Ts(DateTime local) => new DateTimeOffset(local).ToUnixTimeMilliseconds();
 
     private static SyncChange Change(object entity) => SyncEntitySerializer.ToChange(entity)!;

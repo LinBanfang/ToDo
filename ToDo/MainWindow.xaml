@@ -82,5 +82,37 @@
 
         <!-- ══════════════ TASK DETAIL PANE ══════════════ -->
         <views:DetailPaneControl x:Name="DetailPaneControl" Grid.Column="3" Grid.ColumnSpan="2"/>
+
+        <!-- Undo bar: bottom-center floating card for 完成/删除 undo. Rendered last so it
+             sits above everything; visibility bound to CurrentUndo via the existing NullToVis
+             converter. The 5s auto-dismiss DispatcherTimer lives in MainWindow code-behind
+             (the VM only exposes the single slot + UndoCommand, keeping it unit-testable). -->
+        <Border x:Name="UndoBar"
+                Grid.Column="0" Grid.ColumnSpan="5"
+                HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                Margin="0,0,0,28"
+                Visibility="{Binding CurrentUndo, Converter={StaticResource NullToVis}}"
+                Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1"
+                CornerRadius="8" Padding="16,10"
+                RenderTransformOrigin="0.5,1">
+            <Border.RenderTransform>
+                <TranslateTransform x:Name="UndoBarTranslate" Y="24"/>
+            </Border.RenderTransform>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="{Binding CurrentUndo.Message}"
+                           Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"
+                           VerticalAlignment="Center" Margin="0,0,16,0"
+                           TextTrimming="CharacterEllipsis" MaxWidth="320"/>
+                <Button Grid.Column="1" Content="{x:Static services:Loc.Undo}"
+                        Style="{StaticResource FluentAccentButton}" Padding="12,6"
+                        Command="{Binding UndoCommand}"
+                        AutomationProperties.AutomationId="UndoButton"/>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

@@ -42,6 +42,12 @@ public partial class MainViewModel
     [RelayCommand]
     private void DeleteTask(TaskItem task)
     {
+        // Undo snapshot: deep-copy the task + attachments before they're destroyed, so
+        // undoing restores them exactly. Must be taken before DeleteAttachmentsForTask
+        // clears the rows; GetAttachments returns fresh objects each call.
+        var attachments = _db.GetAttachments(task.Id);
+        var snapshot = task.Clone();
+
         _db.Tasks.Delete(task.Id);
         _db.DeleteAttachmentsForTask(task.Id);   // local attachments die with the task (ADR-013)
         Tasks.Remove(task);
@@ -49,6 +55,15 @@ public partial class MainViewModel
             SelectedTask = null;
 
         RefreshActiveTasks();
+
+        PushUndo(Loc.UndoDeleteMsg(snapshot.Title), () =>
+        {
+            _db.Tasks.Insert(snapshot);           // same id re-insert → outbox tombstone replaced
+            foreach (var a in attachments)
+                _db.AddAttachment(a);             // original id / filename / bytes / AddedAt
+            Tasks.Add(snapshot);
+            RefreshActiveTasks();                 // custom lists sort by Order → lands in place
+        });
     }
 
     [RelayCommand]
@@ -100,11 +115,30 @@ public partial class MainViewModel
         // Recurring-task generation (ADR-015): completing or cancel-this-occurrence spawns
         // the next instance; cancel-the-series clears the rule (persisted by the Update
         // below) and spawns nothing. The tracked Insert auto-stamps + outboxes it.
-        if (RecurrenceService.TryGenerateNext(_db, param.task, _clock.Today, endSeries: param.endSeries) is { } next)
+        var next = RecurrenceService.TryGenerateNext(_db, param.task, _clock.Today, endSeries: param.endSeries);
+        if (next != null)
             Tasks.Add(next); // keep the in-memory collection in sync for in-place refresh
 
         _db.Tasks.Update(param.task);
         RefreshActiveTasks();
+
+        // Undo: only completing offers an undo bar (Cancel / endSeries don't). Undoing
+        // also deletes the generated next instance, restoring the single open instance.
+        if (param.mode == CloseMode.Complete)
+        {
+            var completedTask = param.task;
+            var generated = next;
+            PushUndo(Loc.UndoCompleteMsg(completedTask.Title), () =>
+            {
+                ReopenTask(completedTask);          // clears CloseRecord/Completed + persists
+                if (generated != null)
+                {
+                    _db.Tasks.Delete(generated.Id); // idempotent: returns false if already gone
+                    Tasks.Remove(generated);
+                    RefreshActiveTasks();
+                }
+            });
+        }
     }
 
     [RelayCommand]
