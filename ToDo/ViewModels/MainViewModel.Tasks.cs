@@ -1,0 +1,226 @@
+using CommunityToolkit.Mvvm.Input;
+using ToDo.Models;
+using ToDo.Services;
+
+namespace ToDo.ViewModels;
+
+public partial class MainViewModel
+{
+    // ─── Task Commands ────────────────────────────────────
+    [RelayCommand]
+    private void CreateTask(string title)
+    {
+        if (ActiveList == null) return;
+
+        // Searching → inbox; system lists → inbox; custom lists → to that list
+        var listId = IsSearching
+            ? "list-tasks"
+            : ActiveList.Type == ListType.Custom ? ActiveList.Id : "list-tasks";
+        var isMyDay = !IsSearching && ActiveList.Type == ListType.MyDay;
+
+        var task = new TaskItem
+        {
+            Title = title,
+            ListId = listId,
+            IsMyDay = isMyDay,
+            MyDayOrder = isMyDay ? NextOrder(Tasks.Where(t => t.IsMyDay).Select(t => t.MyDayOrder)) : -1,
+            Order = NextOrder(Tasks.Where(t => t.ListId == listId).Select(t => t.Order)),
+        };
+        _db.Tasks.Insert(task);
+        Tasks.Add(task); // keep the in-memory collection in sync for in-place refresh
+        RefreshActiveTasks();
+    }
+
+    [RelayCommand]
+    private void UpdateTask(TaskItem task)
+    {
+        task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        _db.Tasks.Update(task);
+        RefreshActiveTasks();
+    }
+
+    [RelayCommand]
+    private void DeleteTask(TaskItem task)
+    {
+        _db.Tasks.Delete(task.Id);
+        _db.DeleteAttachmentsForTask(task.Id);   // local attachments die with the task (ADR-013)
+        Tasks.Remove(task);
+        if (SelectedTask?.Id == task.Id)
+            SelectedTask = null;
+
+        RefreshActiveTasks();
+    }
+
+    [RelayCommand]
+    private void MoveTaskToList((TaskItem task, TaskList targetList) param)
+    {
+        param.task.ListId = param.targetList.Id;
+        param.task.GroupId = null;
+        param.task.Order = NextOrder(Tasks.Where(t => t.ListId == param.targetList.Id).Select(t => t.Order));
+        param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        _db.Tasks.Update(param.task);
+        RefreshActiveTasks();
+    }
+
+    [RelayCommand]
+    private void MoveTaskToGroup((TaskItem task, TaskGroup? group) param)
+    {
+        param.task.GroupId = param.group?.Id;
+        // Append at the end of the target group (ungrouped = null) so the moved task
+        // lands predictably, matching MoveTaskToList's next-order placement.
+        param.task.Order = NextOrder(Tasks.Where(t => t.GroupId == param.group?.Id).Select(t => t.Order));
+        param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        _db.Tasks.Update(param.task);
+
+        // Auto-expand the target group so the moved task is visible
+        if (param.group != null && param.group.Collapsed)
+        {
+            param.group.Collapsed = false;
+            _db.Groups.Update(param.group);
+        }
+
+        RefreshActiveTasks();
+    }
+
+    // ─── Closing System ───────────────────────────────────
+    // endSeries distinguishes the recurring-task "cancel the whole series" action
+    // (cancel this occurrence = endSeries false) from a plain cancel (ADR-015).
+    [RelayCommand]
+    private void CloseTask((TaskItem task, CloseMode mode, bool endSeries) param)
+    {
+        param.task.CloseRecord = new CloseRecord
+        {
+            ClosedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            CloseMode = param.mode,
+        };
+        param.task.Completed = param.mode == CloseMode.Complete;
+        param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        param.task.NotifyCloseDisplay();
+
+        // Recurring-task generation (ADR-015): completing or cancel-this-occurrence spawns
+        // the next instance; cancel-the-series clears the rule (persisted by the Update
+        // below) and spawns nothing. The tracked Insert auto-stamps + outboxes it.
+        if (RecurrenceService.TryGenerateNext(_db, param.task, _clock.Today, endSeries: param.endSeries) is { } next)
+            Tasks.Add(next); // keep the in-memory collection in sync for in-place refresh
+
+        _db.Tasks.Update(param.task);
+        RefreshActiveTasks();
+    }
+
+    [RelayCommand]
+    private void ReopenTask(TaskItem task)
+    {
+        task.CloseRecord = null;
+        task.Completed = false;
+        task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        task.NotifyCloseDisplay();
+        _db.Tasks.Update(task);
+        RefreshActiveTasks();
+    }
+
+    [RelayCommand]
+    private void EditCloseTime((TaskItem task, long newTime) param)
+    {
+        if (param.task.CloseRecord == null) return;
+        param.task.CloseRecord.ClosedAt = param.newTime;
+        param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        _db.Tasks.Update(param.task);
+        RefreshActiveTasks();
+    }
+
+    // ─── My Day ───────────────────────────────────────────
+    [RelayCommand]
+    private void ToggleMyDay(TaskItem task)
+    {
+        if (task.IsMyDay)
+        {
+            task.IsMyDay = false;
+            task.MyDayOrder = -1;
+        }
+        else
+        {
+            task.IsMyDay = true;
+            task.MyDayOrder = NextOrder(Tasks.Where(t => t.IsMyDay).Select(t => t.MyDayOrder));
+        }
+        task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        _db.Tasks.Update(task);
+        RefreshActiveTasks();
+    }
+
+    // ─── Importance ───────────────────────────────────────
+    [RelayCommand]
+    private void ToggleImportant(TaskItem task)
+    {
+        task.IsImportant = !task.IsImportant;
+        task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        _db.Tasks.Update(task);
+        RefreshActiveTasks();
+    }
+
+    // ─── Steps ────────────────────────────────────────────
+    [RelayCommand]
+    private void AddStep((TaskItem task, string title) param)
+    {
+        param.task.Steps.Add(new TaskStep
+        {
+            Title = param.title,
+            Order = param.task.Steps.Count,
+        });
+        param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        param.task.NotifyCompletedStepCount();
+        _db.Tasks.Update(param.task);
+    }
+
+    /// <summary>Insert a new step after the given index and set it to editing mode</summary>
+    public void InsertStepAfter(TaskItem task, int afterIndex)
+    {
+        for (int i = afterIndex + 1; i < task.Steps.Count; i++)
+            task.Steps[i].Order++;
+        task.Steps.Insert(afterIndex + 1, new TaskStep
+        {
+            Title = "",
+            Order = afterIndex + 1,
+            IsEditing = true
+        });
+        task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        task.NotifyCompletedStepCount();
+        _db.Tasks.Update(task);
+    }
+
+    [RelayCommand]
+    private void ToggleStep((TaskItem task, TaskStep step) param)
+    {
+        param.step.Completed = !param.step.Completed;
+        param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        param.task.NotifyCompletedStepCount();
+        _db.Tasks.Update(param.task);
+    }
+
+    [RelayCommand]
+    private void DeleteStep((TaskItem task, TaskStep step) param)
+    {
+        param.task.Steps.Remove(param.step);
+        param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        param.task.NotifyCompletedStepCount();
+        _db.Tasks.Update(param.task);
+    }
+
+    [RelayCommand]
+    private void PromoteStepToTask((TaskItem task, TaskStep step) param)
+    {
+        var newTask = new TaskItem
+        {
+            Title = param.step.Title,
+            ListId = param.task.ListId,
+            Order = NextOrder(Tasks.Where(t => t.ListId == param.task.ListId).Select(t => t.Order)),
+        };
+        _db.Tasks.Insert(newTask);
+        Tasks.Add(newTask); // keep the in-memory collection in sync for in-place refresh
+        param.task.Steps.Remove(param.step);
+        param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        param.task.NotifyCompletedStepCount();
+        _db.Tasks.Update(param.task);
+        RefreshActiveTasks();
+    }
+
+}
