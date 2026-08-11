@@ -309,7 +309,7 @@
                     DragOver="TaskRow_DragOver"
                     DragLeave="TaskRow_DragLeave" Drop="TaskRow_Drop">
                 <Border.ContextMenu><ContextMenu /></Border.ContextMenu>
-                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource TaskRowContent}"/>
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource TaskRowContent}" Focusable="False"/>
             </Border>
         </DataTemplate>
     </UserControl.Resources>
@@ -523,7 +523,7 @@
                                               Visibility="{Binding TaskListVisible, Converter={StaticResource BoolToVis}}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate DataType="{x:Type models:TaskItem}">
-                                            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource TaskRowReorder}"/>
+                                            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource TaskRowReorder}" Focusable="False"/>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
@@ -565,7 +565,7 @@
                               Visibility="{Binding IsSystemList, Converter={StaticResource BoolToVis}}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type models:TaskItem}">
-                            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource TaskRowReorder}"/>
+                            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource TaskRowReorder}" Focusable="False"/>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
@@ -618,7 +618,7 @@
                                             ContextMenuOpening="TaskRow_ContextMenuOpening">
                                         <Border.ContextMenu><ContextMenu /></Border.ContextMenu>
                                         <ContentControl Content="{Binding}"
-                                                        ContentTemplate="{StaticResource TaskRowContent}"/>
+                                                        ContentTemplate="{StaticResource TaskRowContent}" Focusable="False"/>
                                     </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
