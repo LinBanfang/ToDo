@@ -9,6 +9,7 @@
 - 行号 1 起，区间含两端。
 - 提取的行保持原缩进（partial 类体缩进 4 空格）；保留文件继承源文件的 BOM 与行尾。
 - 每个新文件 = 显式指定的 using 行 + 命名空间 + class 声明 + 提取行 + 收尾（新文件用源文件行尾）。
+- 同一目标文件可出现多次（不连续区间自动合并进一个 partial，按文件顺序拼接）。
 - 源文件重写为保留文件（未提取行），被提取区间的位置留下一行注释指引。
 """
 import sys
@@ -37,11 +38,18 @@ def main():
     if lines and lines[-1] in ("\n", "\r\n"):
         lines[-1] = lines[-1].rstrip("\r\n")
 
-    # Extract content per range.
+    # Extract content per range, then group consecutive same-target ranges so a
+    # partial can collect multiple non-contiguous regions (in file order).
     extracts = []
     for target, start, end, usings in ranges:
         content = "".join(lines[start - 1:end])
         extracts.append((target, start, end, usings, content))
+    grouped = []
+    for t, s, e, u, c in extracts:
+        if grouped and grouped[-1][0] == t:
+            grouped[-1][3].append((s, e, c))
+        else:
+            grouped.append((t, None, None, [(s, e, c)], u))
 
     # Keep file = all lines not inside any extracted range, with a pointer comment
     # left at each extraction point so future readers know where the code went.
@@ -70,13 +78,15 @@ def main():
     print(f"keep:  {keep_path}  ({total} -> {len(kept)} lines, eol={eol!r}, bom={has_bom})")
 
     # Write partial files. The usings arg is a single shell string with `|` separators.
-    for target, start, end, usings, content in extracts:
+    for target, _, _, spans, usings in grouped:
+        content = "".join(c for _, _, c in spans)
         using_lines = [u.strip() for u in usings.split("|") if u.strip()]
         using_block = eol.join(u if u.endswith(";") else u + ";" for u in using_lines)
         header = using_block + eol * 2 + f"namespace {ns};" + eol * 2 + f"public partial class {class_name}" + eol + "{" + eol
         footer = "}" + eol
         write(target, header + content + footer)
-        print(f"split: {target}  (lines {start}-{end}, {content.count(chr(10))} body lines)")
+        ranges_desc = ", ".join(f"{s}-{e}" for s, e, _ in spans)
+        print(f"split: {target}  (lines {ranges_desc}, {content.count(chr(10))} body lines)")
 
     print("done.")
 
