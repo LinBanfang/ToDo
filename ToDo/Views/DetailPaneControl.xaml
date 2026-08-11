@@ -52,7 +52,8 @@
                 </Border>
 
                 <!-- Body -->
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                              Focusable="False" FocusVisualStyle="{x:Null}">
                     <StackPanel Margin="20,16">
                         <TextBox x:Name="DetailTitleBox"
                                  Text="{Binding Title, UpdateSourceTrigger=LostFocus}"

@@ -42,7 +42,8 @@
                 </StackPanel>
 
                 <!-- Scrollable area -->
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                              Focusable="False" FocusVisualStyle="{x:Null}">
                     <StackPanel>
                         <!-- System Lists -->
                         <ListBox ItemsSource="{Binding SystemLists}"

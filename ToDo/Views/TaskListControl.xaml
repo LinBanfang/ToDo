@@ -449,7 +449,8 @@
         <!-- Task area -->
         <ScrollViewer x:Name="TaskAreaScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,15,0,8"
                       AllowDrop="True" PreviewDragOver="TaskArea_PreviewDragOver"
-                      ScrollChanged="TaskAreaScroll_ScrollChanged">
+                      ScrollChanged="TaskAreaScroll_ScrollChanged"
+                      Focusable="False" FocusVisualStyle="{x:Null}">
             <StackPanel x:Name="TaskAreaPanel">
                 <!-- ═══ CUSTOM LIST: Groups (first entry = ungrouped tasks) ═══ -->
                 <ItemsControl x:Name="GroupedTasksControl" ItemsSource="{Binding GroupedTaskList}"
