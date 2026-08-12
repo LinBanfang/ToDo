@@ -140,8 +140,9 @@ public partial class MainWindow : Window
         DetailPaneControl.FlushPendingEdits();
 
         // X closes to the tray (default); with the toggle off it exits the app.
-        // While actually quitting (tray "退出" / session end) let the window close.
-        if (!WindowManager.IsQuitting)
+        // While actually quitting (tray "退出" / session end) or rebuilding for a
+        // language change, let the window close.
+        if (!WindowManager.IsQuitting && !WindowManager.IsRebuilding)
         {
             e.Cancel = true;
             if (SettingsService.Current.MinimizeToTrayOnClose)

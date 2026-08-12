@@ -175,21 +175,59 @@ public sealed class SettingsSectionsTests : IDisposable
     // ─── GeneralSection ────────────────────────────────────
 
     [Fact]
-    public void GeneralSection_Language_Persists_AndHintTracksLiveLanguage()
+    public void GeneralSection_Language_Persists_AndAppliesImmediately()
     {
-        // Loc.Language is cached at startup; the hint must reflect that it differs
-        // from the picked language (restart-to-apply), regardless of which is live.
-        var liveName = Loc.Language == AppLanguage.Chinese ? "Chinese" : "English";
-        SettingsService.Current.Language = liveName;
-        var section = new GeneralSection();
+        // Switching language now applies at once (fires Loc.SetLanguage → App rebuilds
+        // the windows), and the hint is constant "即时生效", mirroring the theme row.
+        var initial = Loc.Language;
+        try
+        {
+            SettingsService.Current.Language = "Chinese";
+            var section = new GeneralSection();
 
-        Assert.Equal(liveName, section.Language);
-        Assert.Equal("", section.LanguageHint);   // matches the live language → no hint
+            section.Language = "English";
 
-        var other = liveName == "Chinese" ? "English" : "Chinese";
-        section.Language = other;
-        Assert.Equal(other, SettingsService.Current.Language);
-        Assert.Equal(Loc.RestartToApply, section.LanguageHint);   // differs → restart hint
+            Assert.Equal("English", SettingsService.Current.Language);
+            Assert.Equal("English", section.Language);
+            Assert.Equal(AppLanguage.English, Loc.Language);                // applied right away
+            Assert.Equal(Loc.AppliesImmediately, section.LanguageHint);     // constant hint
+        }
+        finally
+        {
+            Loc.SetLanguage(initial);   // restore the static Loc for the rest of the suite
+        }
+    }
+
+    [Fact]
+    public void SettingsViewModel_Sections_RefreshLocalizedData_OnLanguageChange()
+    {
+        // Section nav titles and the toast-duration dropdown labels are captured at
+        // construction; Loc.SetLanguage must re-resolve them (the window rebuild then
+        // binds to the updated values).
+        var initial = Loc.Language;
+        try
+        {
+            Loc.SetLanguage(AppLanguage.Chinese);
+            var vm = new SettingsViewModel();
+
+            Loc.SetLanguage(AppLanguage.English);
+
+            Assert.Equal(Loc.General, vm.Sections[0].Title);
+            Assert.Equal(Loc.Appearance, vm.Sections[1].Title);
+            Assert.Equal(Loc.Data, vm.Sections[2].Title);
+            Assert.Equal(Loc.SyncSectionTitle, vm.Sections[3].Title);
+            Assert.Equal(Loc.Updates, vm.Sections[4].Title);
+            Assert.Equal(Loc.RemindersSection, vm.Sections[5].Title);
+            Assert.Equal(Loc.Behavior, vm.Sections[6].Title);
+            Assert.Equal(Loc.About, vm.Sections[7].Title);
+
+            var reminder = Assert.IsType<ReminderSection>(vm.Sections[5]);
+            Assert.Equal(Loc.ToastNeverAutoClose, reminder.ToastOptions[3].Label);
+        }
+        finally
+        {
+            Loc.SetLanguage(initial);
+        }
     }
 
     // ─── AppearanceSection ─────────────────────────────────

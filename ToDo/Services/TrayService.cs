@@ -42,10 +42,7 @@ public sealed class TrayService : IDisposable
         // The app's global Fluent ContextMenu style applies here automatically —
         // the same rounded, themed look as the in-app right-click menus.
         _menu = new ContextMenu();
-        _menu.Items.Add(NewItem(Loc.OpenMainWindow, () => OpenMainRequested?.Invoke()));
-        _menu.Items.Add(NewItem(Loc.StickyNote, () => OpenStickyRequested?.Invoke()));
-        _menu.Items.Add(new Separator());
-        _menu.Items.Add(NewItem(Loc.ExitApp, () => ExitRequested?.Invoke()));
+        BuildMenu();
 
         Icon.MouseUp += (_, e) =>
         {
@@ -58,6 +55,24 @@ public sealed class TrayService : IDisposable
         {
             if (e.Button == WF.MouseButtons.Left) OpenMainRequested?.Invoke();
         };
+    }
+
+    /// <summary>(Re)builds the context menu. Called from the ctor and again after a
+    /// language change — the item headers resolve Loc at construction time.</summary>
+    private void BuildMenu()
+    {
+        _menu.Items.Clear();
+        _menu.Items.Add(NewItem(Loc.OpenMainWindow, () => OpenMainRequested?.Invoke()));
+        _menu.Items.Add(NewItem(Loc.StickyNote, () => OpenStickyRequested?.Invoke()));
+        _menu.Items.Add(new Separator());
+        _menu.Items.Add(NewItem(Loc.ExitApp, () => ExitRequested?.Invoke()));
+    }
+
+    /// <summary>Re-resolves Loc strings after a language change (tooltip + menu labels).</summary>
+    public void Refresh()
+    {
+        Icon.Text = Loc.AppTitle;
+        BuildMenu();
     }
 
     private static MenuItem NewItem(string header, Action onClick)

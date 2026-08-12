@@ -16,6 +16,10 @@ public static class WindowManager
     /// <summary>True while the app is really exiting — windows let themselves close.</summary>
     public static bool IsQuitting { get; private set; }
 
+    /// <summary>True while a language-change rebuild is closing the old main window —
+    /// MainWindow.OnClosing lets it close instead of canceling to the tray.</summary>
+    public static bool IsRebuilding { get; private set; }
+
     public static void Init(MainWindow main)
     {
         _main = main;
@@ -80,6 +84,48 @@ public static class WindowManager
             return _main;
         }
         return Application.Current?.MainWindow;
+    }
+
+    /// <summary>
+    /// Swaps in a fresh main window after a language change. XAML {x:Static Loc.*}
+    /// bindings are resolved when the window loads, so the long-lived windows must be
+    /// recreated to pick up the new language. The App.ViewModel singleton (and with it
+    /// all user state, including IsSettingsMode) survives; window geometry is preserved.
+    /// </summary>
+    public static void RebuildForLanguageChange()
+    {
+        if (IsQuitting) return;
+
+        // Tooltip + context-menu strings resolve Loc at construction — rebuild them.
+        App.Tray?.Refresh();
+
+        var main = _main;
+        var left = main?.Left ?? 0;
+        var top = main?.Top ?? 0;
+        var width = main?.Width ?? 1200;
+        var height = main?.Height ?? 800;
+        var state = main?.WindowState ?? WindowState.Normal;
+        var wasVisible = main?.IsVisible ?? true;
+
+        // The sticky note reopens in the new language (it is recreated per open);
+        // not reachable while the settings page is up, but close defensively.
+        _sticky?.Close();
+        _sticky = null;
+
+        // Bypass MainWindow.OnClosing, which otherwise cancels to the tray.
+        IsRebuilding = true;
+        try { main?.Close(); }
+        finally { IsRebuilding = false; }
+
+        var next = App.CreateMainWindow();
+        next.Left = left;
+        next.Top = top;
+        next.Width = width;
+        next.Height = height;
+        next.WindowState = state;
+        _main = next;
+        Application.Current.MainWindow = next;
+        if (wasVisible) next.Show();
     }
 
     /// <summary>The only real exit: tray menu "退出".</summary>

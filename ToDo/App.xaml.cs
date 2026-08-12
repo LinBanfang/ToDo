@@ -86,11 +86,14 @@ public partial class App : Application
             if (!WindowManager.IsQuitting) WindowManager.Quit();
         };
 
-        var mainWindow = new MainWindow { DataContext = ViewModel };
-        mainWindow.Icon = new System.Windows.Media.Imaging.BitmapImage(
-            new Uri("pack://application:,,,/Resources/app.ico"));
+        var mainWindow = App.CreateMainWindow();
         WindowManager.Init(mainWindow);
         mainWindow.Show();
+
+        // Runtime language switch: Loc.LanguageChanged → rebuild the window (x:Static
+        // bindings resolve at load time). Subscribed after startup's own SetLanguage
+        // above, so the initial window is created in its persisted language untouched.
+        Loc.LanguageChanged += OnLanguageChanged;
 
         Sync.Start();
 
@@ -101,6 +104,26 @@ public partial class App : Application
                 System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         }
     }
+
+    /// <summary>
+    /// Builds the main window bound to the singleton VM. Used at startup and again by
+    /// <see cref="WindowManager.RebuildForLanguageChange"/>. The ctor already sets the
+    /// DataContext; the icon is applied here because it isn't part of the XAML resources.
+    /// </summary>
+    public static MainWindow CreateMainWindow()
+    {
+        var win = new MainWindow();
+        win.Icon = new System.Windows.Media.Imaging.BitmapImage(
+            new Uri("pack://application:,,,/Resources/app.ico"));
+        return win;
+    }
+
+    /// <summary>Language change → rebuild the windows that resolve Loc at load time.
+    /// Deferred one dispatcher turn so the ComboBox selection handler finishes before
+    /// the windows are swapped (SetLanguage fires LanguageChanged synchronously).</summary>
+    private void OnLanguageChanged() =>
+        Dispatcher.BeginInvoke(() => WindowManager.RebuildForLanguageChange(),
+            System.Windows.Threading.DispatcherPriority.Normal);
 
     /// <summary>
     /// Resolves the configured DB path, migrating a legacy DB that sat next to the

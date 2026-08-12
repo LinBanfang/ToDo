@@ -24,26 +24,50 @@ public partial class SettingsViewModel : ObservableObject
 
     public SettingsViewModel()
     {
-        Sections.Add(new GeneralSection { Key = "general", Title = Loc.General });
-        Sections.Add(new AppearanceSection { Key = "appearance", Title = Loc.Appearance });
-        Sections.Add(new DataSection { Key = "data", Title = Loc.Data });
-        Sections.Add(new SyncSection { Key = "sync", Title = Loc.SyncSectionTitle });
-        Sections.Add(new UpdateSection { Key = "update", Title = Loc.Updates });
-        Sections.Add(new ReminderSection { Key = "reminder", Title = Loc.RemindersSection });
-        Sections.Add(new BehaviorSection { Key = "behavior", Title = Loc.Behavior });
-        Sections.Add(new AboutSection { Key = "about", Title = Loc.About });
+        Sections.Add(new GeneralSection { Key = "general" });
+        Sections.Add(new AppearanceSection { Key = "appearance" });
+        Sections.Add(new DataSection { Key = "data" });
+        Sections.Add(new SyncSection { Key = "sync" });
+        Sections.Add(new UpdateSection { Key = "update" });
+        Sections.Add(new ReminderSection { Key = "reminder" });
+        Sections.Add(new BehaviorSection { Key = "behavior" });
+        Sections.Add(new AboutSection { Key = "about" });
         SelectedSection = Sections[0];
+
+        // Nav titles (and any section-localized data) are captured at construction; keep
+        // them in sync when the language changes at runtime.
+        Loc.LanguageChanged += RefreshLocalizedStrings;
+        RefreshLocalizedStrings();
+    }
+
+    /// <summary>Re-resolve the section nav titles + localized section data. Called once
+    /// at construction and again on every <see cref="Loc.LanguageChanged"/>.</summary>
+    private void RefreshLocalizedStrings()
+    {
+        Sections[0].Title = Loc.General;
+        Sections[1].Title = Loc.Appearance;
+        Sections[2].Title = Loc.Data;
+        Sections[3].Title = Loc.SyncSectionTitle;
+        Sections[4].Title = Loc.Updates;
+        Sections[5].Title = Loc.RemindersSection;
+        Sections[6].Title = Loc.Behavior;
+        Sections[7].Title = Loc.About;
+        if (Sections[5] is ReminderSection reminder) reminder.RefreshToastOptions();
     }
 }
 
-/// <summary>Base for settings-page sections: nav model + content-template key.</summary>
+/// <summary>Base for settings-page sections: nav model + content-template key. The title
+/// is re-resolved on language change (it was captured at construction originally), so it
+/// must be observable for the nav + section headers to update live.</summary>
 public abstract class SettingsSection : ObservableObject
 {
     public string Key { get; init; } = "";
-    public string Title { get; init; } = "";
+
+    private string _title = "";
+    public string Title { get => _title; set => SetProperty(ref _title, value); }
 }
 
-/// <summary>常规：语言（重启生效）。</summary>
+/// <summary>常规：语言（即时生效）。</summary>
 public sealed class GeneralSection : SettingsSection
 {
     private string _language;
@@ -57,15 +81,15 @@ public sealed class GeneralSection : SettingsSection
             {
                 SettingsService.Current.Language = value;
                 SettingsService.Save();
-                OnPropertyChanged(nameof(LanguageHint));
+                // Applies immediately: fires LanguageChanged → App rebuilds the windows.
+                Loc.SetLanguage(value == "English" ? AppLanguage.English : AppLanguage.Chinese);
             }
         }
     }
 
-    /// <summary>Show a "restart to apply" hint when the picked language isn't the live one yet.</summary>
-    public string LanguageHint =>
-        Language == (Loc.Language == AppLanguage.Chinese ? "Chinese" : "English")
-            ? "" : Loc.RestartToApply;
+    /// <summary>The picked language is applied immediately (windows are rebuilt), so the
+    /// hint always reads "即时生效", mirroring the theme row.</summary>
+    public string LanguageHint => Loc.AppliesImmediately;
 
     public GeneralSection() => _language = SettingsService.Current.Language;
 }
@@ -293,7 +317,7 @@ public sealed partial class ReminderSection : SettingsSection
     }
 
     /// <summary>可选时长下拉项（本地化标签 → 秒数）。</summary>
-    public IReadOnlyList<ToastDurationOption> ToastOptions { get; }
+    public IReadOnlyList<ToastDurationOption> ToastOptions { get; private set; } = [];
 
     public bool ReminderNotifications
     {
@@ -372,6 +396,13 @@ public sealed partial class ReminderSection : SettingsSection
         _notifications = SettingsService.Current.ReminderNotifications;
         _sound = SettingsService.Current.ReminderSound;
         _toastSeconds = SettingsService.Current.ReminderToastSeconds;
+        RefreshToastOptions();
+    }
+
+    /// <summary>Re-resolve the localized duration-dropdown labels (captured at
+    /// construction) on a language change.</summary>
+    public void RefreshToastOptions()
+    {
         ToastOptions =
         [
             new(Loc.ToastSeconds5, 5),
@@ -379,6 +410,7 @@ public sealed partial class ReminderSection : SettingsSection
             new(Loc.ToastSeconds30, 30),
             new(Loc.ToastNeverAutoClose, 0),
         ];
+        OnPropertyChanged(nameof(ToastOptions));
     }
 }
 
