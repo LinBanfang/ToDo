@@ -64,7 +64,11 @@ public partial class App : Application
         Sync = new SyncService(Database, Dispatcher);
         ViewModel = new MainViewModel(Database);
         Tray = new TrayService();
-        Reminders = new ReminderService(Database);
+        // Native toasts let reminders fire even when the app isn't running (the OS
+        // delivers the scheduled toast; see NativeReminderScheduler). The store also
+        // registers the unpackaged AUMID on first use.
+        Reminders = new ReminderService(Database,
+            nativeScheduler: new NativeReminderScheduler(new WinToastStore()));
         Sync.SetRefreshAction(() => { ViewModel.LoadAll(); ViewModel.RefreshActiveTasks(); });
 
         // With ShutdownMode=OnExplicitShutdown the app keeps running in the tray until

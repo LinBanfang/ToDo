@@ -45,7 +45,7 @@ $ErrorActionPreference = 'Stop'
 
 # ---- paths (repo-relative so the script works from any checkout) -------------------
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
-$exe      = Join-Path $repoRoot "ToDo\bin\$Configuration\net9.0-windows\ToDo.exe"
+$exe      = Join-Path $repoRoot "ToDo\bin\$Configuration\net9.0-windows10.0.19041\ToDo.exe"
 $demoDll  = Join-Path $repoRoot "ToDo.Demo\bin\$Configuration\net9.0\todo-demo.dll"
 if (-not $OutputDir) { $OutputDir = Join-Path $repoRoot 'screenshots' }
 if (-not $DbPath)    { $DbPath = Join-Path $env:TEMP "todo-screenshot-$Theme.db" }

@@ -226,4 +226,65 @@ public sealed class ReminderServiceTests : IDisposable
         // Must not throw even though a poll fires against the disposed service.
         Check(svc);
     }
+
+    // ─── Native toast sync (P2-6): the in-app card and the OS-scheduled toast are
+    // mutually exclusive per reminder; the scheduler is only invoked when provided. ──
+
+    [Fact]
+    public void Check_FiresDueReminder_RemovesPendingNativeToast()
+    {
+        var native = new FakeNativeScheduler();
+        using var svc = new ReminderService(_db, nativeScheduler: native);
+        var rem = Past();   // within the 24h window → not pre-marked → first poll fires
+        _db.Tasks.Insert(new TaskItem { Id = "due", ListId = "list-tasks", Title = "Due", Reminder = rem });
+
+        Check(svc);
+
+        Assert.Contains(native.Fired, f => f.TaskId == "due" && f.ReminderMs == rem);
+    }
+
+    [Fact]
+    public void Check_WithNotificationsOn_ReconcilesOpenReminders()
+    {
+        SettingsService.Current.ReminderNotifications = true;
+        try
+        {
+            var native = new FakeNativeScheduler();
+            using var svc = new ReminderService(_db, nativeScheduler: native);
+            var rem = Future();   // not due → poll won't fire the WPF toast, only reconcile
+            _db.Tasks.Insert(new TaskItem { Id = "future", ListId = "list-tasks", Title = "F", Reminder = rem });
+
+            Check(svc);
+
+            var open = Assert.Single(native.Reconciles).Open;
+            Assert.Contains(open, t => t.Id == "future" && t.Reminder == rem);
+        }
+        finally
+        {
+            SettingsService.Current.ReminderNotifications = false;
+        }
+    }
+
+    [Fact]
+    public void Check_WithNotificationsOff_ClearsNativeSchedule()
+    {
+        var native = new FakeNativeScheduler();
+        using var svc = new ReminderService(_db, nativeScheduler: native);
+
+        Check(svc);
+
+        Assert.True(native.ClearAllCalls >= 1);   // disabled → no native toasts may fire
+    }
+
+    private sealed class FakeNativeScheduler : INativeReminderScheduler
+    {
+        public readonly List<(string TaskId, long ReminderMs)> Fired = new();
+        public readonly List<(List<TaskItem> Open, long Now)> Reconciles = new();
+        public int ClearAllCalls;
+
+        public void Reconcile(IEnumerable<TaskItem> openTasks, long nowMs) =>
+            Reconciles.Add((openTasks.ToList(), nowMs));
+        public void RemoveFired(string taskId, long reminderMs) => Fired.Add((taskId, reminderMs));
+        public void ClearAll() => ClearAllCalls++;
+    }
 }

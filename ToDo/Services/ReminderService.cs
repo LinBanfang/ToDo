@@ -10,6 +10,9 @@ namespace ToDo.Services;
 /// plus a sound, once per reminder. Catch-up strategy: only reminders older than the
 /// catch-up window (default 24h) are pre-marked so the app doesn't nag on launch;
 /// reminders that came due within the window fire on the first poll instead.
+/// Also keeps the native scheduled toasts in sync (optional, see
+/// <see cref="INativeReminderScheduler"/>): a reminder that never fired in-app because
+/// the app was closed still notifies via an OS-delivered toast.
 /// </summary>
 public class ReminderService : IDisposable
 {
@@ -18,11 +21,14 @@ public class ReminderService : IDisposable
     private readonly DatabaseService _db;
     private readonly DispatcherTimer _timer;
     private readonly HashSet<string> _fired = new();
+    private readonly INativeReminderScheduler? _native;
     private bool _disposed;
 
-    public ReminderService(DatabaseService db, TimeSpan? catchUpWindow = null)
+    public ReminderService(DatabaseService db, TimeSpan? catchUpWindow = null,
+        INativeReminderScheduler? nativeScheduler = null)
     {
         _db = db;
+        _native = nativeScheduler;
 
         // Pre-mark only reminders older than the catch-up window — anything due within it
         // is left for the first Check() (15s later) to fire, so a reminder missed by a few
@@ -75,7 +81,40 @@ public class ReminderService : IDisposable
                     ReminderToast.Show(t.Id, t.Title, ResolveListIcon(t));
                 if (SettingsService.Current.ReminderSound)
                     ReminderSoundPlayer.Play();
+
+                // The in-app card is the notification while the app runs — drop the
+                // pending native toast so the OS doesn't fire it again moments later.
+                if (t.Reminder is long r) _native?.RemoveFired(t.Id, r);
             }
+        }
+
+        SyncNativeSchedule(now);
+    }
+
+    /// <summary>
+    /// Every poll, re-align the OS-scheduled native toasts with the open future
+    /// reminders (adding ones that appeared since, dropping ones that were deleted or
+    /// completed). With notifications disabled the whole native schedule is cleared.
+    /// Failures are logged but never break the poll loop.
+    /// </summary>
+    private void SyncNativeSchedule(long now)
+    {
+        if (_native == null) return;
+        try
+        {
+            if (SettingsService.Current.ReminderNotifications)
+            {
+                var open = _db.Tasks.Find(t => t.Reminder != null && t.CloseRecord == null).ToList();
+                _native.Reconcile(open, now);
+            }
+            else
+            {
+                _native.ClearAll();
+            }
+        }
+        catch (Exception ex)
+        {
+            DiagnosticLog.Error("reminder", $"native schedule failed: {ex}");
         }
     }
 
