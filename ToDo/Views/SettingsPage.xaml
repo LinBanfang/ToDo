@@ -294,7 +294,7 @@
                     <Image Source="{Binding Icon}" Width="48" Height="48"
                            Margin="0,0,16,0" VerticalAlignment="Top"/>
                     <StackPanel>
-                        <TextBlock Text="To Do" FontSize="20" FontWeight="SemiBold"
+                        <TextBlock Text="{x:Static services:Loc.AppTitle}" FontSize="20" FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
                         <TextBlock FontSize="12" Foreground="{DynamicResource TextDisabledBrush}"
                                    Margin="0,2,0,0" Text="{Binding VersionText}"/>

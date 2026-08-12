@@ -36,7 +36,7 @@ public sealed class TrayService : IDisposable
         {
             Icon = LoadAppIcon(),
             Visible = true,
-            Text = "To Do",
+            Text = Loc.AppTitle,
         };
 
         // The app's global Fluent ContextMenu style applies here automatically —

@@ -122,7 +122,7 @@ public partial class DataSection : SettingsSection
             try
             {
                 SettingsService.SetDbPath(dialog.ResultPath);
-                FluentDialog.Show(Application.Current.MainWindow, Loc.DbPathChanged, "To Do", MsgKind.Info);
+                FluentDialog.Show(Application.Current.MainWindow, Loc.DbPathChanged, Loc.AppTitle, MsgKind.Info);
                 OnPropertyChanged(nameof(DbPath));
             }
             catch (Exception ex)

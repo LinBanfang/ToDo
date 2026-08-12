@@ -63,6 +63,14 @@ public partial class App : Application
         // to its StatusChanged; the refresh hook + timer start once the VM exists.
         Sync = new SyncService(Database, Dispatcher);
         ViewModel = new MainViewModel(Database);
+
+        // Apply the persisted language + theme before the tray is created: the tray
+        // tooltip and context menu read Loc, so a non-default language must be in
+        // place first (they are bound as x:Static / resolved at construction).
+        Loc.SetLanguage(SettingsService.Current.Language == "English"
+            ? AppLanguage.English : AppLanguage.Chinese);
+        ThemeService.Apply(ViewModel.Theme);
+
         Tray = new TrayService();
         // Native toasts let reminders fire even when the app isn't running (the OS
         // delivers the scheduled toast; see NativeReminderScheduler). The store also
@@ -77,11 +85,6 @@ public partial class App : Application
         {
             if (!WindowManager.IsQuitting) WindowManager.Quit();
         };
-
-        // Apply the persisted language + theme before the first window loads
-        Loc.SetLanguage(SettingsService.Current.Language == "English"
-            ? AppLanguage.English : AppLanguage.Chinese);
-        ThemeService.Apply(ViewModel.Theme);
 
         var mainWindow = new MainWindow { DataContext = ViewModel };
         mainWindow.Icon = new System.Windows.Media.Imaging.BitmapImage(

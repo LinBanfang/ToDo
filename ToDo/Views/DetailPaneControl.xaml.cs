@@ -464,8 +464,8 @@ public partial class DetailPaneControl : UserControl
         var now = DateTime.Now;
 
         foreach (var (label, offset) in new[] {
-            ("1 " + (Loc.Language == AppLanguage.Chinese ? "小时后" : "hour later"), 1.0),
-            ("3 " + (Loc.Language == AppLanguage.Chinese ? "小时后" : "hours later"), 3.0),
+            (Loc.HoursFromNow(1), 1.0),
+            (Loc.HoursFromNow(3), 3.0),
             (Loc.Tomorrow + " 9:00", (now.Date.AddDays(1).AddHours(9) - now).TotalHours),
             (Loc.ThisWeek + " 9:00", (GetNextMonday().AddHours(9) - now).TotalHours),
         })
@@ -484,7 +484,7 @@ public partial class DetailPaneControl : UserControl
             var dlg = new DateTimeDialog(
                 ViewModel.SelectedTask!.Reminder ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 includeTime: true)
-            { Owner = Window.GetWindow(this), Title = "Reminder" };
+            { Owner = Window.GetWindow(this), Title = Loc.Reminder };
             if (dlg.ShowDialog() == true && dlg.Saved)
                 SetReminder(dlg.ResultTimestamp);
         };
