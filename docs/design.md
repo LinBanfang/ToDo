@@ -252,11 +252,12 @@ MainViewModel
 
 ## 7. 本地化
 
-- `Services/LocalizationService.cs` — 静态 `Loc` 类，属性按 `AppLanguage` 返回中/英文
-- XAML 绑定 `{x:Static services:Loc.XXX}`
-- 代码中 `Loc.XXX` 引用；值转换器（相对时间 / 日期）与对话框（DbPathDialog）同样走 `Loc`
-- 设置页"常规"节切换语言 → 持久化到 settings.json，**重启生效**，启动时由 `App.OnStartup` 恢复
-- 默认中文
+- 字符串存于 RESX 资源文件：`ToDo.Core/Resources/Strings.resx`（中性 = 中文）+ `Strings.en.resx`（en 卫星，manifest 名 `ToDo.Resources.Strings`，编译为 `en/ToDo.Core.resources.dll`）。**新增语言 = 新增一个 `.xx.resx` + `AppLanguage` 枚举值 + `SetLanguage` 文化映射**（见 [ADR-016](adr/0016-localization-resx.md)）
+- `Services/LocalizationService.cs` — 静态 `Loc` 门面：公开 API（枚举 / `Language` / `LanguageChanged` / `SetLanguage` / `Toggle` 与全部 221 个字符串成员名）与迁移前逐字节不变，内部用 `ResourceManager` 按显式文化读资源；缺失键返回 `⟦key⟧` 哨兵（不返回键本身，en 值如 OK/Delete/Save/Date 合法等于键名）
+- XAML 绑定 `{x:Static services:Loc.XXX}`；代码中 `Loc.XXX` 引用；值转换器（相对时间 / 日期）与对话框（DbPathDialog）同样走 `Loc`
+- 日期方法统一 `InvariantCulture` 格式化，模板为单个自定义模式（如 `{0:M月d日}`，`M`/`d` 不补零数字）
+- 设置页"常规"节切换语言 → 持久化到 settings.json，**重启生效**，启动时由 `App.OnStartup` 在创建托盘**之前**恢复语言与主题（托盘提示/菜单读 `Loc`）
+- 默认中文；测试三层保证：`loc-golden.txt` 黄金基线（221 值 × 2 语言零漂移）、zh/en `ResourceSet` 键一致且非空、反射扫描哨兵检测
 
 ---
 

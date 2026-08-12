@@ -12,6 +12,7 @@
 - **离线提醒（Windows 原生 toast）**：应用未运行时，到点的提醒改由 Windows 原生 toast 触发——每个未来提醒在到点前 45 秒预调度，运行时到点仍走应用内卡片并取消待发的原生 toast（两种场景各弹一次、无双重通知）；关闭提醒开关后全部原生 toast 一并清除。点击原生 toast 仅启动应用，具体任务由应用内 24h 补发机制弹出
 
 ### 内部
+- **本地化 RESX 管线**：221 个 `Loc` 成员的字符串值从内联三元迁入资源文件——`Strings.resx`（中文中性）+ `Strings.en.resx`（en 卫星），`Loc` 保留同名静态门面，127 处 XAML 绑定与 216 处 C# 调用点零改动；**新增语言只需新增一个 `.xx.resx`** + `AppLanguage` 枚举值 + `SetLanguage` 文化映射（见 [ADR-016](docs/adr/0016-localization-resx.md)）。测试三层保证：`loc-golden.txt` 黄金基线（221 值 × 2 语言零漂移）、zh/en 键一致性、反射扫描哨兵检测；顺带补齐 7 处硬编码文案泄漏（托盘提示 / 弹窗标题 / 稍后提醒菜单等）并在启动时于创建托盘前恢复语言
 - **发布流程**：release.yml 移除 Gitee 同步 job——CI 传 Gitee 的 curl 无超时会永久挂起（v1.3.1 实测挂 50+ 分钟、烧 Windows runner 分钟），Gitee 镜像（tag / 正文 / zip / 配额）改为 Claude 手动同步（见 [docs/gitee-mirror.md](docs/gitee-mirror.md)）
 - **目标框架升级**：ToDo / ToDo.Tests 由 `net9.0-windows` 改为 `net9.0-windows10.0.19041`，启用 WinRT 投影以承载 Windows 原生 toast（CommunityToolkit.WinUI.Notifications，未打包应用 AUMID 自动注册）
 
