@@ -137,6 +137,12 @@ public static class Loc
     public static string ToastNeverAutoClose => Language == AppLanguage.Chinese ? "不自动关闭" : "Keep open";
     public static string ReminderToastPauseHint => Language == AppLanguage.Chinese ? "悬停卡片时暂停倒计时" : "Hovering the card pauses the countdown";
 
+    // Keyboard shortcuts (settings hint)
+    public static string KeyboardShortcuts => Language == AppLanguage.Chinese ? "键盘快捷键" : "Keyboard shortcuts";
+    public static string KeyboardShortcutsHint => Language == AppLanguage.Chinese
+        ? "Ctrl+N 新建任务\nCtrl+F 搜索\nCtrl+Enter 完成任务\nCtrl+Z 撤销\nCtrl+1–4 切换列表\nCtrl+, 设置"
+        : "Ctrl+N New task\nCtrl+F Search\nCtrl+Enter Complete task\nCtrl+Z Undo\nCtrl+1–4 Switch list\nCtrl+, Settings";
+
     // Relative time (TimestampToRelativeStringConverter)
     public static string JustNow => Language == AppLanguage.Chinese ? "刚刚" : "just now";
     public static string MinutesAgo(int n) => Language == AppLanguage.Chinese ? $"{n} 分钟前" : $"{n}m ago";

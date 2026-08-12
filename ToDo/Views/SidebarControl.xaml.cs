@@ -27,6 +27,13 @@ public partial class SidebarControl : UserControl
     }
 
     // ─── Sidebar ──────────────────────────────────────────
+    /// <summary>Ctrl+F: focus the search box (select-all so typing replaces any filter).</summary>
+    public void FocusSearchBox()
+    {
+        SearchBox.Focus();
+        SearchBox.SelectAll();
+    }
+
     private void SearchClear_Click(object sender, RoutedEventArgs e)
     {
         SearchBox.Text = "";

@@ -274,6 +274,12 @@
                           IsChecked="{Binding ShowTaskNote}" Margin="0,0,0,10"/>
                 <CheckBox Style="{StaticResource FluentCheckBox}" Content="{x:Static services:Loc.ShowTaskAttachments}"
                           IsChecked="{Binding ShowTaskAttachments}"/>
+
+                <TextBlock Style="{StaticResource SettingSectionHeader}" Margin="0,20,0,8"
+                           Text="{x:Static services:Loc.KeyboardShortcuts}"/>
+                <TextBlock FontSize="12" Foreground="{DynamicResource TextDisabledBrush}"
+                           LineHeight="20" TextWrapping="Wrap"
+                           Text="{x:Static services:Loc.KeyboardShortcutsHint}"/>
             </StackPanel>
         </DataTemplate>
 

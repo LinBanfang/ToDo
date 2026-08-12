@@ -1,9 +1,12 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using ToDo.Models;
 using ToDo.Services;
 using ToDo.ViewModels;
 
@@ -56,16 +59,72 @@ public partial class MainWindow : Window
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
-        if (e.Key == Key.Escape && ViewModel.SelectedTask != null)
+
+        // While typing (search box, inline editors, note field) editing keys must stay
+        // native — Ctrl+Z/C/V are text undo/copy, and no global shortcut may hijack the
+        // cursor. The inline editors handle their own Esc (Handled) before it bubbles.
+        if (Keyboard.FocusedElement is TextBoxBase or PasswordBox) return;
+
+        if (e.Key == Key.Escape)
         {
-            ViewModel.SelectedTask = null;
-            e.Handled = true;
+            if (ViewModel.SelectedTask != null) { ViewModel.SelectedTask = null; e.Handled = true; }
+            return;
         }
-        if (e.Key == Key.N && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control)) return;
+
+        switch (e.Key)
         {
-            TaskListControl.FocusNewTaskBox();
-            e.Handled = true;
+            case Key.N:
+                TaskListControl.FocusNewTaskBox();
+                e.Handled = true;
+                break;
+            case Key.F:
+                SidebarControl.FocusSearchBox();
+                e.Handled = true;
+                break;
+            case Key.Enter:
+                CompleteSelectedTask();
+                e.Handled = true;
+                break;
+            case Key.Z when ViewModel.CurrentUndo != null:
+                ViewModel.UndoCommand.Execute(null);
+                e.Handled = true;
+                break;
+            case Key.OemComma:
+                ToggleSettings();
+                e.Handled = true;
+                break;
+            case Key.D1:
+            case Key.D2:
+            case Key.D3:
+            case Key.D4:
+                SwitchToSystemList((int)(e.Key - Key.D1) + 1);
+                e.Handled = true;
+                break;
         }
+    }
+
+    /// <summary>Ctrl+Enter: complete the selected open task (recurring series generate
+    /// their next instance, same as the row checkbox).</summary>
+    private void CompleteSelectedTask()
+    {
+        var t = ViewModel.SelectedTask;
+        if (t is { CloseRecord: null })
+            ViewModel.CloseTaskCommand.Execute((t, CloseMode.Complete, false));
+    }
+
+    /// <summary>Ctrl+1..4: jump to a system list (My Day / Important / Planned / Tasks).</summary>
+    private void SwitchToSystemList(int digit)
+    {
+        var id = KeyboardShortcutMap.SystemListId(digit);
+        if (id != null) ViewModel.ActiveListId = id;
+    }
+
+    /// <summary>Ctrl+,: open / close the settings overlay.</summary>
+    private void ToggleSettings()
+    {
+        if (ViewModel.IsSettingsMode) ViewModel.CloseSettingsCommand.Execute(null);
+        else ViewModel.OpenSettingsCommand.Execute(null);
     }
 
     /// <summary>Window focus triggers a sync — the main "check for remote changes" moment.</summary>
