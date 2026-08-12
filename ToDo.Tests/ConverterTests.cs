@@ -248,8 +248,8 @@ public sealed class ConverterTests
     {
         IMultiValueConverter c = new MetaSeparatorVisibilityConverter();
         // Separator "1" binds IsMyDay last (index 12): the sun counts as a leading item.
-        object[] With(bool sun, string[] tags, int steps, long? due) =>
-            new object[] { tags, steps, due!, null!, null, 0, true, true, true, true, true, true, sun };
+        object?[] With(bool sun, string[] tags, int steps, long? due) =>
+            new object?[] { tags, steps, due, null, null, 0, true, true, true, true, true, true, sun };
 
         // Sun visible, tags hidden → the "·" before steps still shows
         Assert.Equal(Visibility.Visible, c.Convert(With(true, Array.Empty<string>(), 2, null), typeof(Visibility), "1", Inv));
