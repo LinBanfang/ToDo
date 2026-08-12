@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>ToDo</RootNamespace>
+    <NeutralLanguage>zh-CN</NeutralLanguage>
   </PropertyGroup>
 
   <ItemGroup>

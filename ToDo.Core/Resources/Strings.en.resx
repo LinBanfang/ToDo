@@ -1,0 +1,673 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <data name="About" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="AddAttachment" xml:space="preserve">
+    <value>Add attachment</value>
+  </data>
+  <data name="AddDueDate" xml:space="preserve">
+    <value>Add due date</value>
+  </data>
+  <data name="AddRecurrence" xml:space="preserve">
+    <value>Add recurrence</value>
+  </data>
+  <data name="AddReminder" xml:space="preserve">
+    <value>Add reminder</value>
+  </data>
+  <data name="AddSource" xml:space="preserve">
+    <value>Add source</value>
+  </data>
+  <data name="AddStep" xml:space="preserve">
+    <value>Add a step</value>
+  </data>
+  <data name="AddTag" xml:space="preserve">
+    <value>Add tag</value>
+  </data>
+  <data name="AddTask" xml:space="preserve">
+    <value>Add a task</value>
+  </data>
+  <data name="AddToMyDay" xml:space="preserve">
+    <value>Add to My Day</value>
+  </data>
+  <data name="AppDescription" xml:space="preserve">
+    <value>A Fluent Design-style todo desktop app</value>
+  </data>
+  <data name="AppTitle" xml:space="preserve">
+    <value>To Do</value>
+  </data>
+  <data name="Appearance" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="AppliesImmediately" xml:space="preserve">
+    <value>Applies immediately</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="AttachmentOpenFailed" xml:space="preserve">
+    <value>Couldn't open attachment "{0}"</value>
+  </data>
+  <data name="AttachmentTooLarge" xml:space="preserve">
+    <value>Attachment too large (max {0} MB)</value>
+  </data>
+  <data name="Attachments" xml:space="preserve">
+    <value>ATTACHMENTS</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="BackToMain" xml:space="preserve">
+    <value>Back to main</value>
+  </data>
+  <data name="BackgroundStrength" xml:space="preserve">
+    <value>Background strength</value>
+  </data>
+  <data name="BackgroundStrengthLocalHint" xml:space="preserve">
+    <value>Background strength is local to this device and won't sync.</value>
+  </data>
+  <data name="BackupFileFilter" xml:space="preserve">
+    <value>Database backup (*.db)|*.db|All files (*.*)|*.*</value>
+  </data>
+  <data name="BackupSaved" xml:space="preserve">
+    <value>Backup exported to: {0}</value>
+  </data>
+  <data name="Behavior" xml:space="preserve">
+    <value>Behavior</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Cancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="CardOpacity" xml:space="preserve">
+    <value>Card opacity</value>
+  </data>
+  <data name="CardOpacityLocalHint" xml:space="preserve">
+    <value>Card opacity is local to this device and won't sync; higher is more solid.</value>
+  </data>
+  <data name="Change" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="CheckForUpdatesOnStartup" xml:space="preserve">
+    <value>Check for updates on startup</value>
+  </data>
+  <data name="CheckUpdatesNow" xml:space="preserve">
+    <value>Check for updates now</value>
+  </data>
+  <data name="ChooseImage" xml:space="preserve">
+    <value>Choose image…</value>
+  </data>
+  <data name="ChooseReminderSound" xml:space="preserve">
+    <value>Choose reminder ringtone</value>
+  </data>
+  <data name="ChooseSound" xml:space="preserve">
+    <value>Choose ringtone…</value>
+  </data>
+  <data name="Closed" xml:space="preserve">
+    <value>CLOSED</value>
+  </data>
+  <data name="Complete" xml:space="preserve">
+    <value>Complete</value>
+  </data>
+  <data name="Completed" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="CompletedSection" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="ConfirmDelete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="ConfirmDeleteGroupMsg" xml:space="preserve">
+    <value>Delete group "{0}"? Tasks will become ungrouped.</value>
+  </data>
+  <data name="ConfirmDeleteListGroupMsg" xml:space="preserve">
+    <value>Delete group "{0}"? Lists will become ungrouped.</value>
+  </data>
+  <data name="ConfirmDeleteMsg" xml:space="preserve">
+    <value>Delete "{0}"?</value>
+  </data>
+  <data name="DarkTheme" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="Data" xml:space="preserve">
+    <value>Data</value>
+  </data>
+  <data name="Date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="DaysAgo" xml:space="preserve">
+    <value>{0}d ago</value>
+  </data>
+  <data name="DbFileFilter" xml:space="preserve">
+    <value>Database files (*.db)|*.db|All files (*.*)|*.*</value>
+  </data>
+  <data name="DbPathChanged" xml:space="preserve">
+    <value>Path changed. Please restart the app to use the new database location.</value>
+  </data>
+  <data name="DbPathPrompt" xml:space="preserve">
+    <value>Enter the full path for the database file. Existing data will be migrated to the new location.</value>
+  </data>
+  <data name="DbPathTitle" xml:space="preserve">
+    <value>Database Path</value>
+  </data>
+  <data name="DefaultRingtone" xml:space="preserve">
+    <value>Default ringtone</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="DeleteGroup" xml:space="preserve">
+    <value>Delete group</value>
+  </data>
+  <data name="DeleteList" xml:space="preserve">
+    <value>Delete list</value>
+  </data>
+  <data name="DeleteListGroup" xml:space="preserve">
+    <value>Delete list group</value>
+  </data>
+  <data name="DeleteTask" xml:space="preserve">
+    <value>Delete task</value>
+  </data>
+  <data name="Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="DownloadUpdate" xml:space="preserve">
+    <value>Update now</value>
+  </data>
+  <data name="DropToUngroupHint" xml:space="preserve">
+    <value>Drop here to ungroup</value>
+  </data>
+  <data name="EditCloseTime" xml:space="preserve">
+    <value>Edit close time...</value>
+  </data>
+  <data name="EditTime" xml:space="preserve">
+    <value>Edit Close Time</value>
+  </data>
+  <data name="EnableReminderNotifications" xml:space="preserve">
+    <value>Enable reminder notifications</value>
+  </data>
+  <data name="EndSeries" xml:space="preserve">
+    <value>Stop repeating</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="ExitApp" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="ExportBackup" xml:space="preserve">
+    <value>Export backup</value>
+  </data>
+  <data name="General" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Group" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="Homepage" xml:space="preserve">
+    <value>Homepage</value>
+  </data>
+  <data name="HourLater" xml:space="preserve">
+    <value>{0} hour later</value>
+  </data>
+  <data name="HoursAgo" xml:space="preserve">
+    <value>{0}h ago</value>
+  </data>
+  <data name="HoursLater" xml:space="preserve">
+    <value>{0} hours later</value>
+  </data>
+  <data name="ImageFileFilter" xml:space="preserve">
+    <value>Images (*.jpg;*.jpeg;*.png;*.bmp;*.gif)|*.jpg;*.jpeg;*.png;*.bmp;*.gif|All files (*.*)|*.*</value>
+  </data>
+  <data name="ImageTooLarge" xml:space="preserve">
+    <value>Image too large (max {0} MB)</value>
+  </data>
+  <data name="Important" xml:space="preserve">
+    <value>Important</value>
+  </data>
+  <data name="InvalidPathMsg" xml:space="preserve">
+    <value>Please enter a valid path.</value>
+  </data>
+  <data name="InvalidTime" xml:space="preserve">
+    <value>Enter a valid time (hour 0-23, minute 0-59)</value>
+  </data>
+  <data name="JustNow" xml:space="preserve">
+    <value>just now</value>
+  </data>
+  <data name="KeyboardShortcuts" xml:space="preserve">
+    <value>Keyboard shortcuts</value>
+  </data>
+  <data name="KeyboardShortcutsHint" xml:space="preserve">
+    <value>Ctrl+N New task&#xA;Ctrl+F Search&#xA;Ctrl+Enter Complete task&#xA;Ctrl+Z Undo&#xA;Ctrl+1–4 Switch list&#xA;Ctrl+, Settings</value>
+  </data>
+  <data name="LanguageName" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Later" xml:space="preserve">
+    <value>Later</value>
+  </data>
+  <data name="LightTheme" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="ListTheme" xml:space="preserve">
+    <value>List theme</value>
+  </data>
+  <data name="ListThemeImageLocalHint" xml:space="preserve">
+    <value>Background images stay on this device and won't sync.</value>
+  </data>
+  <data name="Lists" xml:space="preserve">
+    <value>LISTS</value>
+  </data>
+  <data name="ManageTags" xml:space="preserve">
+    <value>Manage Tags</value>
+  </data>
+  <data name="MarkImportant" xml:space="preserve">
+    <value>Mark as important</value>
+  </data>
+  <data name="MarkIncomplete" xml:space="preserve">
+    <value>Mark incomplete</value>
+  </data>
+  <data name="MinimizeToTrayOnClose" xml:space="preserve">
+    <value>Minimize to tray on close</value>
+  </data>
+  <data name="MinutesAgo" xml:space="preserve">
+    <value>{0}m ago</value>
+  </data>
+  <data name="MoreColors" xml:space="preserve">
+    <value>More colors…</value>
+  </data>
+  <data name="MoveToGroup" xml:space="preserve">
+    <value>Move to group</value>
+  </data>
+  <data name="MoveToList" xml:space="preserve">
+    <value>Move to list</value>
+  </data>
+  <data name="MyDay" xml:space="preserve">
+    <value>My Day</value>
+  </data>
+  <data name="NewGroup" xml:space="preserve">
+    <value>New group</value>
+  </data>
+  <data name="NewList" xml:space="preserve">
+    <value>+ New list</value>
+  </data>
+  <data name="NewListGroup" xml:space="preserve">
+    <value>New list group</value>
+  </data>
+  <data name="NewListName" xml:space="preserve">
+    <value>New list</value>
+  </data>
+  <data name="NewListText" xml:space="preserve">
+    <value>New list</value>
+  </data>
+  <data name="NoAttachments" xml:space="preserve">
+    <value>No attachments</value>
+  </data>
+  <data name="NoBackground" xml:space="preserve">
+    <value>No background</value>
+  </data>
+  <data name="NoDueDate" xml:space="preserve">
+    <value>No Due Date</value>
+  </data>
+  <data name="NoTags" xml:space="preserve">
+    <value>No tags</value>
+  </data>
+  <data name="Notes" xml:space="preserve">
+    <value>NOTES</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="OpenMainWindow" xml:space="preserve">
+    <value>Open main window</value>
+  </data>
+  <data name="OpenTask" xml:space="preserve">
+    <value>Open task</value>
+  </data>
+  <data name="PickDate" xml:space="preserve">
+    <value>Pick a date...</value>
+  </data>
+  <data name="Planned" xml:space="preserve">
+    <value>Planned</value>
+  </data>
+  <data name="PlayReminderSound" xml:space="preserve">
+    <value>Play reminder sound</value>
+  </data>
+  <data name="PromoteToTask" xml:space="preserve">
+    <value>Promote to task</value>
+  </data>
+  <data name="Recurrence" xml:space="preserve">
+    <value>Repeat</value>
+  </data>
+  <data name="RelativeDateFormat" xml:space="preserve">
+    <value>{0:MMM d, yyyy}</value>
+  </data>
+  <data name="RemindLater" xml:space="preserve">
+    <value>Remind me later</value>
+  </data>
+  <data name="Reminder" xml:space="preserve">
+    <value>Reminder</value>
+  </data>
+  <data name="ReminderRingtone" xml:space="preserve">
+    <value>Reminder ringtone</value>
+  </data>
+  <data name="ReminderTimeFormat" xml:space="preserve">
+    <value>{0:MMM d, HH:mm}</value>
+  </data>
+  <data name="ReminderToastDuration" xml:space="preserve">
+    <value>Toast duration</value>
+  </data>
+  <data name="ReminderToastPauseHint" xml:space="preserve">
+    <value>Hovering the card pauses the countdown</value>
+  </data>
+  <data name="RemindersSection" xml:space="preserve">
+    <value>Reminders</value>
+  </data>
+  <data name="RemoveFromGroup" xml:space="preserve">
+    <value>Remove from group</value>
+  </data>
+  <data name="RemoveFromMyDay" xml:space="preserve">
+    <value>Remove from My Day</value>
+  </data>
+  <data name="RemoveImage" xml:space="preserve">
+    <value>Remove image</value>
+  </data>
+  <data name="RemoveImportance" xml:space="preserve">
+    <value>Remove importance</value>
+  </data>
+  <data name="RemoveSource" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Rename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="RenameList" xml:space="preserve">
+    <value>Rename list</value>
+  </data>
+  <data name="ReopenTask" xml:space="preserve">
+    <value>Reopen task</value>
+  </data>
+  <data name="RepeatDaily" xml:space="preserve">
+    <value>Daily</value>
+  </data>
+  <data name="RepeatMonthly" xml:space="preserve">
+    <value>Monthly</value>
+  </data>
+  <data name="RepeatNone" xml:space="preserve">
+    <value>Doesn't repeat</value>
+  </data>
+  <data name="RepeatWeekdays" xml:space="preserve">
+    <value>Every weekday</value>
+  </data>
+  <data name="RepeatWeekly" xml:space="preserve">
+    <value>Weekly</value>
+  </data>
+  <data name="RepeatYearly" xml:space="preserve">
+    <value>Yearly</value>
+  </data>
+  <data name="ResetSound" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="RestartToApply" xml:space="preserve">
+    <value>Takes effect after restart</value>
+  </data>
+  <data name="RestoreBackup" xml:space="preserve">
+    <value>Restore from backup</value>
+  </data>
+  <data name="RestoreStaged" xml:space="preserve">
+    <value>Backup staged. It will replace the current data on next startup.</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="SearchResults" xml:space="preserve">
+    <value>Search Results</value>
+  </data>
+  <data name="SelectBackupFile" xml:space="preserve">
+    <value>Select backup file</value>
+  </data>
+  <data name="SelectDbFile" xml:space="preserve">
+    <value>Select database file</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="ShortDateFormat" xml:space="preserve">
+    <value>{0:MMM d}</value>
+  </data>
+  <data name="ShowTaskAttachments" xml:space="preserve">
+    <value>Show attachment icon</value>
+  </data>
+  <data name="ShowTaskDue" xml:space="preserve">
+    <value>Show due date</value>
+  </data>
+  <data name="ShowTaskNote" xml:space="preserve">
+    <value>Show note icon</value>
+  </data>
+  <data name="ShowTaskReminder" xml:space="preserve">
+    <value>Show reminders</value>
+  </data>
+  <data name="ShowTaskSteps" xml:space="preserve">
+    <value>Show step progress</value>
+  </data>
+  <data name="ShowTaskTags" xml:space="preserve">
+    <value>Show tags</value>
+  </data>
+  <data name="SkipOccurrence" xml:space="preserve">
+    <value>Cancel this occurrence</value>
+  </data>
+  <data name="SkipVersion" xml:space="preserve">
+    <value>Skip this version</value>
+  </data>
+  <data name="SnoozeReminder" xml:space="preserve">
+    <value>Snooze</value>
+  </data>
+  <data name="SolidColor" xml:space="preserve">
+    <value>Solid color</value>
+  </data>
+  <data name="SoundFileFilter" xml:space="preserve">
+    <value>Audio files (*.wav)|*.wav|All files (*.*)|*.*</value>
+  </data>
+  <data name="SoundFileHint" xml:space="preserve">
+    <value>WAV audio files. Uses the built-in chime when unset (independent of the Windows sound scheme).</value>
+  </data>
+  <data name="SoundMissing" xml:space="preserve">
+    <value>file missing</value>
+  </data>
+  <data name="Steps" xml:space="preserve">
+    <value>STEPS</value>
+  </data>
+  <data name="StickyCloseNote" xml:space="preserve">
+    <value>Close note</value>
+  </data>
+  <data name="StickyNote" xml:space="preserve">
+    <value>Sticky note</value>
+  </data>
+  <data name="StickyShowTags" xml:space="preserve">
+    <value>Show tags in sticky note</value>
+  </data>
+  <data name="SyncDeviceId" xml:space="preserve">
+    <value>Device ID</value>
+  </data>
+  <data name="SyncEnabledLabel" xml:space="preserve">
+    <value>Enable multi-device sync</value>
+  </data>
+  <data name="SyncKeyLabel" xml:space="preserve">
+    <value>Sync key</value>
+  </data>
+  <data name="SyncLastSynced" xml:space="preserve">
+    <value>Last synced</value>
+  </data>
+  <data name="SyncMyDayLocalHint" xml:space="preserve">
+    <value>My Day stays on this device. Important markers and everything else sync across devices.</value>
+  </data>
+  <data name="SyncNever" xml:space="preserve">
+    <value>Never synced</value>
+  </data>
+  <data name="SyncNow" xml:space="preserve">
+    <value>Sync now</value>
+  </data>
+  <data name="SyncSectionTitle" xml:space="preserve">
+    <value>Sync</value>
+  </data>
+  <data name="SyncServerUrlLabel" xml:space="preserve">
+    <value>Server URL</value>
+  </data>
+  <data name="SyncStatusAuthFailed" xml:space="preserve">
+    <value>Sync key rejected (401)</value>
+  </data>
+  <data name="SyncStatusDisabled" xml:space="preserve">
+    <value>Sync disabled</value>
+  </data>
+  <data name="SyncStatusLabel" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="SyncStatusNotConfigured" xml:space="preserve">
+    <value>Server URL or sync key not set</value>
+  </data>
+  <data name="SyncStatusOffline" xml:space="preserve">
+    <value>Sync failed</value>
+  </data>
+  <data name="SyncStatusOnline" xml:space="preserve">
+    <value>Synced</value>
+  </data>
+  <data name="SyncStatusSyncing" xml:space="preserve">
+    <value>Syncing…</value>
+  </data>
+  <data name="SyncStatusVersionMismatch" xml:space="preserve">
+    <value>Server version mismatch — update the server</value>
+  </data>
+  <data name="System" xml:space="preserve">
+    <value>SYSTEM</value>
+  </data>
+  <data name="TagNameExists" xml:space="preserve">
+    <value>A tag named "{0}" already exists</value>
+  </data>
+  <data name="TagPlaceholder" xml:space="preserve">
+    <value>New tag name</value>
+  </data>
+  <data name="Tags" xml:space="preserve">
+    <value>TAGS</value>
+  </data>
+  <data name="TaskDetails" xml:space="preserve">
+    <value>Task Details</value>
+  </data>
+  <data name="TaskRowDisplay" xml:space="preserve">
+    <value>Task row display</value>
+  </data>
+  <data name="Tasks" xml:space="preserve">
+    <value>Tasks</value>
+  </data>
+  <data name="TestSound" xml:space="preserve">
+    <value>Test</value>
+  </data>
+  <data name="Theme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="ThirdPartyLicenses" xml:space="preserve">
+    <value>Third-party licenses</value>
+  </data>
+  <data name="ThisWeek" xml:space="preserve">
+    <value>Next Week</value>
+  </data>
+  <data name="Time" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="TitleTextAuto" xml:space="preserve">
+    <value>Auto (recommended)</value>
+  </data>
+  <data name="TitleTextColor" xml:space="preserve">
+    <value>Title text color</value>
+  </data>
+  <data name="TitleTextDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="TitleTextLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="TitleTextNoRecommend" xml:space="preserve">
+    <value>No theme set — the title follows the app theme.</value>
+  </data>
+  <data name="TitleTextPickHint" xml:space="preserve">
+    <value>The header follows the list theme; text light/dark keeps it readable.</value>
+  </data>
+  <data name="ToastNeverAutoClose" xml:space="preserve">
+    <value>Keep open</value>
+  </data>
+  <data name="ToastSeconds10" xml:space="preserve">
+    <value>10s</value>
+  </data>
+  <data name="ToastSeconds30" xml:space="preserve">
+    <value>30s</value>
+  </data>
+  <data name="ToastSeconds5" xml:space="preserve">
+    <value>5s</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="Tomorrow" xml:space="preserve">
+    <value>Tomorrow</value>
+  </data>
+  <data name="Undo" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="UndoCompleteMsg" xml:space="preserve">
+    <value>Completed "{0}"</value>
+  </data>
+  <data name="UndoDeleteMsg" xml:space="preserve">
+    <value>Deleted "{0}"</value>
+  </data>
+  <data name="Ungrouped" xml:space="preserve">
+    <value>Ungrouped</value>
+  </data>
+  <data name="UpdateAvailable" xml:space="preserve">
+    <value>Update available</value>
+  </data>
+  <data name="UpdateCheckFailed" xml:space="preserve">
+    <value>Update check failed: {0}</value>
+  </data>
+  <data name="UpdateDownloaded" xml:space="preserve">
+    <value>Downloaded to</value>
+  </data>
+  <data name="UpdateSourceNoInfo" xml:space="preserve">
+    <value>Couldn't get version info from any update source; check your network or source configuration</value>
+  </data>
+  <data name="UpdateSources" xml:space="preserve">
+    <value>Update sources</value>
+  </data>
+  <data name="UpdateUpToDate" xml:space="preserve">
+    <value>You're up to date (latest version {0})</value>
+  </data>
+  <data name="Updates" xml:space="preserve">
+    <value>Updates</value>
+  </data>
+  <data name="VersionLabel" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="Yesterday" xml:space="preserve">
+    <value>Yesterday</value>
+  </data>
+</root>

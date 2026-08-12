@@ -22,4 +22,8 @@
     <ProjectReference Include="..\ToDo\ToDo.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="TestData\loc-golden.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

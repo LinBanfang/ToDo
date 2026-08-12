@@ -32,6 +32,8 @@ public sealed class LocTests : IDisposable
             var value = Assert.IsType<string>(prop.GetValue(null));
             Assert.False(string.IsNullOrWhiteSpace(value),
                 $"Loc.{prop.Name} is blank in {(lang == AppLanguage.Chinese ? "Chinese" : "English")}");
+            Assert.False(value.StartsWith("⟦", StringComparison.Ordinal),
+                $"Loc.{prop.Name} resolves to the missing-resource sentinel ⟦{prop.Name}⟧");
         }
     }
 

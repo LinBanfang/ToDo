@@ -1,22 +1,45 @@
-using System.ComponentModel;
 using System.Globalization;
-using System.Runtime.CompilerServices;
+using System.Resources;
 using ToDo.Models;
 
 namespace ToDo.Services;
 
 public enum AppLanguage { English, Chinese }
 
+/// <summary>
+/// Typed facade over the RESX resources (Strings.resx = Chinese neutral +
+/// Strings.en.resx satellite), kept in place of a generated designer so the
+/// public member surface stays byte-identical to the old ternary implementation:
+/// ~127 XAML <c>{x:Static services:Loc.X}</c> bindings and ~216 C# call sites
+/// depend on these exact member names. Adding a language = add a Strings.xx.resx,
+/// an <see cref="AppLanguage"/> value and a culture mapping in <see cref="SetLanguage"/>
+/// (see docs/adr/0016-localization-resx.md).
+/// </summary>
 public static class Loc
 {
+    private static readonly ResourceManager Res = new("ToDo.Resources.Strings", typeof(Loc).Assembly);
+    private static CultureInfo _culture = CultureInfo.GetCultureInfo("zh-CN"); // default = Chinese
+
     public static AppLanguage Language { get; private set; } = AppLanguage.Chinese;
     public static event Action? LanguageChanged;
+
+    /// <summary>Look up a key under the active culture; a missing key visibly
+    /// degrades to ⟦Key⟧ (never the bare key — several English values legitimately
+    /// equal their key, e.g. "OK"), and the tests assert no ⟦ sentinel leaks.</summary>
+    private static string S(string key)
+    {
+        try { return Res.GetString(key, _culture) ?? "⟦" + key; }
+        catch (MissingManifestResourceException) { return "⟦" + key; }
+    }
 
     public static void SetLanguage(AppLanguage lang)
     {
         if (Language != lang)
         {
             Language = lang;
+            _culture = lang == AppLanguage.English
+                ? CultureInfo.GetCultureInfo("en-US")
+                : CultureInfo.GetCultureInfo("zh-CN");
             LanguageChanged?.Invoke();
         }
     }
@@ -27,155 +50,133 @@ public static class Loc
     }
 
     // ─── String properties ────────────────────────────────
-    public static string AppTitle => Language == AppLanguage.Chinese ? "待办事项" : "To Do";
-    public static string Search => Language == AppLanguage.Chinese ? "搜索" : "Search";
-    public static string SearchResults => Language == AppLanguage.Chinese ? "搜索结果" : "Search Results";
-    public static string System => Language == AppLanguage.Chinese ? "系统" : "SYSTEM";
-    public static string Lists => Language == AppLanguage.Chinese ? "列表" : "LISTS";
-    public static string Tags => Language == AppLanguage.Chinese ? "标签" : "TAGS";
-    public static string AddTask => Language == AppLanguage.Chinese ? "添加任务" : "Add a task";
-    public static string NewList => Language == AppLanguage.Chinese ? "+ 新建列表" : "+ New list";
-    public static string NewListText => Language == AppLanguage.Chinese ? "新建列表" : "New list";
-    public static string NewGroup => Language == AppLanguage.Chinese ? "新建分组" : "New group";
-    public static string NewListGroup => Language == AppLanguage.Chinese ? "新建列表分组" : "New list group";
-    public static string DeleteListGroup => Language == AppLanguage.Chinese ? "删除列表分组" : "Delete list group";
-    public static string ConfirmDeleteListGroupMsg(string name) =>
-        Language == AppLanguage.Chinese ? $"确定删除分组 \"{name}\" 吗？组内列表将变为未分组。" : $"Delete group \"{name}\"? Lists will become ungrouped.";
-    public static string TaskDetails => Language == AppLanguage.Chinese ? "任务详情" : "Task Details";
-    public static string Steps => Language == AppLanguage.Chinese ? "步骤" : "STEPS";
-    public static string AddStep => Language == AppLanguage.Chinese ? "添加步骤" : "Add a step";
-    public static string Closed => Language == AppLanguage.Chinese ? "已关闭" : "CLOSED";
-    public static string Completed => Language == AppLanguage.Chinese ? "已完成" : "Completed";
-    public static string Cancelled => Language == AppLanguage.Chinese ? "已取消" : "Cancelled";
-    public static string EditCloseTime => Language == AppLanguage.Chinese ? "编辑关闭时间..." : "Edit close time...";
-    public static string Notes => Language == AppLanguage.Chinese ? "备注" : "NOTES";
-    public static string Attachments => Language == AppLanguage.Chinese ? "附件" : "ATTACHMENTS";
-    public static string AddAttachment => Language == AppLanguage.Chinese ? "添加附件" : "Add attachment";
-    public static string NoAttachments => Language == AppLanguage.Chinese ? "暂无附件" : "No attachments";
-    public static string AttachmentOpenFailed(string name) => Language == AppLanguage.Chinese
-        ? $"无法打开附件 \"{name}\"" : $"Couldn't open attachment \"{name}\"";
-    public static string AttachmentTooLarge(int mb) => Language == AppLanguage.Chinese
-        ? $"单个附件不能超过 {mb} MB" : $"Attachment too large (max {mb} MB)";
-    public static string Delete => Language == AppLanguage.Chinese ? "删除" : "Delete";
-    public static string Complete => Language == AppLanguage.Chinese ? "完成" : "Complete";
-    public static string Cancel => Language == AppLanguage.Chinese ? "取消" : "Cancel";
-    public static string OK => Language == AppLanguage.Chinese ? "确定" : "OK";
-    public static string AddToMyDay => Language == AppLanguage.Chinese ? "添加到我的一天" : "Add to My Day";
-    public static string RemoveFromMyDay => Language == AppLanguage.Chinese ? "从我的一天移除" : "Remove from My Day";
-    public static string MarkImportant => Language == AppLanguage.Chinese ? "标记为重要" : "Mark as important";
-    public static string RemoveImportance => Language == AppLanguage.Chinese ? "取消重要标记" : "Remove importance";
-    public static string MoveToList => Language == AppLanguage.Chinese ? "移动到列表" : "Move to list";
-    public static string MoveToGroup => Language == AppLanguage.Chinese ? "移动到分组" : "Move to group";
-    public static string Ungrouped => Language == AppLanguage.Chinese ? "未分组" : "Ungrouped";
-    public static string DropToUngroupHint => Language == AppLanguage.Chinese ? "拖到此处移出分组" : "Drop here to ungroup";
-    public static string RemoveFromGroup => Language == AppLanguage.Chinese ? "从分组移出" : "Remove from group";
-    public static string ReopenTask => Language == AppLanguage.Chinese ? "重新打开" : "Reopen task";
-    public static string DeleteTask => Language == AppLanguage.Chinese ? "删除任务" : "Delete task";
-    public static string DeleteGroup => Language == AppLanguage.Chinese ? "删除分组" : "Delete group";
-    public static string Rename => Language == AppLanguage.Chinese ? "重命名" : "Rename";
-    public static string Group => Language == AppLanguage.Chinese ? "分组" : "Group";
-    public static string RenameList => Language == AppLanguage.Chinese ? "重命名列表" : "Rename list";
-    public static string DeleteList => Language == AppLanguage.Chinese ? "删除列表" : "Delete list";
-    public static string ManageTags => Language == AppLanguage.Chinese ? "管理标签" : "Manage Tags";
-    public static string AddTag => Language == AppLanguage.Chinese ? "添加标签" : "Add tag";
-    public static string NoTags => Language == AppLanguage.Chinese ? "暂无标签" : "No tags";
-    public static string ConfirmDelete => Language == AppLanguage.Chinese ? "确认删除" : "Delete";
-    public static string ConfirmDeleteMsg(string name) =>
-        Language == AppLanguage.Chinese ? $"确定删除 \"{name}\" 吗？" : $"Delete \"{name}\"?";
-    public static string TagNameExists(string name) =>
-        Language == AppLanguage.Chinese ? $"标签名 \"{name}\" 已存在" : $"A tag named \"{name}\" already exists";
-    public static string ConfirmDeleteGroupMsg(string name) =>
-        Language == AppLanguage.Chinese ? $"确定删除分组 \"{name}\" 吗？任务将变为未分组。" : $"Delete group \"{name}\"? Tasks will become ungrouped.";
-    public static string CompletedSection => Language == AppLanguage.Chinese ? "已完成" : "Completed";
-    public static string EditTime => Language == AppLanguage.Chinese ? "编辑关闭时间" : "Edit Close Time";
-    public static string Date => Language == AppLanguage.Chinese ? "日期" : "Date";
-    public static string Time => Language == AppLanguage.Chinese ? "时间" : "Time";
-    public static string Save => Language == AppLanguage.Chinese ? "保存" : "Save";
-    public static string TagPlaceholder => Language == AppLanguage.Chinese ? "新标签名" : "New tag name";
-    public static string Add => Language == AppLanguage.Chinese ? "添加" : "Add";
-    public static string Done => Language == AppLanguage.Chinese ? "完成" : "Done";
-    public static string Today => Language == AppLanguage.Chinese ? "今天" : "Today";
-    public static string Tomorrow => Language == AppLanguage.Chinese ? "明天" : "Tomorrow";
-    public static string ThisWeek => Language == AppLanguage.Chinese ? "下周" : "Next Week";
-    public static string Later => Language == AppLanguage.Chinese ? "稍后" : "Later";
-    public static string PickDate => Language == AppLanguage.Chinese ? "选择日期..." : "Pick a date...";
-    public static string NoDueDate => Language == AppLanguage.Chinese ? "无截止日期" : "No Due Date";
+    public static string AppTitle => S("AppTitle");
+    public static string Search => S("Search");
+    public static string SearchResults => S("SearchResults");
+    public static string System => S("System");
+    public static string Lists => S("Lists");
+    public static string Tags => S("Tags");
+    public static string AddTask => S("AddTask");
+    public static string NewList => S("NewList");
+    public static string NewListText => S("NewListText");
+    public static string NewGroup => S("NewGroup");
+    public static string NewListGroup => S("NewListGroup");
+    public static string DeleteListGroup => S("DeleteListGroup");
+    public static string TaskDetails => S("TaskDetails");
+    public static string Steps => S("Steps");
+    public static string AddStep => S("AddStep");
+    public static string Closed => S("Closed");
+    public static string Completed => S("Completed");
+    public static string Cancelled => S("Cancelled");
+    public static string EditCloseTime => S("EditCloseTime");
+    public static string Notes => S("Notes");
+    public static string Attachments => S("Attachments");
+    public static string AddAttachment => S("AddAttachment");
+    public static string NoAttachments => S("NoAttachments");
+    public static string Delete => S("Delete");
+    public static string Complete => S("Complete");
+    public static string Cancel => S("Cancel");
+    public static string OK => S("OK");
+    public static string AddToMyDay => S("AddToMyDay");
+    public static string RemoveFromMyDay => S("RemoveFromMyDay");
+    public static string MarkImportant => S("MarkImportant");
+    public static string RemoveImportance => S("RemoveImportance");
+    public static string MoveToList => S("MoveToList");
+    public static string MoveToGroup => S("MoveToGroup");
+    public static string Ungrouped => S("Ungrouped");
+    public static string DropToUngroupHint => S("DropToUngroupHint");
+    public static string RemoveFromGroup => S("RemoveFromGroup");
+    public static string ReopenTask => S("ReopenTask");
+    public static string DeleteTask => S("DeleteTask");
+    public static string DeleteGroup => S("DeleteGroup");
+    public static string Rename => S("Rename");
+    public static string Group => S("Group");
+    public static string RenameList => S("RenameList");
+    public static string DeleteList => S("DeleteList");
+    public static string ManageTags => S("ManageTags");
+    public static string AddTag => S("AddTag");
+    public static string NoTags => S("NoTags");
+    public static string ConfirmDelete => S("ConfirmDelete");
+    public static string CompletedSection => S("CompletedSection");
+    public static string EditTime => S("EditTime");
+    public static string Date => S("Date");
+    public static string Time => S("Time");
+    public static string Save => S("Save");
+    public static string TagPlaceholder => S("TagPlaceholder");
+    public static string Add => S("Add");
+    public static string Done => S("Done");
+    public static string Today => S("Today");
+    public static string Tomorrow => S("Tomorrow");
+    public static string ThisWeek => S("ThisWeek");
+    public static string Later => S("Later");
+    public static string PickDate => S("PickDate");
+    public static string NoDueDate => S("NoDueDate");
 
     // System list display names
-    public static string MyDay => Language == AppLanguage.Chinese ? "我的一天" : "My Day";
-    public static string Important => Language == AppLanguage.Chinese ? "重要" : "Important";
-    public static string Planned => Language == AppLanguage.Chinese ? "计划内" : "Planned";
-    public static string Tasks => Language == AppLanguage.Chinese ? "任务" : "Tasks";
-    public static string DbPathTitle => Language == AppLanguage.Chinese ? "数据库路径" : "Database Path";
-    public static string DbPathPrompt => Language == AppLanguage.Chinese ? "请输入数据库文件的完整路径。修改后当前数据将自动迁移到新位置。" : "Enter the full path for the database file. Existing data will be migrated to the new location.";
-    public static string DbPathChanged => Language == AppLanguage.Chinese ? "路径已更改。请重启应用以使用新数据库位置。" : "Path changed. Please restart the app to use the new database location.";
-    public static string SelectDbFile => Language == AppLanguage.Chinese ? "选择数据库文件" : "Select database file";
-    public static string DbFileFilter => Language == AppLanguage.Chinese
-        ? "数据库文件 (*.db)|*.db|所有文件 (*.*)|*.*"
-        : "Database files (*.db)|*.db|All files (*.*)|*.*";
-    public static string InvalidPathMsg => Language == AppLanguage.Chinese ? "请输入有效路径。" : "Please enter a valid path.";
-    public static string Error => Language == AppLanguage.Chinese ? "错误" : "Error";
-    public static string Yesterday => Language == AppLanguage.Chinese ? "昨天" : "Yesterday";
-    public static string NewListName => Language == AppLanguage.Chinese ? "新列表" : "New list";
-    public static string MarkIncomplete => Language == AppLanguage.Chinese ? "标记为未完成" : "Mark incomplete";
-    public static string PromoteToTask => Language == AppLanguage.Chinese ? "升级为任务" : "Promote to task";
+    public static string MyDay => S("MyDay");
+    public static string Important => S("Important");
+    public static string Planned => S("Planned");
+    public static string Tasks => S("Tasks");
+    public static string DbPathTitle => S("DbPathTitle");
+    public static string DbPathPrompt => S("DbPathPrompt");
+    public static string DbPathChanged => S("DbPathChanged");
+    public static string SelectDbFile => S("SelectDbFile");
+    public static string DbFileFilter => S("DbFileFilter");
+    public static string InvalidPathMsg => S("InvalidPathMsg");
+    public static string Error => S("Error");
+    public static string Yesterday => S("Yesterday");
+    public static string NewListName => S("NewListName");
+    public static string MarkIncomplete => S("MarkIncomplete");
+    public static string PromoteToTask => S("PromoteToTask");
 
     // Undo bar + reminder toast buttons
-    public static string Undo => Language == AppLanguage.Chinese ? "撤销" : "Undo";
-    public static string UndoCompleteMsg(string title) =>
-        Language == AppLanguage.Chinese ? $"已完成「{title}」" : $"Completed \"{title}\"";
-    public static string UndoDeleteMsg(string title) =>
-        Language == AppLanguage.Chinese ? $"已删除「{title}」" : $"Deleted \"{title}\"";
-    public static string SnoozeReminder => Language == AppLanguage.Chinese ? "稍后提醒" : "Snooze";
-    public static string OpenTask => Language == AppLanguage.Chinese ? "打开任务" : "Open task";
+    public static string Undo => S("Undo");
+    public static string SnoozeReminder => S("SnoozeReminder");
+    public static string OpenTask => S("OpenTask");
 
     // Reminder toast auto-close duration (settings)
-    public static string ReminderToastDuration => Language == AppLanguage.Chinese ? "提醒显示时长" : "Toast duration";
-    public static string ToastSeconds5 => Language == AppLanguage.Chinese ? "5 秒" : "5s";
-    public static string ToastSeconds10 => Language == AppLanguage.Chinese ? "10 秒" : "10s";
-    public static string ToastSeconds30 => Language == AppLanguage.Chinese ? "30 秒" : "30s";
-    public static string ToastNeverAutoClose => Language == AppLanguage.Chinese ? "不自动关闭" : "Keep open";
-    public static string ReminderToastPauseHint => Language == AppLanguage.Chinese ? "悬停卡片时暂停倒计时" : "Hovering the card pauses the countdown";
+    public static string ReminderToastDuration => S("ReminderToastDuration");
+    public static string ToastSeconds5 => S("ToastSeconds5");
+    public static string ToastSeconds10 => S("ToastSeconds10");
+    public static string ToastSeconds30 => S("ToastSeconds30");
+    public static string ToastNeverAutoClose => S("ToastNeverAutoClose");
+    public static string ReminderToastPauseHint => S("ReminderToastPauseHint");
 
     // Keyboard shortcuts (settings hint)
-    public static string KeyboardShortcuts => Language == AppLanguage.Chinese ? "键盘快捷键" : "Keyboard shortcuts";
-    public static string KeyboardShortcutsHint => Language == AppLanguage.Chinese
-        ? "Ctrl+N 新建任务\nCtrl+F 搜索\nCtrl+Enter 完成任务\nCtrl+Z 撤销\nCtrl+1–4 切换列表\nCtrl+, 设置"
-        : "Ctrl+N New task\nCtrl+F Search\nCtrl+Enter Complete task\nCtrl+Z Undo\nCtrl+1–4 Switch list\nCtrl+, Settings";
+    public static string KeyboardShortcuts => S("KeyboardShortcuts");
+    public static string KeyboardShortcutsHint => S("KeyboardShortcutsHint");
 
     // Relative time (TimestampToRelativeStringConverter)
-    public static string JustNow => Language == AppLanguage.Chinese ? "刚刚" : "just now";
-    public static string MinutesAgo(int n) => Language == AppLanguage.Chinese ? $"{n} 分钟前" : $"{n}m ago";
-    public static string HoursAgo(int n) => Language == AppLanguage.Chinese ? $"{n} 小时前" : $"{n}h ago";
-    public static string DaysAgo(int n) => Language == AppLanguage.Chinese ? $"{n} 天前" : $"{n}d ago";
-    // English date strings use InvariantCulture so they stay English regardless of
-    // the OS culture (a zh-CN system must not render "Mar 5, 2024" as "3月 5, 2024").
+    public static string JustNow => S("JustNow");
+    // The date methods format with InvariantCulture so an English user on a zh-CN
+    // system still sees "Mar 5, 2024" — the format templates themselves come from
+    // RESX (RelativeDateFormat / ShortDateFormat / ReminderTimeFormat).
     public static string RelativeDate(DateTime dt) =>
-        Language == AppLanguage.Chinese ? $"{dt.Year}年{dt.Month}月{dt.Day}日" : dt.ToString("MMM d, yyyy", CultureInfo.InvariantCulture);
+        string.Format(CultureInfo.InvariantCulture, S("RelativeDateFormat"), dt);
 
     // Short date (DueDateToStringConverter)
     public static string ShortDate(DateTime dt) =>
-        Language == AppLanguage.Chinese ? $"{dt.Month}月{dt.Day}日" : dt.ToString("MMM d", CultureInfo.InvariantCulture);
+        string.Format(CultureInfo.InvariantCulture, S("ShortDateFormat"), dt);
     public static string ReminderTime(DateTime dt) =>
-        Language == AppLanguage.Chinese ? $"{dt.Month}月{dt.Day}日 {dt:HH:mm}" : dt.ToString("MMM d, HH:mm", CultureInfo.InvariantCulture);
+        string.Format(CultureInfo.InvariantCulture, S("ReminderTimeFormat"), dt);
     // A reminder falling today shows just the time on the task row.
     public static string ReminderTimeOnly(DateTime dt) => dt.ToString("HH:mm", CultureInfo.InvariantCulture);
     // A reminder on another day shows just the date on the task row (no clock time).
     public static string ReminderDateOnly(DateTime dt) =>
-        Language == AppLanguage.Chinese ? $"{dt.Month}月{dt.Day}日" : dt.ToString("MMM d", CultureInfo.InvariantCulture);
-    public static string Reminder => Language == AppLanguage.Chinese ? "提醒" : "Reminder";
-    public static string AddDueDate => Language == AppLanguage.Chinese ? "添加截止日期" : "Add due date";
-    public static string AddReminder => Language == AppLanguage.Chinese ? "添加提醒" : "Add reminder";
-    public static string Recurrence => Language == AppLanguage.Chinese ? "重复" : "Repeat";
-    public static string AddRecurrence => Language == AppLanguage.Chinese ? "添加重复" : "Add recurrence";
-    public static string RepeatNone => Language == AppLanguage.Chinese ? "不重复" : "Doesn't repeat";
-    public static string RepeatDaily => Language == AppLanguage.Chinese ? "每天" : "Daily";
-    public static string RepeatWeekdays => Language == AppLanguage.Chinese ? "每个工作日" : "Every weekday";
-    public static string RepeatWeekly => Language == AppLanguage.Chinese ? "每周" : "Weekly";
-    public static string RepeatMonthly => Language == AppLanguage.Chinese ? "每月" : "Monthly";
-    public static string RepeatYearly => Language == AppLanguage.Chinese ? "每年" : "Yearly";
-    public static string SkipOccurrence => Language == AppLanguage.Chinese ? "取消本次" : "Cancel this occurrence";
-    public static string EndSeries => Language == AppLanguage.Chinese ? "取消定时任务" : "Stop repeating";
+        string.Format(CultureInfo.InvariantCulture, S("ShortDateFormat"), dt);
+    public static string Reminder => S("Reminder");
+    public static string AddDueDate => S("AddDueDate");
+    public static string AddReminder => S("AddReminder");
+    public static string Recurrence => S("Recurrence");
+    public static string AddRecurrence => S("AddRecurrence");
+    public static string RepeatNone => S("RepeatNone");
+    public static string RepeatDaily => S("RepeatDaily");
+    public static string RepeatWeekdays => S("RepeatWeekdays");
+    public static string RepeatWeekly => S("RepeatWeekly");
+    public static string RepeatMonthly => S("RepeatMonthly");
+    public static string RepeatYearly => S("RepeatYearly");
+    public static string SkipOccurrence => S("SkipOccurrence");
+    public static string EndSeries => S("EndSeries");
     public static string RecurrenceName(RecurrenceFrequency freq) => freq switch
     {
         RecurrenceFrequency.Daily => RepeatDaily,
@@ -185,168 +186,148 @@ public static class Loc
         RecurrenceFrequency.Yearly => RepeatYearly,
         _ => RepeatNone,
     };
-    public static string UpdateAvailable => Language == AppLanguage.Chinese ? "发现新版本" : "Update available";
-    public static string DownloadUpdate => Language == AppLanguage.Chinese ? "立即更新" : "Update now";
-    public static string RemindLater => Language == AppLanguage.Chinese ? "以后再说" : "Remind me later";
-    public static string SkipVersion => Language == AppLanguage.Chinese ? "跳过此版本" : "Skip this version";
-    public static string UpdateDownloaded => Language == AppLanguage.Chinese ? "已下载到" : "Downloaded to";
-    // latest is guaranteed non-empty here: AutoUpdater throws MissingFieldException
-    // (→ the failure branch) before a "no update" result can reach the UI.
+    public static string UpdateAvailable => S("UpdateAvailable");
+    public static string DownloadUpdate => S("DownloadUpdate");
+    public static string RemindLater => S("RemindLater");
+    public static string SkipVersion => S("SkipVersion");
+    public static string UpdateDownloaded => S("UpdateDownloaded");
     public static string UpdateUpToDate(string latest) =>
-        Language == AppLanguage.Chinese
-            ? $"已是最新版本（最新版本 {latest}）"
-            : $"You're up to date (latest version {latest})";
-    public static string UpdateSourceNoInfo => Language == AppLanguage.Chinese
-        ? "无法从更新源获取版本信息，请检查网络或更新源配置"
-        : "Couldn't get version info from any update source; check your network or source configuration";
+        string.Format(S("UpdateUpToDate"), latest);
+    public static string UpdateSourceNoInfo => S("UpdateSourceNoInfo");
     public static string UpdateCheckFailed(string detail) =>
-        Language == AppLanguage.Chinese ? $"检查更新失败：{detail}" : $"Update check failed: {detail}";
+        string.Format(S("UpdateCheckFailed"), detail);
 
     // Settings page
-    public static string Settings => Language == AppLanguage.Chinese ? "设置" : "Settings";
-    public static string Back => Language == AppLanguage.Chinese ? "返回" : "Back";
-    public static string General => Language == AppLanguage.Chinese ? "常规" : "General";
-    public static string Appearance => Language == AppLanguage.Chinese ? "外观" : "Appearance";
-    public static string Data => Language == AppLanguage.Chinese ? "数据" : "Data";
-    public static string Updates => Language == AppLanguage.Chinese ? "更新" : "Updates";
-    public static string RemindersSection => Language == AppLanguage.Chinese ? "提醒" : "Reminders";
-    public static string LanguageName => Language == AppLanguage.Chinese ? "语言" : "Language";
-    public static string Theme => Language == AppLanguage.Chinese ? "主题" : "Theme";
-    public static string LightTheme => Language == AppLanguage.Chinese ? "浅色" : "Light";
-    public static string DarkTheme => Language == AppLanguage.Chinese ? "深色" : "Dark";
-    public static string RestartToApply => Language == AppLanguage.Chinese ? "重启后生效" : "Takes effect after restart";
-    public static string AppliesImmediately => Language == AppLanguage.Chinese ? "即时生效" : "Applies immediately";
-    public static string Change => Language == AppLanguage.Chinese ? "更改" : "Change";
-    public static string ExportBackup => Language == AppLanguage.Chinese ? "导出备份" : "Export backup";
-    public static string RestoreBackup => Language == AppLanguage.Chinese ? "从备份恢复" : "Restore from backup";
+    public static string Settings => S("Settings");
+    public static string Back => S("Back");
+    public static string General => S("General");
+    public static string Appearance => S("Appearance");
+    public static string Data => S("Data");
+    public static string Updates => S("Updates");
+    public static string RemindersSection => S("RemindersSection");
+    public static string LanguageName => S("LanguageName");
+    public static string Theme => S("Theme");
+    public static string LightTheme => S("LightTheme");
+    public static string DarkTheme => S("DarkTheme");
+    public static string RestartToApply => S("RestartToApply");
+    public static string AppliesImmediately => S("AppliesImmediately");
+    public static string Change => S("Change");
+    public static string ExportBackup => S("ExportBackup");
+    public static string RestoreBackup => S("RestoreBackup");
     public static string BackupSaved(string path) =>
-        Language == AppLanguage.Chinese ? $"备份已导出到：{path}" : $"Backup exported to: {path}";
-    public static string RestoreStaged => Language == AppLanguage.Chinese
-        ? "备份已暂存，将在下次启动时替换当前数据。" : "Backup staged. It will replace the current data on next startup.";
-    public static string SelectBackupFile => Language == AppLanguage.Chinese ? "选择备份文件" : "Select backup file";
-    public static string BackupFileFilter => Language == AppLanguage.Chinese
-        ? "数据库备份 (*.db)|*.db|所有文件 (*.*)|*.*"
-        : "Database backup (*.db)|*.db|All files (*.*)|*.*";
-    public static string CheckForUpdatesOnStartup => Language == AppLanguage.Chinese ? "启动时检查更新" : "Check for updates on startup";
-    public static string UpdateSources => Language == AppLanguage.Chinese ? "更新源" : "Update sources";
-    public static string AddSource => Language == AppLanguage.Chinese ? "添加源" : "Add source";
-    public static string RemoveSource => Language == AppLanguage.Chinese ? "移除" : "Remove";
-    public static string CheckUpdatesNow => Language == AppLanguage.Chinese ? "立即检查更新" : "Check for updates now";
-    public static string EnableReminderNotifications => Language == AppLanguage.Chinese ? "启用提醒通知" : "Enable reminder notifications";
-    public static string Apply => Language == AppLanguage.Chinese ? "应用" : "Apply";
-    public static string MoreColors => Language == AppLanguage.Chinese ? "更多颜色…" : "More colors…";
+        string.Format(S("BackupSaved"), path);
+    public static string RestoreStaged => S("RestoreStaged");
+    public static string SelectBackupFile => S("SelectBackupFile");
+    public static string BackupFileFilter => S("BackupFileFilter");
+    public static string CheckForUpdatesOnStartup => S("CheckForUpdatesOnStartup");
+    public static string UpdateSources => S("UpdateSources");
+    public static string AddSource => S("AddSource");
+    public static string RemoveSource => S("RemoveSource");
+    public static string CheckUpdatesNow => S("CheckUpdatesNow");
+    public static string EnableReminderNotifications => S("EnableReminderNotifications");
+    public static string Apply => S("Apply");
+    public static string MoreColors => S("MoreColors");
     // List theme dialog (ADR-014)
-    public static string ListTheme => Language == AppLanguage.Chinese ? "列表主题" : "List theme";
-    public static string NoBackground => Language == AppLanguage.Chinese ? "无背景" : "No background";
-    public static string SolidColor => Language == AppLanguage.Chinese ? "纯色" : "Solid color";
-    public static string ChooseImage => Language == AppLanguage.Chinese ? "选择图片…" : "Choose image…";
-    public static string RemoveImage => Language == AppLanguage.Chinese ? "移除图片" : "Remove image";
+    public static string ListTheme => S("ListTheme");
+    public static string NoBackground => S("NoBackground");
+    public static string SolidColor => S("SolidColor");
+    public static string ChooseImage => S("ChooseImage");
+    public static string RemoveImage => S("RemoveImage");
     public static string ImageTooLarge(int mb) =>
-        Language == AppLanguage.Chinese ? $"图片不能超过 {mb} MB" : $"Image too large (max {mb} MB)";
-    public static string ImageFileFilter => Language == AppLanguage.Chinese
-        ? "图片文件 (*.jpg;*.jpeg;*.png;*.bmp;*.gif)|*.jpg;*.jpeg;*.png;*.bmp;*.gif|所有文件 (*.*)|*.*"
-        : "Images (*.jpg;*.jpeg;*.png;*.bmp;*.gif)|*.jpg;*.jpeg;*.png;*.bmp;*.gif|All files (*.*)|*.*";
-    public static string ListThemeImageLocalHint => Language == AppLanguage.Chinese
-        ? "背景图片仅保存在本设备，不会同步。"
-        : "Background images stay on this device and won't sync.";
-    public static string BackgroundStrength => Language == AppLanguage.Chinese
-        ? "背景强弱" : "Background strength";
-    public static string BackgroundStrengthLocalHint => Language == AppLanguage.Chinese
-        ? "背景强弱仅本设备生效，不同步。"
-        : "Background strength is local to this device and won't sync.";
-    public static string CardOpacity => Language == AppLanguage.Chinese
-        ? "卡片不透明度" : "Card opacity";
-    public static string CardOpacityLocalHint => Language == AppLanguage.Chinese
-        ? "卡片不透明度仅本设备生效，不同步；越高越不透明，越能盖住背景。"
-        : "Card opacity is local to this device and won't sync; higher is more solid.";
-    public static string TitleTextColor => Language == AppLanguage.Chinese
-        ? "标题文字颜色" : "Title text color";
-    public static string TitleTextAuto => Language == AppLanguage.Chinese
-        ? "自动（推荐）" : "Auto (recommended)";
-    public static string TitleTextDark => Language == AppLanguage.Chinese
-        ? "深色" : "Dark";
-    public static string TitleTextLight => Language == AppLanguage.Chinese
-        ? "浅色" : "Light";
-    public static string TitleTextPickHint => Language == AppLanguage.Chinese
-        ? "标题栏随列表主题铺满背景，文字深浅按背景调整以保证可读。"
-        : "The header follows the list theme; text light/dark keeps it readable.";
-    public static string TitleTextNoRecommend => Language == AppLanguage.Chinese
-        ? "未设置背景，标题文字跟随应用主题。"
-        : "No theme set — the title follows the app theme.";
+        string.Format(S("ImageTooLarge"), mb);
+    public static string ImageFileFilter => S("ImageFileFilter");
+    public static string ListThemeImageLocalHint => S("ListThemeImageLocalHint");
+    public static string BackgroundStrength => S("BackgroundStrength");
+    public static string BackgroundStrengthLocalHint => S("BackgroundStrengthLocalHint");
+    public static string CardOpacity => S("CardOpacity");
+    public static string CardOpacityLocalHint => S("CardOpacityLocalHint");
+    public static string TitleTextColor => S("TitleTextColor");
+    public static string TitleTextAuto => S("TitleTextAuto");
+    public static string TitleTextDark => S("TitleTextDark");
+    public static string TitleTextLight => S("TitleTextLight");
+    public static string TitleTextPickHint => S("TitleTextPickHint");
+    public static string TitleTextNoRecommend => S("TitleTextNoRecommend");
     public static string TitleTextRecommend(bool light) => Language == AppLanguage.Chinese
         ? $"自动：推荐{(light ? TitleTextLight : TitleTextDark)}文字"
         : $"Auto: recommends {(light ? TitleTextLight : TitleTextDark)} text";
-    public static string PlayReminderSound => Language == AppLanguage.Chinese ? "播放提示音" : "Play reminder sound";
-    public static string ReminderRingtone => Language == AppLanguage.Chinese ? "提醒铃声" : "Reminder ringtone";
-    public static string DefaultRingtone => Language == AppLanguage.Chinese ? "默认铃声" : "Default ringtone";
-    public static string TestSound => Language == AppLanguage.Chinese ? "试听" : "Test";
-    public static string ChooseSound => Language == AppLanguage.Chinese ? "选择铃声…" : "Choose ringtone…";
-    public static string ResetSound => Language == AppLanguage.Chinese ? "重置" : "Reset";
-    public static string SoundMissing => Language == AppLanguage.Chinese ? "文件不存在" : "file missing";
-    public static string ChooseReminderSound => Language == AppLanguage.Chinese ? "选择提醒铃声" : "Choose reminder ringtone";
-    public static string SoundFileFilter => Language == AppLanguage.Chinese
-        ? "音频文件 (*.wav)|*.wav|所有文件 (*.*)|*.*"
-        : "Audio files (*.wav)|*.wav|All files (*.*)|*.*";
-    public static string SoundFileHint => Language == AppLanguage.Chinese
-        ? "支持 .wav 音频文件；未设置时使用内置铃声（不依赖 Windows 系统音效方案）。"
-        : "WAV audio files. Uses the built-in chime when unset (independent of the Windows sound scheme).";
-    public static string InvalidTime => Language == AppLanguage.Chinese
-        ? "请输入有效时间（小时 0-23，分钟 0-59）"
-        : "Enter a valid time (hour 0-23, minute 0-59)";
-    public static string About => Language == AppLanguage.Chinese ? "关于" : "About";
-    public static string VersionLabel => Language == AppLanguage.Chinese ? "版本" : "Version";
-    public static string AppDescription => Language == AppLanguage.Chinese
-        ? "一款 Fluent Design 风格的待办事项桌面应用"
-        : "A Fluent Design-style todo desktop app";
-    public static string Homepage => Language == AppLanguage.Chinese ? "项目主页" : "Homepage";
-    public static string ThirdPartyLicenses => Language == AppLanguage.Chinese ? "第三方组件许可" : "Third-party licenses";
+    public static string PlayReminderSound => S("PlayReminderSound");
+    public static string ReminderRingtone => S("ReminderRingtone");
+    public static string DefaultRingtone => S("DefaultRingtone");
+    public static string TestSound => S("TestSound");
+    public static string ChooseSound => S("ChooseSound");
+    public static string ResetSound => S("ResetSound");
+    public static string SoundMissing => S("SoundMissing");
+    public static string ChooseReminderSound => S("ChooseReminderSound");
+    public static string SoundFileFilter => S("SoundFileFilter");
+    public static string SoundFileHint => S("SoundFileHint");
+    public static string InvalidTime => S("InvalidTime");
+    public static string About => S("About");
+    public static string VersionLabel => S("VersionLabel");
+    public static string AppDescription => S("AppDescription");
+    public static string Homepage => S("Homepage");
+    public static string ThirdPartyLicenses => S("ThirdPartyLicenses");
 
     // Sync settings
-    public static string SyncSectionTitle => Language == AppLanguage.Chinese ? "同步" : "Sync";
-    public static string SyncEnabledLabel => Language == AppLanguage.Chinese ? "启用多设备同步" : "Enable multi-device sync";
-    public static string SyncServerUrlLabel => Language == AppLanguage.Chinese ? "服务器地址" : "Server URL";
-    public static string SyncKeyLabel => Language == AppLanguage.Chinese ? "同步密钥" : "Sync key";
-    public static string SyncDeviceId => Language == AppLanguage.Chinese ? "设备 ID" : "Device ID";
-    public static string SyncStatusLabel => Language == AppLanguage.Chinese ? "状态" : "Status";
-    public static string SyncNow => Language == AppLanguage.Chinese ? "立即同步" : "Sync now";
-    public static string SyncStatusDisabled => Language == AppLanguage.Chinese ? "同步已禁用" : "Sync disabled";
-    public static string SyncStatusNotConfigured => Language == AppLanguage.Chinese
-        ? "未配置服务器地址或同步密钥" : "Server URL or sync key not set";
-    public static string SyncStatusSyncing => Language == AppLanguage.Chinese ? "同步中…" : "Syncing…";
-    public static string SyncStatusOnline => Language == AppLanguage.Chinese ? "已同步" : "Synced";
-    public static string SyncStatusOffline => Language == AppLanguage.Chinese ? "同步失败" : "Sync failed";
-    public static string SyncStatusAuthFailed => Language == AppLanguage.Chinese ? "同步密钥被拒绝（401）" : "Sync key rejected (401)";
-    public static string SyncStatusVersionMismatch => Language == AppLanguage.Chinese
-        ? "服务器版本不符，请更新同步服务器" : "Server version mismatch — update the server";
-    public static string SyncNever => Language == AppLanguage.Chinese ? "从未同步" : "Never synced";
-    public static string SyncLastSynced => Language == AppLanguage.Chinese ? "上次同步" : "Last synced";
-    public static string SyncMyDayLocalHint => Language == AppLanguage.Chinese
-        ? "「我的一天」仅保存在本设备，不同步。重要标记与其他内容会跨设备同步。"
-        : "My Day stays on this device. Important markers and everything else sync across devices.";
+    public static string SyncSectionTitle => S("SyncSectionTitle");
+    public static string SyncEnabledLabel => S("SyncEnabledLabel");
+    public static string SyncServerUrlLabel => S("SyncServerUrlLabel");
+    public static string SyncKeyLabel => S("SyncKeyLabel");
+    public static string SyncDeviceId => S("SyncDeviceId");
+    public static string SyncStatusLabel => S("SyncStatusLabel");
+    public static string SyncNow => S("SyncNow");
+    public static string SyncStatusDisabled => S("SyncStatusDisabled");
+    public static string SyncStatusNotConfigured => S("SyncStatusNotConfigured");
+    public static string SyncStatusSyncing => S("SyncStatusSyncing");
+    public static string SyncStatusOnline => S("SyncStatusOnline");
+    public static string SyncStatusOffline => S("SyncStatusOffline");
+    public static string SyncStatusAuthFailed => S("SyncStatusAuthFailed");
+    public static string SyncStatusVersionMismatch => S("SyncStatusVersionMismatch");
+    public static string SyncNever => S("SyncNever");
+    public static string SyncLastSynced => S("SyncLastSynced");
+    public static string SyncMyDayLocalHint => S("SyncMyDayLocalHint");
 
     // Behavior + tray
-    public static string Behavior => Language == AppLanguage.Chinese ? "行为" : "Behavior";
-    public static string MinimizeToTrayOnClose => Language == AppLanguage.Chinese
-        ? "关闭主窗口时最小化到托盘" : "Minimize to tray on close";
-    public static string StickyShowTags => Language == AppLanguage.Chinese
-        ? "在便笺中显示标签" : "Show tags in sticky note";
-    public static string TaskRowDisplay => Language == AppLanguage.Chinese
-        ? "任务列表显示" : "Task row display";
-    public static string ShowTaskTags => Language == AppLanguage.Chinese
-        ? "显示标签" : "Show tags";
-    public static string ShowTaskSteps => Language == AppLanguage.Chinese
-        ? "显示步骤进度" : "Show step progress";
-    public static string ShowTaskDue => Language == AppLanguage.Chinese
-        ? "显示截止日期" : "Show due date";
-    public static string ShowTaskReminder => Language == AppLanguage.Chinese
-        ? "显示提醒" : "Show reminders";
-    public static string ShowTaskNote => Language == AppLanguage.Chinese
-        ? "显示备注图标" : "Show note icon";
-    public static string ShowTaskAttachments => Language == AppLanguage.Chinese
-        ? "显示附件图标" : "Show attachment icon";
-    public static string StickyNote => Language == AppLanguage.Chinese ? "迷你便笺" : "Sticky note";
-    public static string OpenMainWindow => Language == AppLanguage.Chinese ? "打开主界面" : "Open main window";
-    public static string ExitApp => Language == AppLanguage.Chinese ? "退出" : "Exit";
-    public static string StickyCloseNote => Language == AppLanguage.Chinese ? "关闭便笺" : "Close note";
-    public static string BackToMain => Language == AppLanguage.Chinese ? "返回主界面" : "Back to main";
+    public static string Behavior => S("Behavior");
+    public static string MinimizeToTrayOnClose => S("MinimizeToTrayOnClose");
+    public static string StickyShowTags => S("StickyShowTags");
+    public static string TaskRowDisplay => S("TaskRowDisplay");
+    public static string ShowTaskTags => S("ShowTaskTags");
+    public static string ShowTaskSteps => S("ShowTaskSteps");
+    public static string ShowTaskDue => S("ShowTaskDue");
+    public static string ShowTaskReminder => S("ShowTaskReminder");
+    public static string ShowTaskNote => S("ShowTaskNote");
+    public static string ShowTaskAttachments => S("ShowTaskAttachments");
+    public static string StickyNote => S("StickyNote");
+    public static string OpenMainWindow => S("OpenMainWindow");
+    public static string ExitApp => S("ExitApp");
+    public static string StickyCloseNote => S("StickyCloseNote");
+    public static string BackToMain => S("BackToMain");
+
+    // Format-template methods (values live in RESX with {0} placeholders)
+    public static string ConfirmDeleteListGroupMsg(string name) =>
+        string.Format(S("ConfirmDeleteListGroupMsg"), name);
+    public static string AttachmentOpenFailed(string name) =>
+        string.Format(S("AttachmentOpenFailed"), name);
+    public static string AttachmentTooLarge(int mb) =>
+        string.Format(S("AttachmentTooLarge"), mb);
+    public static string ConfirmDeleteMsg(string name) =>
+        string.Format(S("ConfirmDeleteMsg"), name);
+    public static string TagNameExists(string name) =>
+        string.Format(S("TagNameExists"), name);
+    public static string ConfirmDeleteGroupMsg(string name) =>
+        string.Format(S("ConfirmDeleteGroupMsg"), name);
+    public static string UndoCompleteMsg(string title) =>
+        string.Format(S("UndoCompleteMsg"), title);
+    public static string UndoDeleteMsg(string title) =>
+        string.Format(S("UndoDeleteMsg"), title);
+    public static string MinutesAgo(int n) =>
+        string.Format(S("MinutesAgo"), n);
+    public static string HoursAgo(int n) =>
+        string.Format(S("HoursAgo"), n);
+    public static string DaysAgo(int n) =>
+        string.Format(S("DaysAgo"), n);
+
+    // Detail-pane snooze menu (pluralized; Chinese has no plural so both match)
+    public static string HoursFromNow(int n) =>
+        string.Format(n == 1 ? S("HourLater") : S("HoursLater"), n);
 }

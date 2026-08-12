@@ -1,0 +1,442 @@
+About	en	About
+About	zh	关于
+Add	en	Add
+Add	zh	添加
+AddAttachment	en	Add attachment
+AddAttachment	zh	添加附件
+AddDueDate	en	Add due date
+AddDueDate	zh	添加截止日期
+AddRecurrence	en	Add recurrence
+AddRecurrence	zh	添加重复
+AddReminder	en	Add reminder
+AddReminder	zh	添加提醒
+AddSource	en	Add source
+AddSource	zh	添加源
+AddStep	en	Add a step
+AddStep	zh	添加步骤
+AddTag	en	Add tag
+AddTag	zh	添加标签
+AddTask	en	Add a task
+AddTask	zh	添加任务
+AddToMyDay	en	Add to My Day
+AddToMyDay	zh	添加到我的一天
+AppDescription	en	A Fluent Design-style todo desktop app
+AppDescription	zh	一款 Fluent Design 风格的待办事项桌面应用
+AppTitle	en	To Do
+AppTitle	zh	待办事项
+Appearance	en	Appearance
+Appearance	zh	外观
+AppliesImmediately	en	Applies immediately
+AppliesImmediately	zh	即时生效
+Apply	en	Apply
+Apply	zh	应用
+AttachmentOpenFailed	en	Couldn't open attachment "f.txt"
+AttachmentOpenFailed	zh	无法打开附件 "f.txt"
+AttachmentTooLarge	en	Attachment too large (max 8 MB)
+AttachmentTooLarge	zh	单个附件不能超过 8 MB
+Attachments	en	ATTACHMENTS
+Attachments	zh	附件
+Back	en	Back
+Back	zh	返回
+BackToMain	en	Back to main
+BackToMain	zh	返回主界面
+BackgroundStrength	en	Background strength
+BackgroundStrength	zh	背景强弱
+BackgroundStrengthLocalHint	en	Background strength is local to this device and won't sync.
+BackgroundStrengthLocalHint	zh	背景强弱仅本设备生效，不同步。
+BackupFileFilter	en	Database backup (*.db)|*.db|All files (*.*)|*.*
+BackupFileFilter	zh	数据库备份 (*.db)|*.db|所有文件 (*.*)|*.*
+BackupSaved	en	Backup exported to: C:\\backup\\app.db
+BackupSaved	zh	备份已导出到：C:\\backup\\app.db
+Behavior	en	Behavior
+Behavior	zh	行为
+Cancel	en	Cancel
+Cancel	zh	取消
+Cancelled	en	Cancelled
+Cancelled	zh	已取消
+CardOpacity	en	Card opacity
+CardOpacity	zh	卡片不透明度
+CardOpacityLocalHint	en	Card opacity is local to this device and won't sync; higher is more solid.
+CardOpacityLocalHint	zh	卡片不透明度仅本设备生效，不同步；越高越不透明，越能盖住背景。
+Change	en	Change
+Change	zh	更改
+CheckForUpdatesOnStartup	en	Check for updates on startup
+CheckForUpdatesOnStartup	zh	启动时检查更新
+CheckUpdatesNow	en	Check for updates now
+CheckUpdatesNow	zh	立即检查更新
+ChooseImage	en	Choose image…
+ChooseImage	zh	选择图片…
+ChooseReminderSound	en	Choose reminder ringtone
+ChooseReminderSound	zh	选择提醒铃声
+ChooseSound	en	Choose ringtone…
+ChooseSound	zh	选择铃声…
+Closed	en	CLOSED
+Closed	zh	已关闭
+Complete	en	Complete
+Complete	zh	完成
+Completed	en	Completed
+Completed	zh	已完成
+CompletedSection	en	Completed
+CompletedSection	zh	已完成
+ConfirmDelete	en	Delete
+ConfirmDelete	zh	确认删除
+ConfirmDeleteGroupMsg	en	Delete group "组A"? Tasks will become ungrouped.
+ConfirmDeleteGroupMsg	zh	确定删除分组 "组A" 吗？任务将变为未分组。
+ConfirmDeleteListGroupMsg	en	Delete group "A组"? Lists will become ungrouped.
+ConfirmDeleteListGroupMsg	zh	确定删除分组 "A组" 吗？组内列表将变为未分组。
+ConfirmDeleteMsg	en	Delete "收件箱"?
+ConfirmDeleteMsg	zh	确定删除 "收件箱" 吗？
+DarkTheme	en	Dark
+DarkTheme	zh	深色
+Data	en	Data
+Data	zh	数据
+Date	en	Date
+Date	zh	日期
+DaysAgo	en	2d ago
+DaysAgo	zh	2 天前
+DbFileFilter	en	Database files (*.db)|*.db|All files (*.*)|*.*
+DbFileFilter	zh	数据库文件 (*.db)|*.db|所有文件 (*.*)|*.*
+DbPathChanged	en	Path changed. Please restart the app to use the new database location.
+DbPathChanged	zh	路径已更改。请重启应用以使用新数据库位置。
+DbPathPrompt	en	Enter the full path for the database file. Existing data will be migrated to the new location.
+DbPathPrompt	zh	请输入数据库文件的完整路径。修改后当前数据将自动迁移到新位置。
+DbPathTitle	en	Database Path
+DbPathTitle	zh	数据库路径
+DefaultRingtone	en	Default ringtone
+DefaultRingtone	zh	默认铃声
+Delete	en	Delete
+Delete	zh	删除
+DeleteGroup	en	Delete group
+DeleteGroup	zh	删除分组
+DeleteList	en	Delete list
+DeleteList	zh	删除列表
+DeleteListGroup	en	Delete list group
+DeleteListGroup	zh	删除列表分组
+DeleteTask	en	Delete task
+DeleteTask	zh	删除任务
+Done	en	Done
+Done	zh	完成
+DownloadUpdate	en	Update now
+DownloadUpdate	zh	立即更新
+DropToUngroupHint	en	Drop here to ungroup
+DropToUngroupHint	zh	拖到此处移出分组
+EditCloseTime	en	Edit close time...
+EditCloseTime	zh	编辑关闭时间...
+EditTime	en	Edit Close Time
+EditTime	zh	编辑关闭时间
+EnableReminderNotifications	en	Enable reminder notifications
+EnableReminderNotifications	zh	启用提醒通知
+EndSeries	en	Stop repeating
+EndSeries	zh	取消定时任务
+Error	en	Error
+Error	zh	错误
+ExitApp	en	Exit
+ExitApp	zh	退出
+ExportBackup	en	Export backup
+ExportBackup	zh	导出备份
+General	en	General
+General	zh	常规
+Group	en	Group
+Group	zh	分组
+Homepage	en	Homepage
+Homepage	zh	项目主页
+HoursAgo	en	3h ago
+HoursAgo	zh	3 小时前
+ImageFileFilter	en	Images (*.jpg;*.jpeg;*.png;*.bmp;*.gif)|*.jpg;*.jpeg;*.png;*.bmp;*.gif|All files (*.*)|*.*
+ImageFileFilter	zh	图片文件 (*.jpg;*.jpeg;*.png;*.bmp;*.gif)|*.jpg;*.jpeg;*.png;*.bmp;*.gif|所有文件 (*.*)|*.*
+ImageTooLarge	en	Image too large (max 12 MB)
+ImageTooLarge	zh	图片不能超过 12 MB
+Important	en	Important
+Important	zh	重要
+InvalidPathMsg	en	Please enter a valid path.
+InvalidPathMsg	zh	请输入有效路径。
+InvalidTime	en	Enter a valid time (hour 0-23, minute 0-59)
+InvalidTime	zh	请输入有效时间（小时 0-23，分钟 0-59）
+JustNow	en	just now
+JustNow	zh	刚刚
+KeyboardShortcuts	en	Keyboard shortcuts
+KeyboardShortcuts	zh	键盘快捷键
+KeyboardShortcutsHint	en	Ctrl+N New task\nCtrl+F Search\nCtrl+Enter Complete task\nCtrl+Z Undo\nCtrl+1–4 Switch list\nCtrl+, Settings
+KeyboardShortcutsHint	zh	Ctrl+N 新建任务\nCtrl+F 搜索\nCtrl+Enter 完成任务\nCtrl+Z 撤销\nCtrl+1–4 切换列表\nCtrl+, 设置
+LanguageName	en	Language
+LanguageName	zh	语言
+Later	en	Later
+Later	zh	稍后
+LightTheme	en	Light
+LightTheme	zh	浅色
+ListTheme	en	List theme
+ListTheme	zh	列表主题
+ListThemeImageLocalHint	en	Background images stay on this device and won't sync.
+ListThemeImageLocalHint	zh	背景图片仅保存在本设备，不会同步。
+Lists	en	LISTS
+Lists	zh	列表
+ManageTags	en	Manage Tags
+ManageTags	zh	管理标签
+MarkImportant	en	Mark as important
+MarkImportant	zh	标记为重要
+MarkIncomplete	en	Mark incomplete
+MarkIncomplete	zh	标记为未完成
+MinimizeToTrayOnClose	en	Minimize to tray on close
+MinimizeToTrayOnClose	zh	关闭主窗口时最小化到托盘
+MinutesAgo	en	5m ago
+MinutesAgo	zh	5 分钟前
+MoreColors	en	More colors…
+MoreColors	zh	更多颜色…
+MoveToGroup	en	Move to group
+MoveToGroup	zh	移动到分组
+MoveToList	en	Move to list
+MoveToList	zh	移动到列表
+MyDay	en	My Day
+MyDay	zh	我的一天
+NewGroup	en	New group
+NewGroup	zh	新建分组
+NewList	en	+ New list
+NewList	zh	+ 新建列表
+NewListGroup	en	New list group
+NewListGroup	zh	新建列表分组
+NewListName	en	New list
+NewListName	zh	新列表
+NewListText	en	New list
+NewListText	zh	新建列表
+NoAttachments	en	No attachments
+NoAttachments	zh	暂无附件
+NoBackground	en	No background
+NoBackground	zh	无背景
+NoDueDate	en	No Due Date
+NoDueDate	zh	无截止日期
+NoTags	en	No tags
+NoTags	zh	暂无标签
+Notes	en	NOTES
+Notes	zh	备注
+OK	en	OK
+OK	zh	确定
+OpenMainWindow	en	Open main window
+OpenMainWindow	zh	打开主界面
+OpenTask	en	Open task
+OpenTask	zh	打开任务
+PickDate	en	Pick a date...
+PickDate	zh	选择日期...
+Planned	en	Planned
+Planned	zh	计划内
+PlayReminderSound	en	Play reminder sound
+PlayReminderSound	zh	播放提示音
+PromoteToTask	en	Promote to task
+PromoteToTask	zh	升级为任务
+Recurrence	en	Repeat
+Recurrence	zh	重复
+RecurrenceName	en	Daily
+RecurrenceName	zh	每天
+RelativeDate	en	Mar 5, 2024
+RelativeDate	zh	2024年3月5日
+RemindLater	en	Remind me later
+RemindLater	zh	以后再说
+Reminder	en	Reminder
+Reminder	zh	提醒
+ReminderDateOnly	en	Mar 5
+ReminderDateOnly	zh	3月5日
+ReminderRingtone	en	Reminder ringtone
+ReminderRingtone	zh	提醒铃声
+ReminderTime	en	Mar 5, 09:30
+ReminderTime	zh	3月5日 09:30
+ReminderTimeOnly	en	09:30
+ReminderTimeOnly	zh	09:30
+ReminderToastDuration	en	Toast duration
+ReminderToastDuration	zh	提醒显示时长
+ReminderToastPauseHint	en	Hovering the card pauses the countdown
+ReminderToastPauseHint	zh	悬停卡片时暂停倒计时
+RemindersSection	en	Reminders
+RemindersSection	zh	提醒
+RemoveFromGroup	en	Remove from group
+RemoveFromGroup	zh	从分组移出
+RemoveFromMyDay	en	Remove from My Day
+RemoveFromMyDay	zh	从我的一天移除
+RemoveImage	en	Remove image
+RemoveImage	zh	移除图片
+RemoveImportance	en	Remove importance
+RemoveImportance	zh	取消重要标记
+RemoveSource	en	Remove
+RemoveSource	zh	移除
+Rename	en	Rename
+Rename	zh	重命名
+RenameList	en	Rename list
+RenameList	zh	重命名列表
+ReopenTask	en	Reopen task
+ReopenTask	zh	重新打开
+RepeatDaily	en	Daily
+RepeatDaily	zh	每天
+RepeatMonthly	en	Monthly
+RepeatMonthly	zh	每月
+RepeatNone	en	Doesn't repeat
+RepeatNone	zh	不重复
+RepeatWeekdays	en	Every weekday
+RepeatWeekdays	zh	每个工作日
+RepeatWeekly	en	Weekly
+RepeatWeekly	zh	每周
+RepeatYearly	en	Yearly
+RepeatYearly	zh	每年
+ResetSound	en	Reset
+ResetSound	zh	重置
+RestartToApply	en	Takes effect after restart
+RestartToApply	zh	重启后生效
+RestoreBackup	en	Restore from backup
+RestoreBackup	zh	从备份恢复
+RestoreStaged	en	Backup staged. It will replace the current data on next startup.
+RestoreStaged	zh	备份已暂存，将在下次启动时替换当前数据。
+Save	en	Save
+Save	zh	保存
+Search	en	Search
+Search	zh	搜索
+SearchResults	en	Search Results
+SearchResults	zh	搜索结果
+SelectBackupFile	en	Select backup file
+SelectBackupFile	zh	选择备份文件
+SelectDbFile	en	Select database file
+SelectDbFile	zh	选择数据库文件
+Settings	en	Settings
+Settings	zh	设置
+ShortDate	en	Mar 5
+ShortDate	zh	3月5日
+ShowTaskAttachments	en	Show attachment icon
+ShowTaskAttachments	zh	显示附件图标
+ShowTaskDue	en	Show due date
+ShowTaskDue	zh	显示截止日期
+ShowTaskNote	en	Show note icon
+ShowTaskNote	zh	显示备注图标
+ShowTaskReminder	en	Show reminders
+ShowTaskReminder	zh	显示提醒
+ShowTaskSteps	en	Show step progress
+ShowTaskSteps	zh	显示步骤进度
+ShowTaskTags	en	Show tags
+ShowTaskTags	zh	显示标签
+SkipOccurrence	en	Cancel this occurrence
+SkipOccurrence	zh	取消本次
+SkipVersion	en	Skip this version
+SkipVersion	zh	跳过此版本
+SnoozeReminder	en	Snooze
+SnoozeReminder	zh	稍后提醒
+SolidColor	en	Solid color
+SolidColor	zh	纯色
+SoundFileFilter	en	Audio files (*.wav)|*.wav|All files (*.*)|*.*
+SoundFileFilter	zh	音频文件 (*.wav)|*.wav|所有文件 (*.*)|*.*
+SoundFileHint	en	WAV audio files. Uses the built-in chime when unset (independent of the Windows sound scheme).
+SoundFileHint	zh	支持 .wav 音频文件；未设置时使用内置铃声（不依赖 Windows 系统音效方案）。
+SoundMissing	en	file missing
+SoundMissing	zh	文件不存在
+Steps	en	STEPS
+Steps	zh	步骤
+StickyCloseNote	en	Close note
+StickyCloseNote	zh	关闭便笺
+StickyNote	en	Sticky note
+StickyNote	zh	迷你便笺
+StickyShowTags	en	Show tags in sticky note
+StickyShowTags	zh	在便笺中显示标签
+SyncDeviceId	en	Device ID
+SyncDeviceId	zh	设备 ID
+SyncEnabledLabel	en	Enable multi-device sync
+SyncEnabledLabel	zh	启用多设备同步
+SyncKeyLabel	en	Sync key
+SyncKeyLabel	zh	同步密钥
+SyncLastSynced	en	Last synced
+SyncLastSynced	zh	上次同步
+SyncMyDayLocalHint	en	My Day stays on this device. Important markers and everything else sync across devices.
+SyncMyDayLocalHint	zh	「我的一天」仅保存在本设备，不同步。重要标记与其他内容会跨设备同步。
+SyncNever	en	Never synced
+SyncNever	zh	从未同步
+SyncNow	en	Sync now
+SyncNow	zh	立即同步
+SyncSectionTitle	en	Sync
+SyncSectionTitle	zh	同步
+SyncServerUrlLabel	en	Server URL
+SyncServerUrlLabel	zh	服务器地址
+SyncStatusAuthFailed	en	Sync key rejected (401)
+SyncStatusAuthFailed	zh	同步密钥被拒绝（401）
+SyncStatusDisabled	en	Sync disabled
+SyncStatusDisabled	zh	同步已禁用
+SyncStatusLabel	en	Status
+SyncStatusLabel	zh	状态
+SyncStatusNotConfigured	en	Server URL or sync key not set
+SyncStatusNotConfigured	zh	未配置服务器地址或同步密钥
+SyncStatusOffline	en	Sync failed
+SyncStatusOffline	zh	同步失败
+SyncStatusOnline	en	Synced
+SyncStatusOnline	zh	已同步
+SyncStatusSyncing	en	Syncing…
+SyncStatusSyncing	zh	同步中…
+SyncStatusVersionMismatch	en	Server version mismatch — update the server
+SyncStatusVersionMismatch	zh	服务器版本不符，请更新同步服务器
+System	en	SYSTEM
+System	zh	系统
+TagNameExists	en	A tag named "工作" already exists
+TagNameExists	zh	标签名 "工作" 已存在
+TagPlaceholder	en	New tag name
+TagPlaceholder	zh	新标签名
+Tags	en	TAGS
+Tags	zh	标签
+TaskDetails	en	Task Details
+TaskDetails	zh	任务详情
+TaskRowDisplay	en	Task row display
+TaskRowDisplay	zh	任务列表显示
+Tasks	en	Tasks
+Tasks	zh	任务
+TestSound	en	Test
+TestSound	zh	试听
+Theme	en	Theme
+Theme	zh	主题
+ThirdPartyLicenses	en	Third-party licenses
+ThirdPartyLicenses	zh	第三方组件许可
+ThisWeek	en	Next Week
+ThisWeek	zh	下周
+Time	en	Time
+Time	zh	时间
+TitleTextAuto	en	Auto (recommended)
+TitleTextAuto	zh	自动（推荐）
+TitleTextColor	en	Title text color
+TitleTextColor	zh	标题文字颜色
+TitleTextDark	en	Dark
+TitleTextDark	zh	深色
+TitleTextLight	en	Light
+TitleTextLight	zh	浅色
+TitleTextNoRecommend	en	No theme set — the title follows the app theme.
+TitleTextNoRecommend	zh	未设置背景，标题文字跟随应用主题。
+TitleTextPickHint	en	The header follows the list theme; text light/dark keeps it readable.
+TitleTextPickHint	zh	标题栏随列表主题铺满背景，文字深浅按背景调整以保证可读。
+TitleTextRecommend	en	Auto: recommends Light text
+TitleTextRecommend	zh	自动：推荐浅色文字
+ToastNeverAutoClose	en	Keep open
+ToastNeverAutoClose	zh	不自动关闭
+ToastSeconds10	en	10s
+ToastSeconds10	zh	10 秒
+ToastSeconds30	en	30s
+ToastSeconds30	zh	30 秒
+ToastSeconds5	en	5s
+ToastSeconds5	zh	5 秒
+Today	en	Today
+Today	zh	今天
+Tomorrow	en	Tomorrow
+Tomorrow	zh	明天
+Undo	en	Undo
+Undo	zh	撤销
+UndoCompleteMsg	en	Completed "任务X"
+UndoCompleteMsg	zh	已完成「任务X」
+UndoDeleteMsg	en	Deleted "任务X"
+UndoDeleteMsg	zh	已删除「任务X」
+Ungrouped	en	Ungrouped
+Ungrouped	zh	未分组
+UpdateAvailable	en	Update available
+UpdateAvailable	zh	发现新版本
+UpdateCheckFailed	en	Update check failed: 网络错误
+UpdateCheckFailed	zh	检查更新失败：网络错误
+UpdateDownloaded	en	Downloaded to
+UpdateDownloaded	zh	已下载到
+UpdateSourceNoInfo	en	Couldn't get version info from any update source; check your network or source configuration
+UpdateSourceNoInfo	zh	无法从更新源获取版本信息，请检查网络或更新源配置
+UpdateSources	en	Update sources
+UpdateSources	zh	更新源
+UpdateUpToDate	en	You're up to date (latest version 1.3.0)
+UpdateUpToDate	zh	已是最新版本（最新版本 1.3.0）
+Updates	en	Updates
+Updates	zh	更新
+VersionLabel	en	Version
+VersionLabel	zh	版本
+Yesterday	en	Yesterday
+Yesterday	zh	昨天

@@ -1,0 +1,673 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <data name="About" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>添加</value>
+  </data>
+  <data name="AddAttachment" xml:space="preserve">
+    <value>添加附件</value>
+  </data>
+  <data name="AddDueDate" xml:space="preserve">
+    <value>添加截止日期</value>
+  </data>
+  <data name="AddRecurrence" xml:space="preserve">
+    <value>添加重复</value>
+  </data>
+  <data name="AddReminder" xml:space="preserve">
+    <value>添加提醒</value>
+  </data>
+  <data name="AddSource" xml:space="preserve">
+    <value>添加源</value>
+  </data>
+  <data name="AddStep" xml:space="preserve">
+    <value>添加步骤</value>
+  </data>
+  <data name="AddTag" xml:space="preserve">
+    <value>添加标签</value>
+  </data>
+  <data name="AddTask" xml:space="preserve">
+    <value>添加任务</value>
+  </data>
+  <data name="AddToMyDay" xml:space="preserve">
+    <value>添加到我的一天</value>
+  </data>
+  <data name="AppDescription" xml:space="preserve">
+    <value>一款 Fluent Design 风格的待办事项桌面应用</value>
+  </data>
+  <data name="AppTitle" xml:space="preserve">
+    <value>待办事项</value>
+  </data>
+  <data name="Appearance" xml:space="preserve">
+    <value>外观</value>
+  </data>
+  <data name="AppliesImmediately" xml:space="preserve">
+    <value>即时生效</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>应用</value>
+  </data>
+  <data name="AttachmentOpenFailed" xml:space="preserve">
+    <value>无法打开附件 "{0}"</value>
+  </data>
+  <data name="AttachmentTooLarge" xml:space="preserve">
+    <value>单个附件不能超过 {0} MB</value>
+  </data>
+  <data name="Attachments" xml:space="preserve">
+    <value>附件</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>返回</value>
+  </data>
+  <data name="BackToMain" xml:space="preserve">
+    <value>返回主界面</value>
+  </data>
+  <data name="BackgroundStrength" xml:space="preserve">
+    <value>背景强弱</value>
+  </data>
+  <data name="BackgroundStrengthLocalHint" xml:space="preserve">
+    <value>背景强弱仅本设备生效，不同步。</value>
+  </data>
+  <data name="BackupFileFilter" xml:space="preserve">
+    <value>数据库备份 (*.db)|*.db|所有文件 (*.*)|*.*</value>
+  </data>
+  <data name="BackupSaved" xml:space="preserve">
+    <value>备份已导出到：{0}</value>
+  </data>
+  <data name="Behavior" xml:space="preserve">
+    <value>行为</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="Cancelled" xml:space="preserve">
+    <value>已取消</value>
+  </data>
+  <data name="CardOpacity" xml:space="preserve">
+    <value>卡片不透明度</value>
+  </data>
+  <data name="CardOpacityLocalHint" xml:space="preserve">
+    <value>卡片不透明度仅本设备生效，不同步；越高越不透明，越能盖住背景。</value>
+  </data>
+  <data name="Change" xml:space="preserve">
+    <value>更改</value>
+  </data>
+  <data name="CheckForUpdatesOnStartup" xml:space="preserve">
+    <value>启动时检查更新</value>
+  </data>
+  <data name="CheckUpdatesNow" xml:space="preserve">
+    <value>立即检查更新</value>
+  </data>
+  <data name="ChooseImage" xml:space="preserve">
+    <value>选择图片…</value>
+  </data>
+  <data name="ChooseReminderSound" xml:space="preserve">
+    <value>选择提醒铃声</value>
+  </data>
+  <data name="ChooseSound" xml:space="preserve">
+    <value>选择铃声…</value>
+  </data>
+  <data name="Closed" xml:space="preserve">
+    <value>已关闭</value>
+  </data>
+  <data name="Complete" xml:space="preserve">
+    <value>完成</value>
+  </data>
+  <data name="Completed" xml:space="preserve">
+    <value>已完成</value>
+  </data>
+  <data name="CompletedSection" xml:space="preserve">
+    <value>已完成</value>
+  </data>
+  <data name="ConfirmDelete" xml:space="preserve">
+    <value>确认删除</value>
+  </data>
+  <data name="ConfirmDeleteGroupMsg" xml:space="preserve">
+    <value>确定删除分组 "{0}" 吗？任务将变为未分组。</value>
+  </data>
+  <data name="ConfirmDeleteListGroupMsg" xml:space="preserve">
+    <value>确定删除分组 "{0}" 吗？组内列表将变为未分组。</value>
+  </data>
+  <data name="ConfirmDeleteMsg" xml:space="preserve">
+    <value>确定删除 "{0}" 吗？</value>
+  </data>
+  <data name="DarkTheme" xml:space="preserve">
+    <value>深色</value>
+  </data>
+  <data name="Data" xml:space="preserve">
+    <value>数据</value>
+  </data>
+  <data name="Date" xml:space="preserve">
+    <value>日期</value>
+  </data>
+  <data name="DaysAgo" xml:space="preserve">
+    <value>{0} 天前</value>
+  </data>
+  <data name="DbFileFilter" xml:space="preserve">
+    <value>数据库文件 (*.db)|*.db|所有文件 (*.*)|*.*</value>
+  </data>
+  <data name="DbPathChanged" xml:space="preserve">
+    <value>路径已更改。请重启应用以使用新数据库位置。</value>
+  </data>
+  <data name="DbPathPrompt" xml:space="preserve">
+    <value>请输入数据库文件的完整路径。修改后当前数据将自动迁移到新位置。</value>
+  </data>
+  <data name="DbPathTitle" xml:space="preserve">
+    <value>数据库路径</value>
+  </data>
+  <data name="DefaultRingtone" xml:space="preserve">
+    <value>默认铃声</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="DeleteGroup" xml:space="preserve">
+    <value>删除分组</value>
+  </data>
+  <data name="DeleteList" xml:space="preserve">
+    <value>删除列表</value>
+  </data>
+  <data name="DeleteListGroup" xml:space="preserve">
+    <value>删除列表分组</value>
+  </data>
+  <data name="DeleteTask" xml:space="preserve">
+    <value>删除任务</value>
+  </data>
+  <data name="Done" xml:space="preserve">
+    <value>完成</value>
+  </data>
+  <data name="DownloadUpdate" xml:space="preserve">
+    <value>立即更新</value>
+  </data>
+  <data name="DropToUngroupHint" xml:space="preserve">
+    <value>拖到此处移出分组</value>
+  </data>
+  <data name="EditCloseTime" xml:space="preserve">
+    <value>编辑关闭时间...</value>
+  </data>
+  <data name="EditTime" xml:space="preserve">
+    <value>编辑关闭时间</value>
+  </data>
+  <data name="EnableReminderNotifications" xml:space="preserve">
+    <value>启用提醒通知</value>
+  </data>
+  <data name="EndSeries" xml:space="preserve">
+    <value>取消定时任务</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>错误</value>
+  </data>
+  <data name="ExitApp" xml:space="preserve">
+    <value>退出</value>
+  </data>
+  <data name="ExportBackup" xml:space="preserve">
+    <value>导出备份</value>
+  </data>
+  <data name="General" xml:space="preserve">
+    <value>常规</value>
+  </data>
+  <data name="Group" xml:space="preserve">
+    <value>分组</value>
+  </data>
+  <data name="Homepage" xml:space="preserve">
+    <value>项目主页</value>
+  </data>
+  <data name="HourLater" xml:space="preserve">
+    <value>{0} 小时后</value>
+  </data>
+  <data name="HoursAgo" xml:space="preserve">
+    <value>{0} 小时前</value>
+  </data>
+  <data name="HoursLater" xml:space="preserve">
+    <value>{0} 小时后</value>
+  </data>
+  <data name="ImageFileFilter" xml:space="preserve">
+    <value>图片文件 (*.jpg;*.jpeg;*.png;*.bmp;*.gif)|*.jpg;*.jpeg;*.png;*.bmp;*.gif|所有文件 (*.*)|*.*</value>
+  </data>
+  <data name="ImageTooLarge" xml:space="preserve">
+    <value>图片不能超过 {0} MB</value>
+  </data>
+  <data name="Important" xml:space="preserve">
+    <value>重要</value>
+  </data>
+  <data name="InvalidPathMsg" xml:space="preserve">
+    <value>请输入有效路径。</value>
+  </data>
+  <data name="InvalidTime" xml:space="preserve">
+    <value>请输入有效时间（小时 0-23，分钟 0-59）</value>
+  </data>
+  <data name="JustNow" xml:space="preserve">
+    <value>刚刚</value>
+  </data>
+  <data name="KeyboardShortcuts" xml:space="preserve">
+    <value>键盘快捷键</value>
+  </data>
+  <data name="KeyboardShortcutsHint" xml:space="preserve">
+    <value>Ctrl+N 新建任务&#xA;Ctrl+F 搜索&#xA;Ctrl+Enter 完成任务&#xA;Ctrl+Z 撤销&#xA;Ctrl+1–4 切换列表&#xA;Ctrl+, 设置</value>
+  </data>
+  <data name="LanguageName" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="Later" xml:space="preserve">
+    <value>稍后</value>
+  </data>
+  <data name="LightTheme" xml:space="preserve">
+    <value>浅色</value>
+  </data>
+  <data name="ListTheme" xml:space="preserve">
+    <value>列表主题</value>
+  </data>
+  <data name="ListThemeImageLocalHint" xml:space="preserve">
+    <value>背景图片仅保存在本设备，不会同步。</value>
+  </data>
+  <data name="Lists" xml:space="preserve">
+    <value>列表</value>
+  </data>
+  <data name="ManageTags" xml:space="preserve">
+    <value>管理标签</value>
+  </data>
+  <data name="MarkImportant" xml:space="preserve">
+    <value>标记为重要</value>
+  </data>
+  <data name="MarkIncomplete" xml:space="preserve">
+    <value>标记为未完成</value>
+  </data>
+  <data name="MinimizeToTrayOnClose" xml:space="preserve">
+    <value>关闭主窗口时最小化到托盘</value>
+  </data>
+  <data name="MinutesAgo" xml:space="preserve">
+    <value>{0} 分钟前</value>
+  </data>
+  <data name="MoreColors" xml:space="preserve">
+    <value>更多颜色…</value>
+  </data>
+  <data name="MoveToGroup" xml:space="preserve">
+    <value>移动到分组</value>
+  </data>
+  <data name="MoveToList" xml:space="preserve">
+    <value>移动到列表</value>
+  </data>
+  <data name="MyDay" xml:space="preserve">
+    <value>我的一天</value>
+  </data>
+  <data name="NewGroup" xml:space="preserve">
+    <value>新建分组</value>
+  </data>
+  <data name="NewList" xml:space="preserve">
+    <value>+ 新建列表</value>
+  </data>
+  <data name="NewListGroup" xml:space="preserve">
+    <value>新建列表分组</value>
+  </data>
+  <data name="NewListName" xml:space="preserve">
+    <value>新列表</value>
+  </data>
+  <data name="NewListText" xml:space="preserve">
+    <value>新建列表</value>
+  </data>
+  <data name="NoAttachments" xml:space="preserve">
+    <value>暂无附件</value>
+  </data>
+  <data name="NoBackground" xml:space="preserve">
+    <value>无背景</value>
+  </data>
+  <data name="NoDueDate" xml:space="preserve">
+    <value>无截止日期</value>
+  </data>
+  <data name="NoTags" xml:space="preserve">
+    <value>暂无标签</value>
+  </data>
+  <data name="Notes" xml:space="preserve">
+    <value>备注</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="OpenMainWindow" xml:space="preserve">
+    <value>打开主界面</value>
+  </data>
+  <data name="OpenTask" xml:space="preserve">
+    <value>打开任务</value>
+  </data>
+  <data name="PickDate" xml:space="preserve">
+    <value>选择日期...</value>
+  </data>
+  <data name="Planned" xml:space="preserve">
+    <value>计划内</value>
+  </data>
+  <data name="PlayReminderSound" xml:space="preserve">
+    <value>播放提示音</value>
+  </data>
+  <data name="PromoteToTask" xml:space="preserve">
+    <value>升级为任务</value>
+  </data>
+  <data name="Recurrence" xml:space="preserve">
+    <value>重复</value>
+  </data>
+  <data name="RelativeDateFormat" xml:space="preserve">
+    <value>{0:yyyy年M月d日}</value>
+  </data>
+  <data name="RemindLater" xml:space="preserve">
+    <value>以后再说</value>
+  </data>
+  <data name="Reminder" xml:space="preserve">
+    <value>提醒</value>
+  </data>
+  <data name="ReminderRingtone" xml:space="preserve">
+    <value>提醒铃声</value>
+  </data>
+  <data name="ReminderTimeFormat" xml:space="preserve">
+    <value>{0:M月d日 HH:mm}</value>
+  </data>
+  <data name="ReminderToastDuration" xml:space="preserve">
+    <value>提醒显示时长</value>
+  </data>
+  <data name="ReminderToastPauseHint" xml:space="preserve">
+    <value>悬停卡片时暂停倒计时</value>
+  </data>
+  <data name="RemindersSection" xml:space="preserve">
+    <value>提醒</value>
+  </data>
+  <data name="RemoveFromGroup" xml:space="preserve">
+    <value>从分组移出</value>
+  </data>
+  <data name="RemoveFromMyDay" xml:space="preserve">
+    <value>从我的一天移除</value>
+  </data>
+  <data name="RemoveImage" xml:space="preserve">
+    <value>移除图片</value>
+  </data>
+  <data name="RemoveImportance" xml:space="preserve">
+    <value>取消重要标记</value>
+  </data>
+  <data name="RemoveSource" xml:space="preserve">
+    <value>移除</value>
+  </data>
+  <data name="Rename" xml:space="preserve">
+    <value>重命名</value>
+  </data>
+  <data name="RenameList" xml:space="preserve">
+    <value>重命名列表</value>
+  </data>
+  <data name="ReopenTask" xml:space="preserve">
+    <value>重新打开</value>
+  </data>
+  <data name="RepeatDaily" xml:space="preserve">
+    <value>每天</value>
+  </data>
+  <data name="RepeatMonthly" xml:space="preserve">
+    <value>每月</value>
+  </data>
+  <data name="RepeatNone" xml:space="preserve">
+    <value>不重复</value>
+  </data>
+  <data name="RepeatWeekdays" xml:space="preserve">
+    <value>每个工作日</value>
+  </data>
+  <data name="RepeatWeekly" xml:space="preserve">
+    <value>每周</value>
+  </data>
+  <data name="RepeatYearly" xml:space="preserve">
+    <value>每年</value>
+  </data>
+  <data name="ResetSound" xml:space="preserve">
+    <value>重置</value>
+  </data>
+  <data name="RestartToApply" xml:space="preserve">
+    <value>重启后生效</value>
+  </data>
+  <data name="RestoreBackup" xml:space="preserve">
+    <value>从备份恢复</value>
+  </data>
+  <data name="RestoreStaged" xml:space="preserve">
+    <value>备份已暂存，将在下次启动时替换当前数据。</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>搜索</value>
+  </data>
+  <data name="SearchResults" xml:space="preserve">
+    <value>搜索结果</value>
+  </data>
+  <data name="SelectBackupFile" xml:space="preserve">
+    <value>选择备份文件</value>
+  </data>
+  <data name="SelectDbFile" xml:space="preserve">
+    <value>选择数据库文件</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="ShortDateFormat" xml:space="preserve">
+    <value>{0:M月d日}</value>
+  </data>
+  <data name="ShowTaskAttachments" xml:space="preserve">
+    <value>显示附件图标</value>
+  </data>
+  <data name="ShowTaskDue" xml:space="preserve">
+    <value>显示截止日期</value>
+  </data>
+  <data name="ShowTaskNote" xml:space="preserve">
+    <value>显示备注图标</value>
+  </data>
+  <data name="ShowTaskReminder" xml:space="preserve">
+    <value>显示提醒</value>
+  </data>
+  <data name="ShowTaskSteps" xml:space="preserve">
+    <value>显示步骤进度</value>
+  </data>
+  <data name="ShowTaskTags" xml:space="preserve">
+    <value>显示标签</value>
+  </data>
+  <data name="SkipOccurrence" xml:space="preserve">
+    <value>取消本次</value>
+  </data>
+  <data name="SkipVersion" xml:space="preserve">
+    <value>跳过此版本</value>
+  </data>
+  <data name="SnoozeReminder" xml:space="preserve">
+    <value>稍后提醒</value>
+  </data>
+  <data name="SolidColor" xml:space="preserve">
+    <value>纯色</value>
+  </data>
+  <data name="SoundFileFilter" xml:space="preserve">
+    <value>音频文件 (*.wav)|*.wav|所有文件 (*.*)|*.*</value>
+  </data>
+  <data name="SoundFileHint" xml:space="preserve">
+    <value>支持 .wav 音频文件；未设置时使用内置铃声（不依赖 Windows 系统音效方案）。</value>
+  </data>
+  <data name="SoundMissing" xml:space="preserve">
+    <value>文件不存在</value>
+  </data>
+  <data name="Steps" xml:space="preserve">
+    <value>步骤</value>
+  </data>
+  <data name="StickyCloseNote" xml:space="preserve">
+    <value>关闭便笺</value>
+  </data>
+  <data name="StickyNote" xml:space="preserve">
+    <value>迷你便笺</value>
+  </data>
+  <data name="StickyShowTags" xml:space="preserve">
+    <value>在便笺中显示标签</value>
+  </data>
+  <data name="SyncDeviceId" xml:space="preserve">
+    <value>设备 ID</value>
+  </data>
+  <data name="SyncEnabledLabel" xml:space="preserve">
+    <value>启用多设备同步</value>
+  </data>
+  <data name="SyncKeyLabel" xml:space="preserve">
+    <value>同步密钥</value>
+  </data>
+  <data name="SyncLastSynced" xml:space="preserve">
+    <value>上次同步</value>
+  </data>
+  <data name="SyncMyDayLocalHint" xml:space="preserve">
+    <value>「我的一天」仅保存在本设备，不同步。重要标记与其他内容会跨设备同步。</value>
+  </data>
+  <data name="SyncNever" xml:space="preserve">
+    <value>从未同步</value>
+  </data>
+  <data name="SyncNow" xml:space="preserve">
+    <value>立即同步</value>
+  </data>
+  <data name="SyncSectionTitle" xml:space="preserve">
+    <value>同步</value>
+  </data>
+  <data name="SyncServerUrlLabel" xml:space="preserve">
+    <value>服务器地址</value>
+  </data>
+  <data name="SyncStatusAuthFailed" xml:space="preserve">
+    <value>同步密钥被拒绝（401）</value>
+  </data>
+  <data name="SyncStatusDisabled" xml:space="preserve">
+    <value>同步已禁用</value>
+  </data>
+  <data name="SyncStatusLabel" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="SyncStatusNotConfigured" xml:space="preserve">
+    <value>未配置服务器地址或同步密钥</value>
+  </data>
+  <data name="SyncStatusOffline" xml:space="preserve">
+    <value>同步失败</value>
+  </data>
+  <data name="SyncStatusOnline" xml:space="preserve">
+    <value>已同步</value>
+  </data>
+  <data name="SyncStatusSyncing" xml:space="preserve">
+    <value>同步中…</value>
+  </data>
+  <data name="SyncStatusVersionMismatch" xml:space="preserve">
+    <value>服务器版本不符，请更新同步服务器</value>
+  </data>
+  <data name="System" xml:space="preserve">
+    <value>系统</value>
+  </data>
+  <data name="TagNameExists" xml:space="preserve">
+    <value>标签名 "{0}" 已存在</value>
+  </data>
+  <data name="TagPlaceholder" xml:space="preserve">
+    <value>新标签名</value>
+  </data>
+  <data name="Tags" xml:space="preserve">
+    <value>标签</value>
+  </data>
+  <data name="TaskDetails" xml:space="preserve">
+    <value>任务详情</value>
+  </data>
+  <data name="TaskRowDisplay" xml:space="preserve">
+    <value>任务列表显示</value>
+  </data>
+  <data name="Tasks" xml:space="preserve">
+    <value>任务</value>
+  </data>
+  <data name="TestSound" xml:space="preserve">
+    <value>试听</value>
+  </data>
+  <data name="Theme" xml:space="preserve">
+    <value>主题</value>
+  </data>
+  <data name="ThirdPartyLicenses" xml:space="preserve">
+    <value>第三方组件许可</value>
+  </data>
+  <data name="ThisWeek" xml:space="preserve">
+    <value>下周</value>
+  </data>
+  <data name="Time" xml:space="preserve">
+    <value>时间</value>
+  </data>
+  <data name="TitleTextAuto" xml:space="preserve">
+    <value>自动（推荐）</value>
+  </data>
+  <data name="TitleTextColor" xml:space="preserve">
+    <value>标题文字颜色</value>
+  </data>
+  <data name="TitleTextDark" xml:space="preserve">
+    <value>深色</value>
+  </data>
+  <data name="TitleTextLight" xml:space="preserve">
+    <value>浅色</value>
+  </data>
+  <data name="TitleTextNoRecommend" xml:space="preserve">
+    <value>未设置背景，标题文字跟随应用主题。</value>
+  </data>
+  <data name="TitleTextPickHint" xml:space="preserve">
+    <value>标题栏随列表主题铺满背景，文字深浅按背景调整以保证可读。</value>
+  </data>
+  <data name="ToastNeverAutoClose" xml:space="preserve">
+    <value>不自动关闭</value>
+  </data>
+  <data name="ToastSeconds10" xml:space="preserve">
+    <value>10 秒</value>
+  </data>
+  <data name="ToastSeconds30" xml:space="preserve">
+    <value>30 秒</value>
+  </data>
+  <data name="ToastSeconds5" xml:space="preserve">
+    <value>5 秒</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>今天</value>
+  </data>
+  <data name="Tomorrow" xml:space="preserve">
+    <value>明天</value>
+  </data>
+  <data name="Undo" xml:space="preserve">
+    <value>撤销</value>
+  </data>
+  <data name="UndoCompleteMsg" xml:space="preserve">
+    <value>已完成「{0}」</value>
+  </data>
+  <data name="UndoDeleteMsg" xml:space="preserve">
+    <value>已删除「{0}」</value>
+  </data>
+  <data name="Ungrouped" xml:space="preserve">
+    <value>未分组</value>
+  </data>
+  <data name="UpdateAvailable" xml:space="preserve">
+    <value>发现新版本</value>
+  </data>
+  <data name="UpdateCheckFailed" xml:space="preserve">
+    <value>检查更新失败：{0}</value>
+  </data>
+  <data name="UpdateDownloaded" xml:space="preserve">
+    <value>已下载到</value>
+  </data>
+  <data name="UpdateSourceNoInfo" xml:space="preserve">
+    <value>无法从更新源获取版本信息，请检查网络或更新源配置</value>
+  </data>
+  <data name="UpdateSources" xml:space="preserve">
+    <value>更新源</value>
+  </data>
+  <data name="UpdateUpToDate" xml:space="preserve">
+    <value>已是最新版本（最新版本 {0}）</value>
+  </data>
+  <data name="Updates" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="VersionLabel" xml:space="preserve">
+    <value>版本</value>
+  </data>
+  <data name="Yesterday" xml:space="preserve">
+    <value>昨天</value>
+  </data>
+</root>
