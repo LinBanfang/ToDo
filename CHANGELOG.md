@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+### 新增
+- **运行时语言切换**：设置 → 常规切换语言即时生效，无需重启；主窗口原地重建（位置/大小不变，仍停在当前设置分区），托盘菜单与悬停提示、设置分区标题、提醒卡片时长下拉同步切换
+
+### 内部
+- `Loc.LanguageChanged` 接线重建流程：`WindowManager.RebuildForLanguageChange`（几何保留 + OnClosing 绕过）、`TrayService.Refresh`、设置分区标题/提醒时长下拉重解析；「重启后生效」提示改为「即时生效」（[ADR-017](docs/adr/0017-runtime-language-switch.md)）
+
 ## [v1.3.2] - 2026-08-12
 
 ### 新增

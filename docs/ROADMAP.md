@@ -66,7 +66,7 @@
 
 ### 9. 本地化管线 ✅
 
-字符串已迁入 RESX（zh 中性 + en 卫星），`Loc` 保留同名静态门面，消费面零改动；新增语言只需新增一个 `.xx.resx` + 枚举/映射（见 [ADR-016](adr/0016-localization-resx.md)）。语言切换仍重启生效。
+字符串已迁入 RESX（zh 中性 + en 卫星），`Loc` 保留同名静态门面，消费面零改动；新增语言只需新增一个 `.xx.resx` + 枚举/映射（见 [ADR-016](adr/0016-localization-resx.md)）。语言切换即时生效（重建窗口，见 [ADR-017](adr/0017-runtime-language-switch.md)）。
 
 - [x] RESX 资源管线：字符串迁入 `Strings.resx`（zh 中性）+ `Strings.en.resx`（卫星），新增语言只需新增一个 `.xx.resx`
 

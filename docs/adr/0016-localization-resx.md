@@ -68,7 +68,7 @@ public static void SetLanguage(AppLanguage lang) { /* Language 变更时换 _cul
 
 ### 不做的（明确出界）
 
-- **运行时即时切语言**：维持**重启生效**（`LanguageChanged` 生产代码不订阅，同 ADR-0008）。
+- ~~**运行时即时切语言**~~：已实现（重建窗口方案，见 [ADR-017](0017-runtime-language-switch.md)），本条出界说明作废。
 - 新增第三种语言演示（221 条翻译量；配方写文档即可）。
 - 改 settings.json schema、改 vendored `AutoUpdater`、改线程文化（避免影响其他格式化路径）。
 
@@ -81,5 +81,5 @@ public static void SetLanguage(AppLanguage lang) { /* Language 变更时换 _cul
   - `Loc` 门面让 XAML 静态绑定与代码引用都不必改为 `{x:Static}` 之外的机制。
 - 权衡 / 已知限制：
   - **单文件发布风险**：卫星程序集（`en/ToDo.Core.resources.dll`）在单文件（`IncludeAllContentForSelfExtract`）场景下可能不随包解压，导致非中性语言不可用。当前发布为**多文件自包含**，已确认 `publish/en/ToDo.Core.resources.dll` 存在；若未来改单文件发布需回归验证。
-  - 语言切换仍重启生效（既有约束，未扩大范围）。
+  - 语言切换已支持即时生效（重建窗口，[ADR-017](0017-runtime-language-switch.md)）；本 ADR 只负责资源管线本身。
   - 日期模板依赖各文化的内置格式分量（`MMM` 等），新增语言时若目标文化无对应分量需检查输出。

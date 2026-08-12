@@ -256,7 +256,7 @@ MainViewModel
 - `Services/LocalizationService.cs` — 静态 `Loc` 门面：公开 API（枚举 / `Language` / `LanguageChanged` / `SetLanguage` / `Toggle` 与全部 221 个字符串成员名）与迁移前逐字节不变，内部用 `ResourceManager` 按显式文化读资源；缺失键返回 `⟦key⟧` 哨兵（不返回键本身，en 值如 OK/Delete/Save/Date 合法等于键名）
 - XAML 绑定 `{x:Static services:Loc.XXX}`；代码中 `Loc.XXX` 引用；值转换器（相对时间 / 日期）与对话框（DbPathDialog）同样走 `Loc`
 - 日期方法统一 `InvariantCulture` 格式化，模板为单个自定义模式（如 `{0:M月d日}`，`M`/`d` 不补零数字）
-- 设置页"常规"节切换语言 → 持久化到 settings.json，**重启生效**，启动时由 `App.OnStartup` 在创建托盘**之前**恢复语言与主题（托盘提示/菜单读 `Loc`）
+- 设置页"常规"节切换语言 → 持久化到 settings.json 并**即时生效**（无需重启）：`Loc.SetLanguage` 触发 `LanguageChanged`，`App` 延迟一拍重建主窗口——`{x:Static}` 绑定在窗口加载时解析，需重建才能刷新；托盘菜单/提示、设置分区标题与提醒卡片时长下拉同步重解析（见 [ADR-017](adr/0017-runtime-language-switch.md)）。启动时由 `App.OnStartup` 在创建托盘**之前**恢复语言与主题（托盘提示/菜单读 `Loc`）
 - 默认中文；测试三层保证：`loc-golden.txt` 黄金基线（221 值 × 2 语言零漂移）、zh/en `ResourceSet` 键一致且非空、反射扫描哨兵检测
 
 ---
