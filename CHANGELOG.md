@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [v1.3.2] - 2026-08-12
+
 ### 新增
 - **撤销完成 / 删除**：完成任务或删除任务后，底部浮现撤销条（约 5 秒自动消失，新操作覆盖旧撤销）；「撤销」可重开刚完成的任务（重复任务同时删掉自动生成的下一实例），或原样恢复被删除的任务（含本地附件，自定义列表回原位）。仅任务支持撤销，删除列表 / 分组仍走确认框
 - **提醒交互增强**：提醒卡片新增三个操作按钮——稍后提醒（+10 分钟）、打开任务（主窗前台并选中）、完成（关闭任务，重复任务同样触发撤销条）；启动补发改为「24 小时内到期的提醒在启动后首次轮询补弹」，更早的提醒保持静默，避免启动轰炸
@@ -234,7 +236,8 @@
 - 浅色 / 深色主题（DynamicResource 运行时切换）、中英文切换
 - LiteDB 本地存储（默认 `%LOCALAPPDATA%\ToDo\todo.db`，路径可配置）
 
-[unreleased]: https://github.com/LinBanfang/ToDo/compare/v1.3.1...HEAD
+[unreleased]: https://github.com/LinBanfang/ToDo/compare/v1.3.2...HEAD
+[v1.3.2]: https://github.com/LinBanfang/ToDo/compare/v1.3.1...v1.3.2
 [v1.3.1]: https://github.com/LinBanfang/ToDo/compare/v1.3.0...v1.3.1
 [v1.3.0]: https://github.com/LinBanfang/ToDo/compare/v1.2.5...v1.3.0
 [v1.2.5]: https://github.com/LinBanfang/ToDo/compare/v1.2.4...v1.2.5
