@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+### 修复
+- **多端提醒只弹一次**：提醒「已触发」状态落为任务可同步字段 `FiredReminder`（替换内存去重键），同一任务的提醒在多台设备间只触发一次——应用内卡片、提示音、Windows 原生 toast 均不再重复打扰；完成任务后尚未同步的另一台设备也不再误触发（[ADR-019](docs/adr/0019-reminder-cross-device.md)）
+- **同步时钟偏移收敛**：冲突裁决（LWW）由客户端墙钟改为 HLC 混合逻辑时钟（`physical<<21 | logical<<8 | discriminator` 编码进单个 `long`），时钟偏移 / NTP 回拨 / 同毫秒平局下因果序「后编辑者恒胜」，多设备并发编辑不再被快钟设备系统性覆盖（[ADR-018](docs/adr/0018-sync-lww-hlc.md)）
+
+### 内部
+- 同步协议升 v2（`ModifiedAt` 语义由 unix 毫秒变为 HLC 编码，新旧客户端不互通）；首次升级自动重基现有实体并全量重推；设备 HLC 状态随设置落盘（SchemaVersion 7→8）
+
 ## [v1.3.3] - 2026-08-13
 
 ### 新增
