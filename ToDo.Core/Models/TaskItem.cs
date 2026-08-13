@@ -39,6 +39,11 @@ public partial class TaskItem : ObservableObject, IOrdered
     [ObservableProperty]
     private long? _reminder;
 
+    /// <summary>Value of Reminder that has already fired (ADR-019); synced so a reminder
+    /// doesn't re-fire on another device. null = hasn't fired its current reminder.</summary>
+    [ObservableProperty]
+    private long? _firedReminder;
+
     /// <summary>Recurrence rule (ADR-015); None = one-off task. Synced — must be, or
     /// sync's whole-entity overwrite would wipe it (the ADR-014 trap).</summary>
     [ObservableProperty]
@@ -152,6 +157,7 @@ public partial class TaskItem : ObservableObject, IOrdered
             MyDayOrder = MyDayOrder,
             DueDate = DueDate,
             Reminder = Reminder,
+            FiredReminder = FiredReminder,
             Recurrence = Recurrence,
             RecurrenceInterval = RecurrenceInterval,
             RecurrenceSeriesId = RecurrenceSeriesId,

@@ -20,7 +20,6 @@ public class ReminderService : IDisposable
 
     private readonly DatabaseService _db;
     private readonly DispatcherTimer _timer;
-    private readonly HashSet<string> _fired = new();
     private readonly INativeReminderScheduler? _native;
     private bool _disposed;
 
@@ -32,14 +31,17 @@ public class ReminderService : IDisposable
 
         // Pre-mark only reminders older than the catch-up window — anything due within it
         // is left for the first Check() (15s later) to fire, so a reminder missed by a few
-        // hours still nags once. Only open tasks are marked (mirroring the poll filter):
-        // a task completed before shutdown must be able to fire again when the user reopens
-        // it this session.
+        // hours still nags once. Only open tasks are marked (mirroring the poll filter).
+        // FiredReminder (ADR-019) makes the "already fired" state durable and synced, so a
+        // stale reminder doesn't re-nag here or on another device; setting it through the
+        // tracked Update is a one-time, idempotent write (the guard skips already-fired rows).
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var window = (catchUpWindow ?? TimeSpan.FromHours(DefaultCatchUpHours)).TotalMilliseconds;
-        foreach (var t in db.Tasks.Find(t => t.Reminder != null && t.Reminder < now - window && t.CloseRecord == null))
+        foreach (var t in db.Tasks.Find(t =>
+                     t.Reminder != null && t.Reminder < now - window && t.CloseRecord == null && t.FiredReminder != t.Reminder))
         {
-            _fired.Add($"{t.Id}|{t.Reminder}");
+            t.FiredReminder = t.Reminder;
+            db.Tasks.Update(t);
         }
 
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(15) };
@@ -65,27 +67,26 @@ public class ReminderService : IDisposable
             return;
         }
 
-        // "Fired" markers only apply to tasks that are still open-and-due. Prune markers
-        // of completed / deleted / rescheduled tasks so completing and reopening a task
-        // lets its reminder fire again in this session, instead of a stale key blocking it.
-        var eligible = new HashSet<string>(due.Select(t => $"{t.Id}|{t.Reminder}"));
-        _fired.RemoveWhere(key => !eligible.Contains(key));
-
         foreach (var t in due)
         {
-            var key = $"{t.Id}|{t.Reminder}";
-            if (_fired.Add(key))
-            {
-                // Respect the settings toggles on each poll so changes apply live
-                if (SettingsService.Current.ReminderNotifications)
-                    ReminderToast.Show(t.Id, t.Title, ResolveListIcon(t));
-                if (SettingsService.Current.ReminderSound)
-                    ReminderSoundPlayer.Play();
+            // FiredReminder (ADR-019) is the durable, cross-device "already fired" marker: a
+            // task that fired its current reminder — here or on another device — is skipped.
+            // Rescheduling (Reminder changed) makes FiredReminder != Reminder → fires again;
+            // clearing it on close makes a reopen fire again.
+            if (t.FiredReminder == t.Reminder) continue;
 
-                // The in-app card is the notification while the app runs — drop the
-                // pending native toast so the OS doesn't fire it again moments later.
-                if (t.Reminder is long r) _native?.RemoveFired(t.Id, r);
-            }
+            t.FiredReminder = t.Reminder;
+            _db.Tasks.Update(t);   // tracked → stamps ModifiedAt + outbox, syncing the fired state
+
+            // Respect the settings toggles on each poll so changes apply live
+            if (SettingsService.Current.ReminderNotifications)
+                ReminderToast.Show(t.Id, t.Title, ResolveListIcon(t));
+            if (SettingsService.Current.ReminderSound)
+                ReminderSoundPlayer.Play();
+
+            // The in-app card is the notification while the app runs — drop the
+            // pending native toast so the OS doesn't fire it again moments later.
+            if (t.Reminder is long r) _native?.RemoveFired(t.Id, r);
         }
 
         SyncNativeSchedule(now);

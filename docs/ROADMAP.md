@@ -56,7 +56,9 @@
 
 提醒去重键（`_fired`）是内存态、不参与同步；多设备场景下提醒触发 / 抑制可能不一致。多端用户才会遇到的正确性问题。
 
-- [ ] 评估提醒状态持久化或进入同步模型
+已实现（[ADR-019](adr/0019-reminder-cross-device.md)）：把已触发状态落为任务可同步字段 `FiredReminder`，跨设备共享，替换内存 `HashSet`。
+
+- [x] 实现 `FiredReminder` 字段（模型 / `TaskSync` / 序列化）+ `ReminderService` 改造 + 原生 toast 抑制（依赖 ADR-018）
 
 ### 8. 键盘快捷键 ✅
 

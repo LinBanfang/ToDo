@@ -86,6 +86,7 @@ public sealed class NativeReminderScheduler : INativeReminderScheduler
         foreach (var t in openTasks)
         {
             if (t.CloseRecord != null || t.Reminder is not long r) continue;
+            if (t.FiredReminder == t.Reminder) continue; // already fired (this/another device) → suppress (ADR-019)
             var fireAt = r + _graceMs;
             if (fireAt <= nowMs) continue;               // already due → in-app catch-up owns it
             var key = Key(t, r);

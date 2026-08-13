@@ -9,11 +9,11 @@ using Xunit;
 namespace ToDo.Tests;
 
 /// <summary>
-/// Exercises ReminderService's dedup / prune state machine: already-due reminders are
-/// pre-marked so the app doesn't nag on launch, a reminder fires at most once, and
-/// completing / reopening or rescheduling a task lets its reminder fire again in-session.
-/// The toast and sound side effects are gated behind SettingsService toggles, which the
-/// tests keep off — the observable state is the private _fired key set.
+/// Exercises ReminderService's dedup / fire state machine (ADR-019): already-due reminders
+/// are pre-marked so the app doesn't nag on launch, a reminder fires at most once, and
+/// rescheduling or reopening a task lets its reminder fire again. The observable state is
+/// the persisted TaskItem.FiredReminder — the toast / sound side effects are gated off via
+/// the settings toggles.
 /// </summary>
 [Collection("settings-shared")]   // serialized with the other SettingsService users
 public sealed class ReminderServiceTests : IDisposable
@@ -43,8 +43,7 @@ public sealed class ReminderServiceTests : IDisposable
     // Older than the default 24h catch-up window, so ctor pre-marks it (silent on launch).
     private static long LongPast() => DateTimeOffset.UtcNow.AddHours(-25).ToUnixTimeMilliseconds();
 
-    private static HashSet<string> Fired(ReminderService svc) =>
-        (HashSet<string>)typeof(ReminderService).GetField("_fired", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(svc)!;
+    private long? Fired(string id) => _db.Tasks.FindById(id)!.FiredReminder;
 
     private static void Check(ReminderService svc) =>
         typeof(ReminderService).GetMethod("Check", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(svc, null);
@@ -68,27 +67,29 @@ public sealed class ReminderServiceTests : IDisposable
         });
 
         using var svc = new ReminderService(_db);
-        var fired = Fired(svc);
 
-        Assert.Contains($"due|{dueRem}", fired);       // open + already due → skipped at startup
-        Assert.DoesNotContain(fired, f => f.StartsWith("future|"));   // not yet due → not marked
-        Assert.DoesNotContain(fired, f => f.StartsWith("closed|"));    // closed → not marked
+        Assert.Equal(dueRem, Fired("due"));        // open + already due → skipped at startup
+        Assert.Null(Fired("future"));              // not yet due → not marked
+        Assert.Null(Fired("closed"));              // closed → not marked
     }
 
     [Fact]
     public void Check_FiresNewlyDueReminder_ExactlyOnce()
     {
-        using var svc = new ReminderService(_db);
-        Assert.Empty(Fired(svc));
+        var native = new FakeNativeScheduler();
+        using var svc = new ReminderService(_db, nativeScheduler: native);
 
         var rem = Past();
         _db.Tasks.Insert(new TaskItem { Id = "due", ListId = "list-tasks", Reminder = rem });
+        Assert.Null(Fired("due"));
 
         Check(svc);
-        Assert.Contains($"due|{rem}", Fired(svc));     // fired → key recorded
+        Assert.Equal(rem, Fired("due"));           // fired → marker persisted
+        Assert.Single(native.Fired);               // pending native toast dropped once
 
         Check(svc);
-        Assert.Single(Fired(svc));                     // second poll: key still eligible → no re-fire
+        Assert.Equal(rem, Fired("due"));           // second poll: no re-fire
+        Assert.Single(native.Fired);               // ...and no second native drop
     }
 
     [Fact]
@@ -97,40 +98,55 @@ public sealed class ReminderServiceTests : IDisposable
         var rem = LongPast();   // outside the window → pre-marked on launch (asserted below)
         _db.Tasks.Insert(new TaskItem { Id = "due", ListId = "list-tasks", Reminder = rem });
         using var svc = new ReminderService(_db);
-        Assert.Contains($"due|{rem}", Fired(svc));     // pre-marked on launch
+        Assert.Equal(rem, Fired("due"));           // pre-marked on launch
 
-        // Complete it → the marker is pruned so a later reopen can fire again.
+        // Complete it — CloseTask clears FiredReminder (mirrored directly here) so a later
+        // reopen can fire again.
         var t = _db.Tasks.FindById("due")!;
         t.CloseRecord = new CloseRecord { ClosedAt = Past() };
+        t.FiredReminder = null;
         _db.Tasks.Update(t);
         Check(svc);
-        Assert.DoesNotContain($"due|{rem}", Fired(svc));
+        Assert.Null(Fired("due"));                 // cleared by close; closed → not re-fired
 
         // Reopen → fires again (this is the v1.2.1 "提醒重复触发" regression).
         t.CloseRecord = null;
         _db.Tasks.Update(t);
         Check(svc);
-        Assert.Contains($"due|{rem}", Fired(svc));
+        Assert.Equal(rem, Fired("due"));
     }
 
     [Fact]
-    public void Check_RescheduledReminder_PrunesOldKeyAndFiresNewOne()
+    public void Check_RescheduledReminder_FiresNewOne()
     {
         var oldRem = LongPast();   // outside the window → pre-marked on launch (asserted below)
         _db.Tasks.Insert(new TaskItem { Id = "due", ListId = "list-tasks", Reminder = oldRem });
         using var svc = new ReminderService(_db);
-        Assert.Contains($"due|{oldRem}", Fired(svc));
+        Assert.Equal(oldRem, Fired("due"));
 
-        // Push the reminder to another (still past) time → the old marker must not block it.
-        // The new time lands inside the window, exercising the "within-window → first poll fires" path.
+        // Push the reminder to another (still past) time → FiredReminder != new Reminder,
+        // so the new value fires.
         var newRem = Past();
         var t = _db.Tasks.FindById("due")!;
         t.Reminder = newRem;
         _db.Tasks.Update(t);
         Check(svc);
 
-        Assert.DoesNotContain($"due|{oldRem}", Fired(svc));
-        Assert.Contains($"due|{newRem}", Fired(svc));
+        Assert.Equal(newRem, Fired("due"));        // marker advanced to the new reminder
+    }
+
+    [Fact]
+    public void Check_AlreadyFiredReminder_DoesNotFire()
+    {
+        // A task synced from another device that already fired its reminder (ADR-019).
+        var native = new FakeNativeScheduler();
+        var rem = Past();
+        _db.Tasks.Insert(new TaskItem { Id = "due", ListId = "list-tasks", Reminder = rem, FiredReminder = rem });
+        using var svc = new ReminderService(_db, nativeScheduler: native);
+
+        Check(svc);
+
+        Assert.Empty(native.Fired);                // already fired elsewhere → suppressed
     }
 
     // ─── Catch-up window (v1.3.2): only reminders older than the window are pre-marked
@@ -145,7 +161,7 @@ public sealed class ReminderServiceTests : IDisposable
 
         using var svc = new ReminderService(_db);
 
-        Assert.DoesNotContain($"due|{rem}", Fired(svc));   // left for the first poll
+        Assert.Null(Fired("due"));   // left for the first poll
     }
 
     [Fact]
@@ -156,7 +172,7 @@ public sealed class ReminderServiceTests : IDisposable
 
         using var svc = new ReminderService(_db);
 
-        Assert.Contains($"due|{rem}", Fired(svc));   // silent — no startup nag
+        Assert.Equal(rem, Fired("due"));   // silent — no startup nag
     }
 
     [Fact]
@@ -164,16 +180,18 @@ public sealed class ReminderServiceTests : IDisposable
     {
         // Seeded BEFORE the ctor but within the window → not pre-marked, so the first
         // poll fires it exactly once and a second poll does not re-fire.
+        var native = new FakeNativeScheduler();
         var rem = Past();
         _db.Tasks.Insert(new TaskItem { Id = "due", ListId = "list-tasks", Reminder = rem });
-        using var svc = new ReminderService(_db);
-        Assert.DoesNotContain($"due|{rem}", Fired(svc));
+        using var svc = new ReminderService(_db, nativeScheduler: native);
+        Assert.Null(Fired("due"));
 
         Check(svc);
-        Assert.Contains($"due|{rem}", Fired(svc));
+        Assert.Equal(rem, Fired("due"));
+        Assert.Single(native.Fired);
 
         Check(svc);
-        Assert.Single(Fired(svc));
+        Assert.Single(native.Fired);               // no re-fire
     }
 
     [Theory]
@@ -187,9 +205,9 @@ public sealed class ReminderServiceTests : IDisposable
         using var svc = new ReminderService(_db, TimeSpan.FromMinutes(windowMinutes));
 
         if (expectedPreMarked)
-            Assert.Contains($"due|{rem}", Fired(svc));
+            Assert.Equal(rem, Fired("due"));
         else
-            Assert.DoesNotContain($"due|{rem}", Fired(svc));
+            Assert.Null(Fired("due"));
     }
 
     [Fact]

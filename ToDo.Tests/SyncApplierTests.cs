@@ -67,6 +67,17 @@ public sealed class SyncApplierTests : IDisposable
     }
 
     [Fact]
+    public void ApplyTask_RoundTripsFiredReminder()
+    {
+        // FiredReminder (ADR-019) must sync: a reminder fired on one device is suppressed
+        // on every device after the change lands.
+        _db.ApplySync(new[] { Change(new TaskItem { Id = "t1", ListId = "list-1", Title = "a", Reminder = 500, FiredReminder = 500, ModifiedAt = 200 }) });
+
+        var local = _db.Tasks.FindById("t1");
+        Assert.Equal(500, local.FiredReminder);
+    }
+
+    [Fact]
     public void ApplyTask_PreservesLocalIsMyDay()
     {
         var local = new TaskItem { Id = "t1", ListId = "list-1", Title = "a", IsMyDay = true, MyDayOrder = 7 };

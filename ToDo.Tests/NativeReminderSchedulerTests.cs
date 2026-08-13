@@ -28,6 +28,10 @@ public sealed class NativeReminderSchedulerTests
         new() { Id = id, ListId = "list-tasks", Title = $"Task {id}", Reminder = reminder,
                 CloseRecord = new CloseRecord { ClosedAt = Now } };
 
+    private static TaskItem OpenFired(string id, long reminder) =>
+        new() { Id = id, ListId = "list-tasks", Title = $"Task {id}", Reminder = reminder,
+                FiredReminder = reminder };
+
     private NativeReminderScheduler NewScheduler() => new(_store, Grace);
 
     [Fact]
@@ -90,6 +94,20 @@ public sealed class NativeReminderSchedulerTests
         Assert.Single(_store.Scheduled);
 
         svc.Reconcile(new[] { Closed("a", rem) }, Now);      // closed → not desired anymore
+        Assert.Empty(_store.Scheduled);
+    }
+
+    [Fact]
+    public void Reconcile_SuppressesAlreadyFiredReminder_FromAnotherDevice()
+    {
+        var svc = NewScheduler();
+        var rem = Now + 60_000;
+        // FiredReminder == Reminder → the reminder already fired (possibly on another
+        // device, ADR-019); no native toast is scheduled even though it's open + future.
+        var t = OpenFired("a", rem);
+
+        svc.Reconcile(new[] { t }, Now);
+
         Assert.Empty(_store.Scheduled);
     }
 

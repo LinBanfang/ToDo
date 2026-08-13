@@ -15,6 +15,9 @@ public class TaskSync
     public bool IsImportant { get; set; }
     public long? DueDate { get; set; }
     public long? Reminder { get; set; }
+    /// <summary>Reminder value already fired (ADR-019); null = not fired. Omitted when null
+    /// (backward-compatible with pre-v2 peers).</summary>
+    public long? FiredReminder { get; set; }
     public RecurrenceFrequency Recurrence { get; set; }
     public int RecurrenceInterval { get; set; } = 1;
     public string? RecurrenceSeriesId { get; set; }

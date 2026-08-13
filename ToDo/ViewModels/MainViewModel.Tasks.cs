@@ -109,6 +109,7 @@ public partial class MainViewModel
             CloseMode = param.mode,
         };
         param.task.Completed = param.mode == CloseMode.Complete;
+        param.task.FiredReminder = null;   // closing clears the fired marker → reopening fires again (ADR-019)
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         param.task.NotifyCloseDisplay();
 
