@@ -4,8 +4,15 @@
 
 ## [Unreleased]
 
+## [v1.3.3] - 2026-08-13
+
 ### 新增
 - **运行时语言切换**：设置 → 常规切换语言即时生效，无需重启；主窗口原地重建（位置/大小不变，仍停在当前设置分区），托盘菜单与悬停提示、设置分区标题、提醒卡片时长下拉同步切换
+- **非 HTTPS 同步地址明文警告**：设置 → 同步的服务器地址若不是 HTTPS，地址框下显示橙色警告（同步密钥与数据将以明文传输，建议改用 HTTPS）
+
+### 修复
+- **「我的一天」重置不再改写同步时间戳**：每日重置仅改本设备的「我的一天」状态，不再改写参与同步的 `ModifiedAt`——此前设备时钟偏快时，启动重置会以陈旧快照参与 LWW 冲突并可能覆盖其他设备较新的真实编辑
+- **检查更新下载不再阻塞界面**：更新包下载由同步 `.Result` 改为 `await`（`UpdateDialog`），避免下载期间主窗口卡死
 
 ### 内部
 - `Loc.LanguageChanged` 接线重建流程：`WindowManager.RebuildForLanguageChange`（几何保留 + OnClosing 绕过）、`TrayService.Refresh`、设置分区标题/提醒时长下拉重解析；「重启后生效」提示改为「即时生效」（[ADR-017](docs/adr/0017-runtime-language-switch.md)）
@@ -242,7 +249,8 @@
 - 浅色 / 深色主题（DynamicResource 运行时切换）、中英文切换
 - LiteDB 本地存储（默认 `%LOCALAPPDATA%\ToDo\todo.db`，路径可配置）
 
-[unreleased]: https://github.com/LinBanfang/ToDo/compare/v1.3.2...HEAD
+[unreleased]: https://github.com/LinBanfang/ToDo/compare/v1.3.3...HEAD
+[v1.3.3]: https://github.com/LinBanfang/ToDo/compare/v1.3.2...v1.3.3
 [v1.3.2]: https://github.com/LinBanfang/ToDo/compare/v1.3.1...v1.3.2
 [v1.3.1]: https://github.com/LinBanfang/ToDo/compare/v1.3.0...v1.3.1
 [v1.3.0]: https://github.com/LinBanfang/ToDo/compare/v1.2.5...v1.3.0
