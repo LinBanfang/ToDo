@@ -109,6 +109,10 @@
                            Text="{x:Static services:Loc.SyncServerUrlLabel}"/>
                 <TextBox Style="{StaticResource FluentTextBox}"
                          Text="{Binding SyncServerUrl, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock FontSize="12" Foreground="{DynamicResource AccentOrange}"
+                           Margin="0,8,0,0" TextWrapping="Wrap"
+                           Text="{x:Static services:Loc.SyncInsecureUrlHint}"
+                           Visibility="{Binding SyncInsecureUrlVisible, Converter={StaticResource BoolToVis}}"/>
                 <TextBlock Style="{StaticResource SettingSectionHeader}" Margin="0,16,0,8"
                            Text="{x:Static services:Loc.SyncKeyLabel}"/>
                 <TextBox Style="{StaticResource FluentTextBox}"

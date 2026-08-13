@@ -285,6 +285,7 @@ public static class Loc
     public static string SyncNever => S("SyncNever");
     public static string SyncLastSynced => S("SyncLastSynced");
     public static string SyncMyDayLocalHint => S("SyncMyDayLocalHint");
+    public static string SyncInsecureUrlHint => S("SyncInsecureUrlHint");
 
     // Behavior + tray
     public static string Behavior => S("Behavior");

@@ -334,6 +334,8 @@ SyncDeviceId	en	Device ID
 SyncDeviceId	zh	设备 ID
 SyncEnabledLabel	en	Enable multi-device sync
 SyncEnabledLabel	zh	启用多设备同步
+SyncInsecureUrlHint	en	The server URL is not HTTPS — your sync key and data will be sent in plaintext. Use HTTPS.
+SyncInsecureUrlHint	zh	服务器地址不是 HTTPS，同步密钥与数据将以明文传输，建议使用 HTTPS。
 SyncKeyLabel	en	Sync key
 SyncKeyLabel	zh	同步密钥
 SyncLastSynced	en	Last synced

@@ -514,6 +514,9 @@
   <data name="SyncEnabledLabel" xml:space="preserve">
     <value>启用多设备同步</value>
   </data>
+  <data name="SyncInsecureUrlHint" xml:space="preserve">
+    <value>服务器地址不是 HTTPS，同步密钥与数据将以明文传输，建议使用 HTTPS。</value>
+  </data>
   <data name="SyncKeyLabel" xml:space="preserve">
     <value>同步密钥</value>
   </data>

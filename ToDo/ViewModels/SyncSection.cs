@@ -1,3 +1,4 @@
+using System;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.Input;
 using ToDo.Services;
@@ -40,9 +41,16 @@ public sealed partial class SyncSection : SettingsSection
             {
                 SettingsService.Current.SyncServerUrl = value;
                 SettingsService.Save();
+                OnPropertyChanged(nameof(SyncInsecureUrlVisible));
             }
         }
     }
+
+    /// <summary>True when the server URL is set but not HTTPS — the sync key and all
+    /// data would travel the wire in plaintext. Drives the warning under the URL field.</summary>
+    public bool SyncInsecureUrlVisible =>
+        !string.IsNullOrWhiteSpace(SyncServerUrl) &&
+        !SyncServerUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
 
     public string SyncKey
     {
