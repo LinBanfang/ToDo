@@ -10,6 +10,7 @@ public class DatabaseService : IDisposable
     private readonly LiteDatabase _db;
     private readonly string _dbPath;
     private readonly SyncTracker _tracker;
+    private readonly HybridClock? _clock;
 
     // Raw collections: ApplySync writes here directly, bypassing outbox tracking.
     private readonly ILiteCollection<TaskList> _rawLists;
@@ -35,10 +36,13 @@ public class DatabaseService : IDisposable
 
     public SyncTracker Tracker => _tracker;
     public string StoragePath => _dbPath;
+    /// <summary>The HLC clock when one was supplied, else null (tests/legacy).</summary>
+    public HybridClock? Clock => _clock;
 
-    public DatabaseService(string dbPath)
+    public DatabaseService(string dbPath, HybridClock? clock = null)
     {
         _dbPath = dbPath;
+        _clock = clock;
         _db = new LiteDatabase($"Filename={_dbPath};Connection=direct");
 
         // Map ObservableCollection types to List for serialization
@@ -67,17 +71,19 @@ public class DatabaseService : IDisposable
 
         _tracker = new SyncTracker(_db.GetCollection<SyncEvent>("sync_events"));
 
-        // Tracked wrappers: every mutation stamps ModifiedAt and fills the outbox.
+        // Tracked wrappers: every mutation stamps ModifiedAt and fills the outbox. When an
+        // HLC clock is supplied (production), ModifiedAt is a hybrid-logical timestamp
+        // (ADR-018); without one (tests/legacy) it falls back to raw wall-clock ms.
         Lists = new TrackedCollection<TaskList>(_rawLists, _tracker, SyncEntityTypes.List,
-            l => l.Id, l => l.ModifiedAt = Now(), skip: l => l.IsSystem);
+            l => l.Id, l => l.ModifiedAt = StampNow(), skip: l => l.IsSystem, clockNow: ClockTick);
         Groups = new TrackedCollection<TaskGroup>(_rawGroups, _tracker, SyncEntityTypes.Group,
-            g => g.Id, g => g.ModifiedAt = Now());
+            g => g.Id, g => g.ModifiedAt = StampNow(), clockNow: ClockTick);
         Tasks = new TrackedCollection<TaskItem>(_rawTasks, _tracker, SyncEntityTypes.Task,
-            t => t.Id, t => t.ModifiedAt = Now());
+            t => t.Id, t => t.ModifiedAt = StampNow(), clockNow: ClockTick);
         Tags = new TrackedCollection<Tag>(_rawTags, _tracker, SyncEntityTypes.Tag,
-            t => t.Id, t => t.ModifiedAt = Now());
+            t => t.Id, t => t.ModifiedAt = StampNow(), clockNow: ClockTick);
         ListGroups = new TrackedCollection<ListGroup>(_rawListGroups, _tracker, SyncEntityTypes.ListGroup,
-            lg => lg.Id, lg => lg.ModifiedAt = Now());
+            lg => lg.Id, lg => lg.ModifiedAt = StampNow(), clockNow: ClockTick);
         Attachments = _rawAttachments;
 
         // Ensure indexes
@@ -97,7 +103,16 @@ public class DatabaseService : IDisposable
         SeedDefaultData();
     }
 
+    /// <summary>Raw wall-clock ms for non-sync fields (e.g. CreatedAt).</summary>
     private static long Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+    /// <summary>Stamps ModifiedAt for a write: HLC when a clock is present, raw wall clock
+    /// otherwise (tests construct DatabaseService without a clock).</summary>
+    private long StampNow() => _clock?.Tick() ?? Now();
+
+    /// <summary>Clock-now delegate for tombstone stamping; null when no clock (then the
+    /// tracked collection falls back to raw wall-clock ms).</summary>
+    private Func<long>? ClockTick => _clock == null ? null : () => _clock.Tick();
 
     private void SeedDefaultData()
     {
@@ -149,6 +164,45 @@ public class DatabaseService : IDisposable
 
     private void RecordIfSyncable(object entity) => _tracker.Record(SyncEntitySerializer.ToChange(entity));
 
+    /// <summary>Raw wall-clock ms never exceeds this before year ~34000, while every HLC
+    /// encoding (physical ≥ 2026) exceeds it — the boundary separating the two encodings.</summary>
+    private const long HlcEpoch = 1L << 50;
+
+    /// <summary>One-time migration to HLC timestamps (ADR-018 §迁移). Existing entities carry
+    /// raw wall-clock-ms ModifiedAt; rebase each to (physical&lt;&lt;21 | 0 | 0), seed the clock's
+    /// high-water mark to the max raw value, then re-seed the outbox so the rebased values
+    /// re-push to the server. Idempotent: only values below <see cref="HlcEpoch"/> (raw ms)
+    /// are rebased, so a re-run — or a fresh install — finds nothing to do.</summary>
+    public void MigrateToHlc()
+    {
+        if (_clock == null) return;
+
+        long max = 0;
+        void Rebase<T>(ILiteCollection<T> col, Func<T, long> get, Action<T, long> set) where T : class
+        {
+            foreach (var e in col.FindAll())
+            {
+                var v = get(e);
+                if (v <= 0 || v >= HlcEpoch) continue;   // unset or already HLC
+                set(e, v << 21);
+                col.Update(e);
+                if (v > max) max = v;
+            }
+        }
+
+        Rebase(_rawLists, l => l.ModifiedAt, (l, v) => l.ModifiedAt = v);
+        Rebase(_rawGroups, g => g.ModifiedAt, (g, v) => g.ModifiedAt = v);
+        Rebase(_rawTasks, t => t.ModifiedAt, (t, v) => t.ModifiedAt = v);
+        Rebase(_rawTags, t => t.ModifiedAt, (t, v) => t.ModifiedAt = v);
+        Rebase(_rawListGroups, lg => lg.ModifiedAt, (lg, v) => lg.ModifiedAt = v);
+
+        if (max > 0)
+        {
+            _clock.Observe(max << 21);   // post-migration writes must sort after the newest rebased entity
+            BootstrapSync();             // re-push rebased values (upsert keeps the larger ModifiedAt)
+        }
+    }
+
     /// <summary>
     /// Applies server changes to the raw collections, bypassing outbox tracking.
     /// Client-side LWW: a change is skipped when the local copy is newer. My Day
@@ -158,7 +212,11 @@ public class DatabaseService : IDisposable
     {
         foreach (var change in changes.OrderBy(c => c.ModifiedAt))
         {
-            try { ApplyOne(change); }
+            try
+            {
+                _clock?.Observe(change.ModifiedAt);   // merge remote timestamp → next local write sorts after it
+                ApplyOne(change);
+            }
             catch (Exception ex) { SyncDiagnostics.Warn($"ApplySync {change.Type}:{change.Id} failed: {ex.Message}"); }
         }
     }

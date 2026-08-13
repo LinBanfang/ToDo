@@ -58,6 +58,12 @@ public class AppSettings
     public long LastSyncServerSeq { get; set; }
     public long LastSyncTime { get; set; }
 
+    /// <summary>Persisted HLC high-water mark (ADR-018): the (physical ms, logical) pair the
+    /// HybridClock restores on startup, so a restart or NTP rollback never lets new writes
+    /// sort before older ones. 0/0 = never synced with HLC.</summary>
+    public long HlcPhysical { get; set; }
+    public long HlcLogical { get; set; }
+
     /// <summary>Auto-update feeds, tried in order. Empty = default (GitHub).</summary>
     public List<UpdateSourceSetting> UpdateSources { get; set; } = new();
 
@@ -84,7 +90,7 @@ public static class SettingsService
     /// <summary>Where a chosen backup is staged before it replaces the live DB on restart.</summary>
     public static string PendingRestoreFilePath => Path.Combine(SettingsDir, "pending-restore.db");
 
-    private const int CurrentSchemaVersion = 7;   // v7 adds ReminderToastSeconds; v6 adds ShowTask* row toggles; v5 adds ReminderSoundPath; v4 adds StickyShowTags; v3 added the Behavior block + sticky geometry
+    private const int CurrentSchemaVersion = 8;   // v8 adds HlcPhysical/HlcLogical (ADR-018); v7 adds ReminderToastSeconds; v6 adds ShowTask* row toggles; v5 adds ReminderSoundPath; v4 adds StickyShowTags; v3 added the Behavior block + sticky geometry
 
     private static AppSettings? _current;
 

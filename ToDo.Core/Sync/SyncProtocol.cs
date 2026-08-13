@@ -8,5 +8,5 @@ namespace ToDo.Sync;
 /// </summary>
 public static class SyncProtocol
 {
-    public const int Version = 1;
+    public const int Version = 2;   // v2: ModifiedAt is an HLC-encoded long (ADR-018), not raw wall-clock ms
 }

@@ -103,7 +103,7 @@ public sealed class SettingsServiceTests : IDisposable
 
         SettingsService.Load();
 
-        Assert.Equal(7, SettingsService.Current.SchemaVersion);
+        Assert.Equal(8, SettingsService.Current.SchemaVersion);
         Assert.Equal("Dark", SettingsService.Current.Theme);
         Assert.Equal("English", SettingsService.Current.Language);
         Assert.Equal(SettingsService.DefaultDbPath, SettingsService.Current.DbPath);

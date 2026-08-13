@@ -51,7 +51,11 @@ public partial class App : Application
         // Swap in a restored backup before the database is opened
         RestorePendingDatabase();
 
-        Database = new DatabaseService(ResolveDbPath());
+        // Mint the DeviceId + create the HLC clock before the database opens, so the very
+        // first write (SeedDefaultData) is already stamped with a hybrid-logical timestamp
+        // instead of raw wall-clock (ADR-018). Then one-time rebase any pre-HLC rows.
+        Database = new DatabaseService(ResolveDbPath(), CreateHybridClock());
+        Database.MigrateToHlc();
 
         // The sync engine (in ToDo.Core) reports through the same app log as the rest of
         // the app; the seam is a no-op until wired here (ADR-009).
@@ -146,6 +150,21 @@ public partial class App : Application
         }
 
         return configured;
+    }
+
+    /// <summary>Ensures a DeviceId is minted (kept forever; the server treats it as the
+    /// cursor owner) and builds the HLC clock from the persisted high-water mark. Runs
+    /// before DatabaseService is constructed; SyncService's constructor keeps the same
+    /// minting logic as an idempotent safety net.</summary>
+    private static HybridClock CreateHybridClock()
+    {
+        var s = SettingsService.Current;
+        if (string.IsNullOrEmpty(s.DeviceId))
+        {
+            s.DeviceId = Guid.NewGuid().ToString("N");
+            SettingsService.Save();
+        }
+        return new HybridClock(HybridClock.DiscriminatorFor(s.DeviceId), s.HlcPhysical, s.HlcLogical);
     }
 
     /// <summary>Applies a pending "restore from backup" staged by the settings page.</summary>

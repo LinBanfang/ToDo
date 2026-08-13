@@ -164,6 +164,11 @@ public partial class SyncService : ObservableObject, IDisposable
                 _db.Tracker.ClearPushed(events);
                 SettingsService.Current.LastSyncServerSeq = response.ServerSeq;
                 SettingsService.Current.LastSyncTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                if (_db.Clock is { } clock)
+                {
+                    SettingsService.Current.HlcPhysical = clock.Physical;
+                    SettingsService.Current.HlcLogical = clock.Logical;
+                }
                 SettingsService.Save();
                 _onSynced?.Invoke();
             });

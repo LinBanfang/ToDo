@@ -19,9 +19,10 @@ public class TrackedCollection<T> : ILiteCollection<T> where T : class
     private readonly Func<T, string> _getId;
     private readonly Action<T> _stamp;
     private readonly Func<T, bool>? _skip;
+    private readonly Func<long>? _clockNow;
 
     public TrackedCollection(ILiteCollection<T> inner, SyncTracker tracker, string entityType,
-        Func<T, string> getId, Action<T> stamp, Func<T, bool>? skip = null)
+        Func<T, string> getId, Action<T> stamp, Func<T, bool>? skip = null, Func<long>? clockNow = null)
     {
         _inner = inner;
         _tracker = tracker;
@@ -29,9 +30,10 @@ public class TrackedCollection<T> : ILiteCollection<T> where T : class
         _getId = getId;
         _stamp = stamp;
         _skip = skip;
+        _clockNow = clockNow;
     }
 
-    private static long Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    private long Now() => _clockNow?.Invoke() ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
     private void Record(T entity)
     {
