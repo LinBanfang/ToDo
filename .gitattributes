@@ -1,7 +1,22 @@
-# Shell scripts, systemd units and Caddy configs are deployed verbatim to the Linux
-# VPS via scp — CRLF would corrupt them (bash "syntax error", awk regex with \r,
-# systemd Environment values). Force LF regardless of Windows autocrlf.
+# Line-ending policy: normalize all text files to LF in the repository (so the
+# index is always consistent), and check them out with the platform's native
+# line ending (CRLF on Windows, LF on Linux/macOS). This makes the policy
+# explicit and independent of each contributor's local core.autocrlf setting.
+* text=auto
+
+# Files deployed verbatim to the Linux VPS via scp — CRLF would corrupt them
+# (bash "syntax error", awk regex with \r, systemd Environment values).
+# Force LF regardless of Windows autocrlf.
 *.sh text eol=lf
 *.service text eol=lf
 *.Caddyfile text eol=lf
 Caddyfile text eol=lf
+
+# Binary assets — never line-ending-normalize.
+*.ico binary
+*.wav binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
