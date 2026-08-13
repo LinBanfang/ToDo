@@ -292,6 +292,13 @@ public class DatabaseService : IDisposable
         }
     }
 
+    /// <summary>Persists a task's per-device My Day state (IsMyDay / MyDayOrder) without
+    /// stamping ModifiedAt or filling the sync outbox. My Day is local-only (the TaskSync
+    /// DTO excludes it, ADR-015), so the daily reset must not rewrite the syncable
+    /// ModifiedAt — doing so re-uploads a stale snapshot and lets a device with a newer
+    /// wall-clock win an LWW conflict over a genuinely newer edit on another device.</summary>
+    public void UpdateMyDayLocal(TaskItem task) => _rawTasks.Update(task);
+
     /// <summary>Flushes LiteDB's journal then copies the database file to <paramref name="destPath"/>.
     /// Attachments live inside the DB file (ADR-013), so a backup automatically includes them.</summary>
     public void ExportTo(string destPath)

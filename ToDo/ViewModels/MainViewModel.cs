@@ -184,8 +184,7 @@ public partial class MainViewModel : ObservableObject
         {
             t.IsMyDay = false;
             t.MyDayOrder = -1;
-            t.ModifiedAt = _clock.UtcNow.ToUnixTimeMilliseconds();
-            _db.Tasks.Update(t);
+            _db.UpdateMyDayLocal(t);
         }
 
         // Auto-add today's tasks to My Day
@@ -199,8 +198,7 @@ public partial class MainViewModel : ObservableObject
         {
             t.IsMyDay = true;
             t.MyDayOrder = ++maxOrder;
-            t.ModifiedAt = _clock.UtcNow.ToUnixTimeMilliseconds();
-            _db.Tasks.Update(t);
+            _db.UpdateMyDayLocal(t);
         }
     }
 

@@ -236,6 +236,23 @@ public sealed class MainViewModelTests : IDisposable
         Assert.Equal(2, Task("C").MyDayOrder);
     }
 
+    [Fact]
+    public void DailyMyDayReset_DoesNotStampModifiedAt_OrFillOutbox()
+    {
+        // The daily reset mutates only local-only My Day state (IsMyDay / MyDayOrder).
+        // It must NOT rewrite the syncable ModifiedAt or fill the outbox — otherwise a
+        // startup reset re-uploads a stale snapshot and can win an LWW conflict over a
+        // genuinely newer edit on another device.
+        SeedTask("A", "list-tasks", myDay: true, myDayOrder: 5, due: Today.AddDays(-1));
+        var before = _db.Tasks.FindById("A")!.ModifiedAt;
+        var pendingBefore = _db.Tracker.AllPending().Count();
+
+        _vm.DailyMyDayReset();
+
+        Assert.Equal(before, _db.Tasks.FindById("A")!.ModifiedAt);   // untouched
+        Assert.Equal(pendingBefore, _db.Tracker.AllPending().Count()); // no outbox churn
+    }
+
     // A valid 1x1 PNG so BitmapImage decoding in ListBackgroundBrush succeeds.
     private static readonly byte[] TinyPng = Convert.FromBase64String(
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==");
