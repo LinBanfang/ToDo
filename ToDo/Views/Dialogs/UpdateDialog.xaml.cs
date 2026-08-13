@@ -37,7 +37,7 @@ public partial class UpdateDialog : Window
     private async Task DownloadAsync(string url, string target)
     {
         using var client = new HttpClient();
-        using var response = client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).Result;
+        using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
         response.EnsureSuccessStatusCode();
         var total = response.Content.Headers.ContentLength ?? 0;
         await using var content = await response.Content.ReadAsStreamAsync();

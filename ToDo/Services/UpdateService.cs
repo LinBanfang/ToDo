@@ -113,6 +113,10 @@ public static class UpdateService
         args.UpdateInfo = null;
     }
 
+    /// <summary>Fetches one source's latest release synchronously. Runs on AutoUpdater's
+    /// background worker (via the ParseUpdateInfoEvent handler), so blocking on the result
+    /// is acceptable — it must NOT become async, because ParseUpdateInfoEvent is a
+    /// synchronous event and CheckUpdate reads args.UpdateInfo right after firing it.</summary>
     private static bool TryGetLatest(UpdateSource source, out string version, out string downloadUrl,
         out string body, out string changelogUrl)
     {
@@ -122,7 +126,7 @@ public static class UpdateService
         {
             using var client = new HttpClient();
             client.DefaultRequestHeaders.UserAgent.ParseAdd("ToDo-Updater");
-            var xml = client.GetStringAsync(source.Url).Result;
+            var xml = client.GetStringAsync(source.Url).GetAwaiter().GetResult();
 
             UpdateInfoEventArgs info;
             var previousBaseUri = AutoUpdater.BaseUri;
@@ -150,7 +154,7 @@ public static class UpdateService
         // JSON releases API (github / gitee style)
         using var http = new HttpClient();
         http.DefaultRequestHeaders.UserAgent.ParseAdd("ToDo-Updater");
-        var json = http.GetStringAsync(source.Url).Result;
+        var json = http.GetStringAsync(source.Url).GetAwaiter().GetResult();
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
 
