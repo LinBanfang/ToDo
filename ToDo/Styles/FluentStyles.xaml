@@ -142,7 +142,7 @@
                                        HorizontalAlignment="Center" VerticalAlignment="Center"
                                        Visibility="Collapsed"/>
                         </Border>
-                        <ContentPresenter Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        <ContentPresenter x:Name="ContentHost" Margin="6,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
@@ -152,6 +152,12 @@
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource TextAccentBrush}"/>
+                        </Trigger>
+                        <!-- No label → the 6px box→label gap is dead space; drop it so a bare
+                             checkbox is 18px wide instead of 24px. Otherwise the empty
+                             ContentPresenter's margin pushes the step-row text right. -->
+                        <Trigger Property="Content" Value="{x:Null}">
+                            <Setter TargetName="ContentHost" Property="Margin" Value="0"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

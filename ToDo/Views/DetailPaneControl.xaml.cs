@@ -42,6 +42,7 @@ public partial class DetailPaneControl : UserControl
     /// instead of going blank.</summary>
     public void UpdateForSelectedTask()
     {
+        ResetAddStep();
         var task = ViewModel.SelectedTask;
         var target = Math.Clamp(SettingsService.Current.DetailPaneWidth, DetailPaneMinWidth, DetailPaneMaxWidth);
         if (task == null)
@@ -567,18 +568,64 @@ public partial class DetailPaneControl : UserControl
     }
 
     // ─── Steps ────────────────────────────────────────────
-    private void AddStepBox_ButtonClick(object sender, RoutedEventArgs e)
+    private void AddStepIdle_Click(object sender, MouseButtonEventArgs e)
     {
-        AddStepBox.Focus();
+        BeginAddStep();
+        e.Handled = true;
+    }
+
+    /// <summary>Swaps the idle "+ 添加步骤" hint for the in-place editing row and focuses it.</summary>
+    private void BeginAddStep()
+    {
+        AddStepIdle.Visibility = Visibility.Collapsed;
+        AddStepActive.Visibility = Visibility.Visible;
+        // Defer the focus so the just-shown row is laid out first (same pattern as the
+        // inline title editor's IsVisibleChanged focus).
+        Dispatcher.BeginInvoke(() => AddStepBox.Focus());
+    }
+
+    /// <summary>Back to the idle "+ 添加步骤" hint after the draft is committed or discarded.</summary>
+    private void ShowAddStepIdle()
+    {
+        AddStepActive.Visibility = Visibility.Collapsed;
+        AddStepIdle.Visibility = Visibility.Visible;
+    }
+
+    /// <summary>Clears any draft and returns the add-step area to its idle affordance
+    /// (on task switch, so a half-typed step doesn't leak into the next task).</summary>
+    private void ResetAddStep()
+    {
+        AddStepBox.Text = "";
+        ShowAddStepIdle();
+    }
+
+    private void AddStepBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        // Clicked away while editing: keep the draft as a real step when it has content,
+        // otherwise discard and return to the idle affordance.
+        var text = AddStepBox.Text?.Trim();
+        if (!string.IsNullOrEmpty(text) && ViewModel.SelectedTask != null)
+            ViewModel.AddStepCommand.Execute((ViewModel.SelectedTask, text));
+        AddStepBox.Text = "";
+        ShowAddStepIdle();
     }
 
     private void AddStepBox_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Enter && sender is TextBox tb && !string.IsNullOrWhiteSpace(tb.Text)
-            && ViewModel.SelectedTask != null)
+        if (sender is not TextBox tb) return;
+
+        if (e.Key == Key.Enter)
         {
-            ViewModel.AddStepCommand.Execute((ViewModel.SelectedTask, tb.Text.Trim()));
-            tb.Text = "";
+            if (!string.IsNullOrWhiteSpace(tb.Text) && ViewModel.SelectedTask != null)
+            {
+                ViewModel.AddStepCommand.Execute((ViewModel.SelectedTask, tb.Text.Trim()));
+                tb.Text = "";
+            }
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape)
+        {
+            ResetAddStep();
             e.Handled = true;
         }
     }
