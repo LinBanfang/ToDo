@@ -448,7 +448,7 @@
 
         <!-- Task area -->
         <ScrollViewer x:Name="TaskAreaScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,15,0,8"
-                      AllowDrop="True" PreviewDragOver="TaskArea_PreviewDragOver"
+                      AllowDrop="True" PreviewDragOver="TaskArea_PreviewDragOver" DragLeave="TaskArea_DragLeave"
                       ScrollChanged="TaskAreaScroll_ScrollChanged"
                       Focusable="False" FocusVisualStyle="{x:Null}">
             <StackPanel x:Name="TaskAreaPanel">

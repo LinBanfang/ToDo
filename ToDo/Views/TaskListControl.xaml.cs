@@ -103,6 +103,7 @@ public partial class TaskListControl : UserControl
         {
             SetGroupHeaderToggleSuppressed();
             DragDrop.DoDragDrop(fe, gt.Group!, DragDropEffects.Move);
+            StopDragAutoScroll();
         }
     }
 
@@ -480,6 +481,7 @@ public partial class TaskListControl : UserControl
                 ViewModel.IsTaskDragging = false;
                 _ungroupedZoneBottom = null;
                 SetDropSlotOpen(false);
+                StopDragAutoScroll();
             }
         }
     }
@@ -509,10 +511,75 @@ public partial class TaskListControl : UserControl
     /// neighbouring section, which would flicker the slot at the top-zone boundary.</summary>
     private void TaskArea_PreviewDragOver(object sender, DragEventArgs e)
     {
+        // Auto-scroll the task area while a task or group is dragged near the top/bottom
+        // edge, so a reorder/regroup across a list longer than one viewport can land in a
+        // single drag instead of drop-scroll-drag-again.
+        if (e.Data.GetDataPresent(typeof(TaskItem)) || e.Data.GetDataPresent(typeof(TaskGroup)))
+            UpdateDragAutoScroll(e);
+
         if (!ViewModel.IsTaskDragging || !e.Data.GetDataPresent(typeof(TaskItem))) return;
         var pos = e.GetPosition(TaskAreaPanel);
         SetDropSlotOpen(_ungroupedZoneBottom != null && pos.Y <= _ungroupedZoneBottom.Value);
     }
+
+    // ─── Drag auto-scroll ─────────────────────────────────
+    // DragOver only fires on mouse moves, so a pointer held still in the near-edge zone
+    // needs a timer to keep the list scrolling beneath it. Velocity ramps from 0 at the
+    // zone's inner edge up to DragAutoScrollMaxStep at the very edge. The timer stops on
+    // pointer leave (TaskArea_DragLeave), on reaching either end, and when the drag ends
+    // (both DoDragDrop call sites clear it explicitly).
+    private DispatcherTimer? _dragAutoScrollTimer;
+    private double _dragAutoScrollStep;
+
+    private const double DragAutoScrollZone = 60;     // px near the top/bottom edge
+    private const double DragAutoScrollMaxStep = 24;  // px per 16ms tick at full speed
+
+    private void UpdateDragAutoScroll(DragEventArgs e)
+    {
+        var pos = e.GetPosition(TaskAreaScroll);
+        double step = 0;
+        if (pos.Y >= 0 && pos.Y < DragAutoScrollZone)
+            step = -(DragAutoScrollZone - pos.Y) / DragAutoScrollZone * DragAutoScrollMaxStep;
+        else if (pos.Y > TaskAreaScroll.ViewportHeight - DragAutoScrollZone && pos.Y <= TaskAreaScroll.ViewportHeight)
+            step = (pos.Y - (TaskAreaScroll.ViewportHeight - DragAutoScrollZone)) / DragAutoScrollZone * DragAutoScrollMaxStep;
+
+        if (step != 0 && TaskAreaScroll.ScrollableHeight > 0)
+        {
+            _dragAutoScrollStep = step;
+            if (_dragAutoScrollTimer == null)
+            {
+                _dragAutoScrollTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
+                _dragAutoScrollTimer.Tick += (_, _) => AutoScrollTick();
+            }
+            if (!_dragAutoScrollTimer.IsEnabled) _dragAutoScrollTimer.Start();
+        }
+        else
+        {
+            StopDragAutoScroll();
+        }
+    }
+
+    private void AutoScrollTick()
+    {
+        var next = TaskAreaScroll.VerticalOffset + _dragAutoScrollStep;
+        if (next <= 0 || next >= TaskAreaScroll.ScrollableHeight)
+        {
+            TaskAreaScroll.ScrollToVerticalOffset(Math.Clamp(next, 0, TaskAreaScroll.ScrollableHeight));
+            StopDragAutoScroll();   // reached an end — nothing left to scroll
+        }
+        else
+        {
+            TaskAreaScroll.ScrollToVerticalOffset(next);
+        }
+    }
+
+    private void StopDragAutoScroll()
+    {
+        _dragAutoScrollTimer?.Stop();
+        _dragAutoScrollStep = 0;
+    }
+
+    private void TaskArea_DragLeave(object sender, DragEventArgs e) => StopDragAutoScroll();
 
     /// <summary>Slides the empty-ungrouped drop slot in/out. Driven directly rather than
     /// via a Style trigger's EnterActions storyboard, which WPF does not revert when the
