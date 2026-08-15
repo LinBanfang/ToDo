@@ -89,7 +89,7 @@ cd d:\Dev\Code\ToDo
 ```bash
 # ① 存活检查(HTTPS 端口 8443)
 curl https://<你的域名>:8443/healthz
-#   期望: {"status":"ok","protocolVersion":1}   (protocolVersion 由客户端用于"版本不符"检测)
+#   期望: {"status":"ok","protocolVersion":2}   (protocolVersion 由客户端用于"版本不符"检测)
 
 # ② 认证:错误密钥必须 401
 curl -i -X POST https://<你的域名>:8443/api/sync \
