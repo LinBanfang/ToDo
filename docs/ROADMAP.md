@@ -86,7 +86,7 @@
 
 - [x] M1 契约项目 + `PluginManager` + 首个导出插件跑通全链路（含侧边栏入口 + 只读门面）
 - [x] M2 事件总线（`ITodoEvents`，命令末尾 `Raise`）+ 门面写方法（命令粒度，转发 VM 命令）
-- [ ] M3 `IUiHost` 设置节 + 资源合并（`MergeResourceDictionary`）+ 快速添加拦截器（侧边栏入口已在 M1 落地）
+- [x] M3 `IUiHost` 设置节 + 资源合并（`MergeResourceDictionary`）+ 快速添加拦截器（侧边栏入口已在 M1 落地）
 - [ ] M4 manifest `minAppVersion` 校验 + 卸载级联清理插件数据 + 大小上限（契约版本校验已在 M1 落地）
 - [ ] M5 插件更新 + 验签（与 ROADMAP-13 合流）
 

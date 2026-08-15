@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using System.Windows;
 using System.Windows.Threading;
 using ToDo.Models;
 using ToDo.Plugin.Abstractions;
@@ -203,13 +204,21 @@ sealed class TodoHost : ITodoHost, IUiHost
         RunOnUi(() => _registerSidebar(entry));
 
     public void RegisterSettingsSection(string title, Func<object> createView) =>
-        throw new NotImplementedException("IUiHost.RegisterSettingsSection 在 M3 实现。");
+        RunOnUi(() =>
+        {
+            var view = createView();   // 插件 ALC 里创建 FrameworkElement（spike U3 已验证可用）
+            _vm.Settings.Sections.Add(new PluginSettingsSection($"plugin:{_pluginId}", title, view));
+        });
 
     public void RegisterQuickAddInterceptor(IQuickAddInterceptor interceptor) =>
-        throw new NotImplementedException("IUiHost.RegisterQuickAddInterceptor 在 M3 实现。");
+        RunOnUi(() => _vm.RegisterQuickAddInterceptor(interceptor));
 
-    public void MergeResourceDictionary(Uri uri) =>
-        throw new NotImplementedException("IUiHost.MergeResourceDictionary 在 M3 实现。");
+    public void MergeResourceDictionary(Uri uri) => RunOnUi(() =>
+    {
+        var app = Application.Current;
+        if (app == null) return;   // headless/测试：无 App 资源可合并
+        app.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = uri });
+    });
 
     // ─── 线程编组 ─────────────────────────────────────────────
 

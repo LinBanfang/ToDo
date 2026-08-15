@@ -56,7 +56,7 @@ public partial class TaskListControl : UserControl
     {
         if (e.Key == Key.Enter && sender is TextBox tb && !string.IsNullOrWhiteSpace(tb.Text))
         {
-            ViewModel.CreateTaskCommand.Execute(tb.Text.Trim());
+            ViewModel.AddTask(tb.Text.Trim());
             tb.Text = "";
             e.Handled = true;
         }

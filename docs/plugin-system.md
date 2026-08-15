@@ -338,7 +338,7 @@ ShutdownAll（退出时）：
 
 - 宿主 `Loc` 是强类型静态门面（221 个成员），**只服务宿主字符串**；`host.CurrentLanguage` 供插件判断当前语言（`zh-CN`/`en-US`）。`SetLanguage` 不设 `CurrentUICulture`（已核对 `LocalizationService`），所以插件**不能**依赖线程文化，必须读 `host.CurrentLanguage` + 订阅 `Events.LanguageChanged`。
 - 插件 UI 字符串**自带资源**（卫星程序集或嵌入式 resx/JSON），宿主不代管。
-- 语言切换会 `WindowManager.RebuildForLanguageChange()` 重建主窗口（ADR-017）——插件侧边栏入口/设置节需在重建后重新注册。实现上 `PluginManager` 暴露 `RebuildUi()`，主窗口重建时重新调用，避免插件 UI 丢失。
+- 语言切换会 `WindowManager.RebuildForLanguageChange()` 重建主窗口（ADR-017）。插件 UI 注册挂在 **VM 集合**上（侧边栏入口在 `MainViewModel.PluginEntries`、设置节在 `SettingsViewModel.Sections`），集合跨窗口重建存活，新窗口重建后重新绑定即恢复——无需重新注册；仅当插件用 `MergeResourceDictionary` 合并进 `Application.Resources` 时，需在卸载时移除该字典（见 §5.3）。
 
 ---
 
