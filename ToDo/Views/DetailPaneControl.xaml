@@ -237,10 +237,16 @@
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
+                                        <!-- Hidden checkbox (same element as the step rows) anchors the
+                                             hint text to the exact same column; the "+" is drawn over
+                                             its box so the idle row lines up with the step titles. -->
+                                        <CheckBox Grid.Column="0" Style="{StaticResource FluentCheckBox}"
+                                                  Visibility="Hidden"
+                                                  VerticalAlignment="Center" Margin="0,0,8,0"/>
                                         <TextBlock Grid.Column="0" Text="+" FontSize="14" FontWeight="Light"
                                                    Foreground="{DynamicResource TextAccentBrush}"
-                                                   Width="18" HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                   Width="18" HorizontalAlignment="Left" TextAlignment="Center"
+                                                   VerticalAlignment="Center" IsHitTestVisible="False"/>
                                         <TextBlock Grid.Column="1" Text="{x:Static services:Loc.AddStep}" FontSize="13"
                                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                                    VerticalAlignment="Center"/>
