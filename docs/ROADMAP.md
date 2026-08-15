@@ -102,3 +102,13 @@ ADR-010 已规划；`ToDo.Core` 按可复用设计、同步协议带版本号，
 
 - [ ] 发布流水线对 zip 做代码签名
 - [ ] 客户端内置公钥并验签（或校验发布物哈希）
+
+### 14. 升级 .NET 10（LTS）
+
+当前目标 `net9.0` 是 STS，已于 2026-05 停止支持（服务端运行时临时钉在 9.0.19，见 `ToDo.Server.csproj` 的 `RuntimeFrameworkVersion`）。.NET 8 也将在 2026-11 到期，退回它没有意义——直接升到 LTS 的 .NET 10（支持至 2028-11）才是长期归宿。
+
+- [ ] 6 个项目 TFM `net9.0` → `net10.0`（WPF 客户端 / 客户端测试为 `net10.0-windows10.0.19041`）
+- [ ] 验证依赖兼容：CommunityToolkit.Mvvm / CommunityToolkit.WinUI.Notifications / LiteDB / Microsoft.Xaml.Behaviors.Wpf / EF Core / xunit / coverlet
+- [ ] CI 的 `actions/setup-dotnet` 改为 `10.0.x`；本地建议加 `global.json` 锁 SDK，避免 SDK 漂移
+- [ ] 全量回归 + 覆盖率 + release.yml 发布路径验证
+- [ ] 升级后移除服务端的 `RuntimeFrameworkVersion` / `TargetLatestRuntimePatch` 钉版（随 LTS 补丁正常走）
