@@ -26,6 +26,9 @@ public class DatabaseService : IDisposable
     // List background opacity ("背景强弱") is local-only as well — a display preference
     // tied to a local-only asset, so a value that can't sync, in its own untracked collection.
     private readonly ILiteCollection<ListBackgroundSetting> _rawListBackgroundSettings;
+    // Generic local-only KV (plugin settings/storage, ADR-020 D5): untracked, survives
+    // backup/migration like attachments, namespaced by the plugin host facade.
+    private readonly ILiteCollection<LocalKv> _rawLocalKv;
 
     public ILiteCollection<TaskList> Lists { get; }
     public ILiteCollection<TaskGroup> Groups { get; }
@@ -68,6 +71,7 @@ public class DatabaseService : IDisposable
         _rawAttachments = _db.GetCollection<TaskAttachment>("attachments");
         _rawListBackgrounds = _db.GetCollection<ListBackground>("list_backgrounds");
         _rawListBackgroundSettings = _db.GetCollection<ListBackgroundSetting>("list_background_settings");
+        _rawLocalKv = _db.GetCollection<LocalKv>("local_kv");
 
         _tracker = new SyncTracker(_db.GetCollection<SyncEvent>("sync_events"));
 
@@ -365,6 +369,25 @@ public class DatabaseService : IDisposable
         Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
         File.Copy(_dbPath, destPath, overwrite: true);
     }
+
+    // ─── Local-only generic KV (plugin settings/storage, ADR-020 D5) ──
+
+    /// <summary>Reads a local-only KV value, or null when absent.</summary>
+    public string? GetLocalValue(string key) => _rawLocalKv.FindById(key)?.Value;
+
+    /// <summary>Upserts a local-only KV value (unset when <paramref name="value"/> is null).</summary>
+    public void SetLocalValue(string key, string? value)
+    {
+        if (value == null) { _rawLocalKv.Delete(key); return; }
+        _rawLocalKv.Upsert(new LocalKv { Id = key, Value = value });
+    }
+
+    /// <summary>Deletes a local-only KV value.</summary>
+    public void RemoveLocalValue(string key) => _rawLocalKv.Delete(key);
+
+    /// <summary>All local-only KV keys under a prefix (e.g. "plugins/&lt;Id&gt;/").</summary>
+    public IEnumerable<string> GetLocalKeys(string prefix) =>
+        _rawLocalKv.Find(k => k.Id.StartsWith(prefix)).Select(k => k.Id);
 
     // ─── Attachments (local-only, ADR-013) ─────────────────
 

@@ -27,6 +27,9 @@ public partial class MainViewModel : ObservableObject
     public ObservableCollection<TaskItem> Tasks { get; } = new();
     public ObservableCollection<Tag> Tags { get; } = new();
 
+    // ─── Plugin sidebar entries (filled by PluginManager via IUiHost) ──
+    public ObservableCollection<PluginEntryVm> PluginEntries { get; } = new();
+
     // ─── Active list's tasks (filtered + sorted) ──────────
     public ObservableCollection<TaskItem> ActiveTasks { get; } = new();
     public ObservableCollection<TaskItem> CompletedTasks { get; } = new();

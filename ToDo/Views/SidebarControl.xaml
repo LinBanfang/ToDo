@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="ToDo.Views.SidebarControl"
+<UserControl x:Class="ToDo.Views.SidebarControl"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:models="clr-namespace:ToDo.Models;assembly=ToDo.Core"
@@ -220,6 +220,26 @@
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
+
+                        <!-- Plugin entries (registered by plugins via IUiHost.RegisterSidebarEntry) -->
+                        <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="14,4"
+                                Visibility="{Binding PluginEntries.Count, Converter={StaticResource CountToVis}}"/>
+                        <ItemsControl ItemsSource="{Binding PluginEntries}" Margin="0,4,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:PluginEntryVm}">
+                                    <Button Style="{StaticResource FluentSubtleButton}" FontSize="14"
+                                            HorizontalContentAlignment="Left" Padding="14,8" Margin="0,1,0,1"
+                                            Foreground="{DynamicResource TextSecondaryBrush}"
+                                            Command="{Binding OpenCommand}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Icon}" FontSize="16" FontFamily="Segoe UI Emoji"
+                                                       Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
                 </ScrollViewer>
 

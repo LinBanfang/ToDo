@@ -44,12 +44,14 @@
 
 原提案 §4.1 同时写了 `GetTasks → TaskItem` 又宣称「只依赖 SDK」，自相矛盾；D1 采用 A 修正之。
 
-### D2 契约分两层：`Abstractions`（net9.0）+ `Abstractions.Wpf`（net9.0-windows）
+### D2 契约分层：单一 `ToDo.Plugin.Abstractions`（net9.0）
 
 | 选项 | 说明 | 优点 | 缺点 |
 |---|---|---|---|
-| **A（采用）：分两层** | 纯数据/接口放 net9.0；UI 扩展点放 net9.0-windows | 后台插件（导出/GitHub 同步）不依赖 WPF，可复用 `ToDo.Core` 的 net9.0 分层；与 `ToDo.Core`(net9.0) / WPF 宿主(net9.0-windows) 对齐 | 多一个程序集 |
-| B：单层 net9.0-windows | 全部放一起 | 简单 | 强制纯后台插件也拉 WPF 引用 |
+| **A（采用）：单一 net9.0 契约** | DTO + `ITodoPlugin/ITodoHost/ITodoEvents/IUiHost` 全放 net9.0。`IUiHost` 签名刻意不含 WPF 类型（视图返回 `object`、资源用 `System.Uri`），故无需 net9.0-windows | 后台插件不依赖 WPF；一个程序集；无「net9.0 引用 net9.0-windows」的 TFM 冲突 | 无 |
+| B：拆 `Abstractions` + `Abstractions.Wpf` | UI 扩展点单独放 net9.0-windows | 语义清晰 | 若 UI 扩展点签名不含 WPF 类型则纯属多余；且 `ITodoHost.Ui`（net9.0）引用 `IUiHost`（net9.0-windows）会制造 TFM 依赖倒挂 |
+
+实施中确认：`IUiHost` 当前成员（`RegisterSidebarEntry`/`RegisterSettingsSection`/`MergeResourceDictionary(Uri)`）都不需要 WPF 类型，故选 A。**未来若某扩展点需在签名里直接暴露 WPF 类型（如返回 `FrameworkElement`），再拆出 net9.0-windows 契约**，届时 `ITodoHost` 通过新增的 `IUiHost` 获取方式（而非直接属性）解耦。
 
 ### D3 加载模型：统一 collectible ALC（非「UI 走默认上下文」）
 
@@ -73,7 +75,7 @@ A 与 B 在「UI 插件不可卸载」上等价，A 更简单，故选 A。U3d �
 
 | 选项 | 说明 | 优点 | 缺点 |
 |---|---|---|---|
-| **A（采用）：进 todo.db 独立 collection（untracked）** | `plugin_settings`（KV）+ `plugin_storage`（blob）两个普通 `ILiteCollection`，不进 `TrackedCollection`/outbox | 与 ADR-013/014「单文件即数据、备份/迁移零改动」哲学一致；无孤儿文件 | 插件数据与主数据同库，坏插件可能撑大 db（设每插件大小上限 + 卸载级联清理） |
+| **A（采用）：进 todo.db 独立 collection（untracked）** | 一个通用 `local_kv` collection（`DatabaseService` 暴露 `Get/SetLocalValue`），不进 `TrackedCollection`/outbox；门面按 `plugins/<Id>/settings/` 与 `plugins/<Id>/storage/` 前缀隔离 KV 与 blob | 与 ADR-013/014「单文件即数据、备份/迁移零改动」哲学一致；`ToDo.Core` 保持插件无关（通用 KV，不引入插件概念）；无孤儿文件 | 插件数据与主数据同库，坏插件可能撑大 db（设每插件大小上限 + 卸载级联清理） |
 | B：插件目录下文件 | `plugins\<id>\*.json/.db` | 隔离干净，删目录即删数据 | 破坏「单文件备份」承诺；`DatabaseService.ExportTo` 备份漏掉插件数据 |
 
 插件**代码/程序集**始终放文件目录（`%LOCALAPPDATA%\ToDo\plugins\<id>\`，需 ALC 加载与更新），只有**数据**进 DB——两者分开。
@@ -119,9 +121,8 @@ ToDo.sln（新增两个契约项目 + 样例插件）
 │       ├── PluginManifest.cs
 │       ├── TodoHost.cs                 （ITodoHost 门面实现，桥接 App 静态单例）
 │       └── TodoEvents.cs
-├── ToDo.Plugin.Abstractions/           net9.0         （契约核心：DTO + ITodoPlugin/ITodoHost/事件/存储）
-├── ToDo.Plugin.Abstractions.Wpf/       net9.0-windows （UI 扩展点：IUiHost/ISidebarEntry）
-├── samples/ExportPlugin/               net9.0-windows （首个样例：导出 iCalendar/Markdown/CSV）
+├── ToDo.Plugin.Abstractions/           net9.0         （契约：DTO + ITodoPlugin/ITodoHost/事件/存储/IUiHost）
+├── samples/ExportPlugin/               net9.0-windows （首个样例：导出 Markdown）
 └── spikes/plugin-loading/              （验证代码，保留作证据）
 ```
 
@@ -248,9 +249,10 @@ public sealed class NewTaskDraft
 
 **契约时间约定**：`DueDate/Reminder/CreatedAt/ClosedAt` 是 Unix 毫秒（墙钟）；`ModifiedAt` 是 HLC 编码（ADR-018），只用于比较排序，**不得**当时间显示——插件要「最近修改」用 `ClosedAt`/`CreatedAt`，或宿主另给 `CreatedAt`。
 
-### 4.3 `ToDo.Plugin.Abstractions.Wpf`（net9.0-windows）
+### 4.3 UI 扩展点 `IUiHost`（在 `ToDo.Plugin.Abstractions` 内）
 
 ```csharp
+// 签名不含 WPF 类型（视图返回 object、资源用 System.Uri），故与契约同属 net9.0（见 D2）。
 public interface IUiHost
 {
     void RegisterSidebarEntry(SidebarEntry entry);
@@ -287,7 +289,7 @@ sealed class PluginLoadContext : AssemblyLoadContext
     protected override Assembly? Load(AssemblyName name)
     {
         // 契约单载：契约程序集名强制回默认上下文
-        if (name.Name is "ToDo.Plugin.Abstractions" or "ToDo.Plugin.Abstractions.Wpf")
+        if (name.Name == "ToDo.Plugin.Abstractions")
             return null;
         var path = _resolver.ResolveAssemblyToPath(name);
         if (path != null) return LoadFromAssemblyPath(path);
@@ -315,7 +317,7 @@ ShutdownAll（退出时）：
 - **读方法**：`Dispatcher.Invoke` 后从 VM 集合投影为 `TaskDto` 快照（`.ToArray()` 切断活对象引用）。
 - **事件**：`TodoEvents` 在 VM 命令末尾 `Raise`（见 6）。
 - **`Notify`**：转发 `ReminderService`/托盘通知；**`Log`**：转发 `DiagnosticLog`；**`CurrentLanguage`**：映射 `Loc.Language`。
-- **`Settings/Storage`**：落到 `plugin_settings`/`plugin_storage` 两个 untracked collection，键空间按插件 Id 前缀隔离。
+- **`Settings/Storage`**：落到 `DatabaseService` 的通用 `local_kv` untracked collection（`Get/SetLocalValue`），键空间按 `plugins/<Id>/settings/` 与 `plugins/<Id>/storage/` 前缀隔离。
 
 ---
 
@@ -356,7 +358,7 @@ ShutdownAll（退出时）：
 
 ### 8.2 数据（DB，见 D5）
 
-`DatabaseService` 新增两个 untracked collection：`plugin_settings`、`plugin_storage`，键 `pluginId + "/" + key`。卸载插件时级联删除该插件行。备份/迁移/改库路径零改动（仍是拷一个 `todo.db`）。
+`DatabaseService` 新增一个通用 untracked collection `local_kv`（`GetLocalValue`/`SetLocalValue`/`RemoveLocalValue`/`GetLocalKeys`），门面按 `plugins/<Id>/settings/` 与 `plugins/<Id>/storage/` 前缀隔离；`ToDo.Core` 不引入插件概念。卸载插件时级联删除该插件前缀下的行。备份/迁移/改库路径零改动（仍是拷一个 `todo.db`）。
 
 ### 8.3 更新
 

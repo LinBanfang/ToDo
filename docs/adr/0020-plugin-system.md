@@ -16,7 +16,7 @@
 ## 决策
 
 1. **加载机制**：可回收 `AssemblyLoadContext`（`isCollectible:true`）+ 契约程序集单载（ALC `Load` 对契约名返回 null）+ `AssemblyDependencyResolver` + 反射发现。已用独立 spike（`spikes/plugin-loading`）验证：契约单载成立、非 UI 插件可干净卸载、编译 XAML `UserControl` 可从 `%LOCALAPPDATA%` 外部目录经 ALC 加载。
-2. **契约分层**：`ToDo.Plugin.Abstractions`（net9.0，纯 DTO + 接口）+ `ToDo.Plugin.Abstractions.Wpf`（net9.0-windows，UI 扩展点）。契约只暴露**纯 DTO 快照**，不暴露 `TaskItem`（避免插件依赖 LiteDB/CommunityToolkit.Mvvm，避免 UI 线程活对象跨线程）。
+2. **契约分层**：单一 `ToDo.Plugin.Abstractions`（net9.0），DTO + 接口（含 `IUiHost`，其签名不含 WPF 类型）。契约只暴露**纯 DTO 快照**，不暴露 `TaskItem`（避免插件依赖 LiteDB/CommunityToolkit.Mvvm，避免 UI 线程活对象跨线程）。若未来 UI 扩展点需 WPF 类型再拆 net9.0-windows 契约。
 3. **门面**：`ITodoHost` 是命令粒度门面（镜像 VM 命令），内部 `Dispatcher.Invoke` 编组到 UI 线程，转发到 `App.ViewModel`/`App.Database`；读返回 DTO 快照。
 4. **事件总线**：`ITodoEvents` 粗粒度领域事件（`TaskCreated/Changed/Completed/Canceled/Reopened/Deleted/Restored/DataSyncApplied/LanguageChanged`），在 VM 命令成功提交点 `Raise`；undo 与重复任务分别以显式事件表达。
 5. **UI 插件不可热卸载**（spike U4）：插件一旦创建 WPF UI 就被 WPF 钉住（`asmAlive=true`、文件锁不释放）。故：后台插件可卸载热重载；UI 插件「更新 = 重启应用」。

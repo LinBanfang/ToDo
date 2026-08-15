@@ -36,6 +36,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ToDo.Core\ToDo.Core.csproj" />
+    <ProjectReference Include="..\ToDo.Plugin.Abstractions\ToDo.Plugin.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>
