@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ExportPlugin</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Private=false：契约 DLL 不复制进插件目录，运行时由宿主默认上下文单载提供。 -->
+    <ProjectReference Include="..\..\ToDo.Plugin.Abstractions\ToDo.Plugin.Abstractions.csproj" Private="false" />
+  </ItemGroup>
+
+</Project>

@@ -340,6 +340,15 @@
                            Margin="0,16,0,0" Text="{Binding Copyright}"/>
             </StackPanel>
         </DataTemplate>
+
+        <!-- ═════ 插件节（插件经 IUiHost.RegisterSettingsSection 注册）═════ -->
+        <DataTemplate DataType="{x:Type vm:PluginSettingsSection}">
+            <StackPanel Margin="0,4">
+                <TextBlock Style="{StaticResource SettingSectionTitle}" Text="{Binding Title}"/>
+                <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,0,0,16"/>
+                <ContentControl Content="{Binding View}" Focusable="False"/>
+            </StackPanel>
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid>

@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
+using ToDo.Plugins;
 using ToDo.Services;
 using ToDo.Sync;
 using ToDo.ViewModels;
@@ -17,6 +18,7 @@ public partial class App : Application
     public static ReminderService? Reminders { get; private set; }
     public static SyncService? Sync { get; private set; }
     public static TrayService? Tray { get; private set; }
+    public static PluginManager? Plugins { get; private set; }
 
     /// <summary>Held for the whole process so the OS keeps the single-instance lock.</summary>
     private static Mutex? _singleInstanceMutex;
@@ -66,7 +68,9 @@ public partial class App : Application
         // Sync is created before the ViewModel so the settings SyncSection can subscribe
         // to its StatusChanged; the refresh hook + timer start once the VM exists.
         Sync = new SyncService(Database, Dispatcher);
-        ViewModel = new MainViewModel(Database);
+        // 共享事件总线：VM 在命令缝 Raise，插件经 host.Events 订阅（同一实例）。
+        var events = new TodoEvents();
+        ViewModel = new MainViewModel(Database, events: events);
 
         // Apply the persisted language + theme before the tray is created: the tray
         // tooltip and context menu read Loc, so a non-default language must be in
@@ -81,7 +85,12 @@ public partial class App : Application
         // registers the unpackaged AUMID on first use.
         Reminders = new ReminderService(Database,
             nativeScheduler: new NativeReminderScheduler(new WinToastStore()));
-        Sync.SetRefreshAction(() => { ViewModel.LoadAll(); ViewModel.RefreshActiveTasks(); });
+        Sync.SetRefreshAction(() => ViewModel.OnSyncApplied());
+
+        // Plugins load after the ViewModel (they read it through the facade) and before
+        // the window is created, so sidebar entries they register are bound at first render.
+        Plugins = new PluginManager(Database, ViewModel, Dispatcher, events);
+        Plugins.LoadAll(Path.Combine(Path.GetDirectoryName(SettingsService.DefaultDbPath)!, "plugins"));
 
         // With ShutdownMode=OnExplicitShutdown the app keeps running in the tray until
         // told to exit; a Windows logout/shutdown must still terminate it cleanly.
@@ -273,6 +282,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        Plugins?.ShutdownAll();
         Sync?.Dispose();
         Reminders?.Dispose();
         Tray?.Dispose();

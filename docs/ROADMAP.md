@@ -80,6 +80,17 @@
 
 - [x] 实现 HLC 时钟（设备侧状态持久化 + `TrackedCollection` 盖章 + `ApplySync` 合并）+ 协议升 v2 + 迁移重基
 
+### 10b. 插件系统
+
+设计已定稿（[plugin-system.md](plugin-system.md) + [ADR-020](adr/0020-plugin-system.md)）；关键加载机制（契约单载 / 可回收 ALC / WPF 从外部目录加载）已用 `spikes/plugin-loading` 验证。
+
+- [x] M1 契约项目 + `PluginManager` + 首个导出插件跑通全链路（含侧边栏入口 + 只读门面）
+- [x] M2 事件总线（`ITodoEvents`，命令末尾 `Raise`）+ 门面写方法（命令粒度，转发 VM 命令）
+- [x] M3 `IUiHost` 设置节 + 资源合并（`MergeResourceDictionary`）+ 快速添加拦截器（侧边栏入口已在 M1 落地）
+- [x] M4 manifest `minAppVersion` 校验 + 启动清理已移除插件的残留数据 + 每插件 10 MB 大小上限（契约版本校验已在 M1 落地）
+- [x] M5 插件更新（`PluginUpdater`：zip SHA256 验签 + 原子替换）+ 后台插件热重载
+- [ ] 后续：插件市场 `index.json` 下载源 + 完整代码签名（与 ROADMAP-13 合流）
+
 ## P3 — 远期
 
 ### 11. 自定义铃声完善

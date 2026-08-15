@@ -1,5 +1,7 @@
 using CommunityToolkit.Mvvm.Input;
 using ToDo.Models;
+using ToDo.Plugin.Abstractions;
+using ToDo.Plugins;
 using ToDo.Services;
 
 namespace ToDo.ViewModels;
@@ -29,6 +31,30 @@ public partial class MainViewModel
         _db.Tasks.Insert(task);
         Tasks.Add(task); // keep the in-memory collection in sync for in-place refresh
         RefreshActiveTasks();
+        _events.RaiseTaskCreated(DtoMapper.ToTask(task));
+    }
+
+    /// <summary>插件门面用的全字段创建：草稿字段显式给出（不依赖当前激活列表），其余语义与
+    /// <see cref="CreateTask(string)"/> 一致（tracked Insert 盖 HLC + outbox）。</summary>
+    public TaskItem CreateTaskFromDraft(NewTaskDraft draft)
+    {
+        var listId = string.IsNullOrWhiteSpace(draft.ListId) ? "list-tasks" : draft.ListId;
+        var task = new TaskItem
+        {
+            Title = draft.Title,
+            Note = draft.Note,
+            ListId = listId,
+            GroupId = draft.GroupId,
+            DueDate = draft.DueDate,
+            IsImportant = draft.IsImportant,
+            TagIds = new List<string>(draft.TagIds ?? Array.Empty<string>()),
+            Order = NextOrder(Tasks.Where(t => t.ListId == listId).Select(t => t.Order)),
+        };
+        _db.Tasks.Insert(task);
+        Tasks.Add(task);
+        RefreshActiveTasks();
+        _events.RaiseTaskCreated(DtoMapper.ToTask(task));
+        return task;
     }
 
     [RelayCommand]
@@ -37,6 +63,7 @@ public partial class MainViewModel
         task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(task);
         RefreshActiveTasks();
+        _events.RaiseTaskChanged(DtoMapper.ToTask(task));
     }
 
     [RelayCommand]
@@ -55,6 +82,7 @@ public partial class MainViewModel
             SelectedTask = null;
 
         RefreshActiveTasks();
+        _events.RaiseTaskDeleted(task.Id);
 
         PushUndo(Loc.UndoDeleteMsg(snapshot.Title), () =>
         {
@@ -63,6 +91,7 @@ public partial class MainViewModel
                 _db.AddAttachment(a);             // original id / filename / bytes / AddedAt
             Tasks.Add(snapshot);
             RefreshActiveTasks();                 // custom lists sort by Order → lands in place
+            _events.RaiseTaskRestored(DtoMapper.ToTask(snapshot));
         });
     }
 
@@ -75,6 +104,7 @@ public partial class MainViewModel
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(param.task);
         RefreshActiveTasks();
+        _events.RaiseTaskChanged(DtoMapper.ToTask(param.task));
     }
 
     [RelayCommand]
@@ -95,6 +125,7 @@ public partial class MainViewModel
         }
 
         RefreshActiveTasks();
+        _events.RaiseTaskChanged(DtoMapper.ToTask(param.task));
     }
 
     // ─── Closing System ───────────────────────────────────
@@ -122,6 +153,11 @@ public partial class MainViewModel
 
         _db.Tasks.Update(param.task);
         RefreshActiveTasks();
+
+        // 完成/取消 → 各自事件；重复任务自动生成的下一实例单独发 TaskCreated（D7）。
+        if (param.mode == CloseMode.Complete) _events.RaiseTaskCompleted(DtoMapper.ToTask(param.task));
+        else _events.RaiseTaskCanceled(DtoMapper.ToTask(param.task));
+        if (next != null) _events.RaiseTaskCreated(DtoMapper.ToTask(next));
 
         // Undo: only completing offers an undo bar (Cancel / endSeries don't). Undoing
         // also deletes the generated next instance, restoring the single open instance.
@@ -151,6 +187,7 @@ public partial class MainViewModel
         task.NotifyCloseDisplay();
         _db.Tasks.Update(task);
         RefreshActiveTasks();
+        _events.RaiseTaskReopened(DtoMapper.ToTask(task));
     }
 
     [RelayCommand]
@@ -161,6 +198,7 @@ public partial class MainViewModel
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(param.task);
         RefreshActiveTasks();
+        _events.RaiseTaskChanged(DtoMapper.ToTask(param.task));
     }
 
     // ─── My Day ───────────────────────────────────────────
@@ -180,6 +218,7 @@ public partial class MainViewModel
         task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(task);
         RefreshActiveTasks();
+        _events.RaiseTaskChanged(DtoMapper.ToTask(task));
     }
 
     // ─── Importance ───────────────────────────────────────
@@ -190,6 +229,7 @@ public partial class MainViewModel
         task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _db.Tasks.Update(task);
         RefreshActiveTasks();
+        _events.RaiseTaskChanged(DtoMapper.ToTask(task));
     }
 
     // ─── Steps ────────────────────────────────────────────
@@ -204,6 +244,7 @@ public partial class MainViewModel
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         param.task.NotifyCompletedStepCount();
         _db.Tasks.Update(param.task);
+        _events.RaiseTaskChanged(DtoMapper.ToTask(param.task));
     }
 
     /// <summary>Insert a new step after the given index and set it to editing mode</summary>
@@ -220,6 +261,7 @@ public partial class MainViewModel
         task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         task.NotifyCompletedStepCount();
         _db.Tasks.Update(task);
+        _events.RaiseTaskChanged(DtoMapper.ToTask(task));
     }
 
     [RelayCommand]
@@ -229,6 +271,7 @@ public partial class MainViewModel
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         param.task.NotifyCompletedStepCount();
         _db.Tasks.Update(param.task);
+        _events.RaiseTaskChanged(DtoMapper.ToTask(param.task));
     }
 
     [RelayCommand]
@@ -238,6 +281,7 @@ public partial class MainViewModel
         param.task.ModifiedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         param.task.NotifyCompletedStepCount();
         _db.Tasks.Update(param.task);
+        _events.RaiseTaskChanged(DtoMapper.ToTask(param.task));
     }
 
     [RelayCommand]
@@ -256,6 +300,8 @@ public partial class MainViewModel
         param.task.NotifyCompletedStepCount();
         _db.Tasks.Update(param.task);
         RefreshActiveTasks();
+        _events.RaiseTaskCreated(DtoMapper.ToTask(newTask));
+        _events.RaiseTaskChanged(DtoMapper.ToTask(param.task));
     }
 
 }
