@@ -5,7 +5,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:models="clr-namespace:ToDo.Models;assembly=ToDo.Core"
              xmlns:services="clr-namespace:ToDo.Services;assembly=ToDo.Core"
+             xmlns:local="clr-namespace:ToDo.Views"
              mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="360"
              Focusable="False">
 
     <!-- Hosted in MainWindow grid spanning the former DetailSplitter + DetailPane columns
@@ -27,6 +29,8 @@
              themed task area re-crops smoothly instead of snapping. Content stretches to the
              pane's width (resizable), clipped during the slide so it reveals progressively. -->
         <Border x:Name="DetailPane" Grid.Column="1" Width="0" Visibility="Collapsed"
+                d:Width="360" d:Visibility="Visible"
+                d:DataContext="{x:Static local:DetailPaneDesignData.SampleTask}"
                 ClipToBounds="True"
                 Background="{DynamicResource CardBackgroundBrush}"
                 BorderBrush="{DynamicResource SidebarBorderBrush}" BorderThickness="1,0,0,0">
