@@ -154,7 +154,40 @@ curl -sIL --max-time 60 "https://gitee.com/$GITEE_OWNER/$REPO/releases/download/
 | Gitee 偶发 DNS / 网络抖动 | 偶发失败 | 对每个调用做指数退避重试（3s 起，最多 5 次）；失败时保留 HTTP 码与响应体便于诊断 |
 | token 落盘 / 进对话 | 泄露风险 | 只从本地文件读、不回显、用完删文件 + 提醒撤销 |
 
-## 6. 分工
+## 6. Windows / PowerShell（pwsh）执行注意
+
+> 本机 DSH 的实际执行环境是 **Windows + pwsh 5.1**（不是 bash）；用 bash 可跳过本节。以下坑都在 pwsh 下实测踩过。
+
+### 6.1 变量后接 `?` 被解析成变量名 → 401
+
+`"$base/releases/$rid?access_token=$tok"` 里，PowerShell 把 `$rid?access_token` 整体当成变量名（空），URL 变成 `.../releases/=TOKEN`，token 被吞 → 401「登录失败，无权限访问该资源」。这与第 5 节 bash 的 `$RID?access_token=` 同源，但根因不同：PowerShell 变量名可含 `?`。
+
+**对策**：用 `${rid}` 显式分隔变量名：
+
+```powershell
+$url = "$base/releases/${rid}?access_token=$tok"
+```
+
+### 6.2 curl 读文件双重编码 → 中文乱码
+
+`curl.exe --data-urlencode "body@file"` 在 Windows 上把 UTF-8 文件按 Latin-1 读，`修`（UTF-8 `E4 BF AE`）被存成 `ä¿®`（U+00E4 U+00BF U+00AE），正文长度翻倍、中文全乱。
+
+**对策**：先 `[Uri]::EscapeDataString` 预编码成**纯 ASCII** form 体，再 `--data-binary` 发送（全程无非 ASCII 字节，不再触发任何字符集转换）：
+
+```powershell
+# $body = 从 CHANGELOG 提取的 vX.Y.Z 正文（正确 Unicode 字符串）
+$formBody = "tag_name=$TAG&name=Release%20$TAG&body=" + [System.Uri]::EscapeDataString($body)
+[System.IO.File]::WriteAllText("$dir\form.txt", $formBody, (New-Object System.Text.ASCIIEncoding))
+curl.exe -sS -X PATCH $url -H "Content-Type: application/x-www-form-urlencoded" --data-binary "@$($dir.Replace('\','/'))/form.txt"
+```
+
+### 6.3 PowerShell 5.1 文件编码坑（连带）
+
+- `Set-Content -Encoding UTF8` 会写 **BOM**（正文开头多出 `锘?`）；`Get-Content -Raw` 默认按系统 GBK 读，读 UTF-8 文件会乱码。
+- 写无 BOM UTF-8 用 `[IO.File]::WriteAllText($p,$s,(New-Object Text.UTF8Encoding($false)))`；读用 `[IO.File]::ReadAllText($p,[Text.Encoding]::UTF8)`。
+- `Invoke-RestMethod` 在 5.1 下显示中文乱码**不代表 Gitee 存错**——校验正文应 `curl.exe -o` 抓原始字节，确认含 `修` 的 UTF-8 字节 `E4 BF AE`（而非双重编码的 `C3 A4 C2 BF C2 AE`）。
+
+## 7. 分工
 
 - **CI（release.yml）只做**：构建 → 打包 → 提取 CHANGELOG → 创建 GitHub Release + 上传 zip 附件。
 - **Claude 手动做**：Gitee tag / release 正文 / zip 上传 / 附件配额清理。
