@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Input;
 using ToDo.Models;
+using ToDo.Plugins;
 using ToDo.Services;
 
 namespace ToDo.ViewModels;
@@ -50,6 +51,8 @@ public partial class MainViewModel
         _db.Tags.Delete(tag.Id);
         LoadTags();
         RefreshActiveTasks();
+        foreach (var t in affected)
+            _events.RaiseTaskChanged(DtoMapper.ToTask(t));
     }
 
     [RelayCommand]
@@ -62,6 +65,7 @@ public partial class MainViewModel
             param.task.NotifyTagsChanged();
             _db.Tasks.Update(param.task);
             RefreshActiveTasks();
+            _events.RaiseTaskChanged(DtoMapper.ToTask(param.task));
         }
     }
 
@@ -73,6 +77,7 @@ public partial class MainViewModel
         param.task.NotifyTagsChanged();
         _db.Tasks.Update(param.task);
         RefreshActiveTasks();
+        _events.RaiseTaskChanged(DtoMapper.ToTask(param.task));
     }
 
     // ─── Dialog Toggles ───────────────────────────────────

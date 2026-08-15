@@ -19,13 +19,17 @@ public sealed class PluginManager
     private readonly DatabaseService _db;
     private readonly MainViewModel _vm;
     private readonly Dispatcher _dispatcher;
+    private readonly TodoEvents _events;
     private readonly List<LoadedPlugin> _loaded = new();
 
-    public PluginManager(DatabaseService db, MainViewModel vm, Dispatcher dispatcher)
+    public PluginManager(DatabaseService db, MainViewModel vm, Dispatcher dispatcher, TodoEvents events)
     {
         _db = db;
         _vm = vm;
         _dispatcher = dispatcher;
+        _events = events;
+        // 语言切换 → 广播给所有插件（插件据此重载自身字符串，ADR-020 §7）。
+        Loc.LanguageChanged += () => _events.RaiseLanguageChanged();
     }
 
     public IReadOnlyList<string> LoadedPluginIds => _loaded.Select(p => p.Id).ToArray();
@@ -96,7 +100,7 @@ public sealed class PluginManager
             return;
         }
 
-        var host = new TodoHost(_db, _vm, _dispatcher, manifest.Id, RegisterSidebar);
+        var host = new TodoHost(_db, _vm, _dispatcher, _events, manifest.Id, RegisterSidebar);
         try { plugin.Initialize(host); }
         catch (Exception ex)
         {

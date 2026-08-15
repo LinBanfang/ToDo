@@ -18,6 +18,7 @@ public sealed class PluginManagerTests : IDisposable
     private readonly string _dir = Path.Combine(Path.GetTempPath(), "todo-plugintests-" + Guid.NewGuid().ToString("N"));
     private readonly DatabaseService _db;
     private readonly MainViewModel _vm;
+    private readonly TodoEvents _events = new();
     private readonly Dispatcher _dispatcher = Dispatcher.CurrentDispatcher;
 
     public PluginManagerTests()
@@ -44,7 +45,7 @@ public sealed class PluginManagerTests : IDisposable
         _db.Tasks.Insert(new TaskItem { Title = "写周报", ListId = "list-tasks" });
         _vm.Refresh();
 
-        var host = new TodoHost(_db, _vm, _dispatcher, "test.plugin", _ => { });
+        var host = new TodoHost(_db, _vm, _dispatcher, _events, "test.plugin", _ => { });
 
         var all = host.GetTasks(null);
         Assert.Contains(all, t => t.Title == "写周报");
@@ -66,7 +67,7 @@ public sealed class PluginManagerTests : IDisposable
             "{\"id\":\"com.example.export\",\"name\":\"导出周报\",\"version\":\"1.0.0\"," +
             "\"entryAssembly\":\"ExportPlugin.dll\",\"contractVersion\":1,\"hasUi\":true}");
 
-        var manager = new PluginManager(_db, _vm, _dispatcher);
+        var manager = new PluginManager(_db, _vm, _dispatcher, _events);
         manager.LoadAll(Path.Combine(_dir, "plugins"));
 
         Assert.Contains("com.example.export", manager.LoadedPluginIds);

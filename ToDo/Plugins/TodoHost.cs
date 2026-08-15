@@ -11,7 +11,7 @@ namespace ToDo.Plugins;
 /// <summary>
 /// <see cref="ITodoHost"/> 门面实现：把静态单例（App.Database / App.ViewModel / Loc / Tray）
 /// 桥接给插件。每个方法内部编组到 UI 线程；读方法返回 DTO 快照而非活对象（ADR-020 D1/D8）。
-/// 写方法（命令粒度）在 M2（事件总线）落地时实现。
+/// 写方法转发到 MainViewModel 命令，由命令缝统一盖 HLC / 写 outbox / 刷新 / Raise 事件。
 /// </summary>
 sealed class TodoHost : ITodoHost, IUiHost
 {
@@ -20,16 +20,17 @@ sealed class TodoHost : ITodoHost, IUiHost
     private readonly Dispatcher _dispatcher;
     private readonly string _pluginId;
     private readonly Action<SidebarEntry> _registerSidebar;
-    private readonly TodoEvents _events = new();
+    private readonly TodoEvents _events;
     private readonly PluginSettingsStore _settings;
     private readonly PluginStorageStore _storage;
 
-    public TodoHost(DatabaseService db, MainViewModel vm, Dispatcher dispatcher,
+    public TodoHost(DatabaseService db, MainViewModel vm, Dispatcher dispatcher, TodoEvents events,
         string pluginId, Action<SidebarEntry> registerSidebar)
     {
         _db = db;
         _vm = vm;
         _dispatcher = dispatcher;
+        _events = events;
         _pluginId = pluginId;
         _registerSidebar = registerSidebar;
         _settings = new PluginSettingsStore(db, $"plugins/{pluginId}/settings/");
@@ -47,52 +48,138 @@ sealed class TodoHost : ITodoHost, IUiHost
     // ─── 读（快照）─────────────────────────────────────────────
 
     public IReadOnlyList<TaskListDto> GetLists() => RunOnUi(() =>
-        _vm.Lists.Select(l => new TaskListDto
-        {
-            Id = l.Id,
-            Name = l.Name,
-            Icon = l.Icon,
-            Type = l.Type.ToString(),
-            IsSystem = l.IsSystem,
-            GroupId = l.GroupId,
-            Order = l.Order,
-        }).ToArray());
+        _vm.Lists.Select(DtoMapper.ToList).ToArray());
 
     public IReadOnlyList<TagDto> GetTags() => RunOnUi(() =>
-        _vm.Tags.Select(t => new TagDto(t.Id, t.Name, t.Color)).ToArray());
+        _vm.Tags.Select(DtoMapper.ToTag).ToArray());
 
     public IReadOnlyList<TaskDto> GetTasks(string? listId) => RunOnUi(() =>
         _vm.Tasks
             .Where(t => listId == null || t.ListId == listId)
-            .Select(ToDto)
+            .Select(DtoMapper.ToTask)
             .ToArray());
 
     public TaskDto? GetTask(string id) => RunOnUi(() =>
-        _vm.Tasks.FirstOrDefault(t => t.Id == id) is { } t ? ToDto(t) : null);
+        _vm.Tasks.FirstOrDefault(t => t.Id == id) is { } t ? DtoMapper.ToTask(t) : null);
 
-    // ─── 写（M2 事件总线落地时实现）───────────────────────────
+    // ─── 写（转发到 VM 命令；命令缝统一 HLC 盖章 + outbox + 刷新 + Raise 事件）──
 
-    public TaskDto CreateTask(NewTaskDraft draft) => throw M2();
-    public void UpdateTaskTitle(string id, string title) => throw M2();
-    public void UpdateTaskNote(string id, string? note) => throw M2();
-    public void SetTaskDueDate(string id, long? dueDateUnixMs) => throw M2();
-    public void SetTaskReminder(string id, long? reminderUnixMs) => throw M2();
-    public void SetTaskImportant(string id, bool important) => throw M2();
-    public void MoveTaskToList(string id, string listId) => throw M2();
-    public void MoveTaskToGroup(string id, string? groupId) => throw M2();
-    public void AddTaskStep(string id, string title) => throw M2();
-    public void CompleteTaskStep(string id, string stepId) => throw M2();
-    public void DeleteTaskStep(string id, string stepId) => throw M2();
-    public void AddTaskTag(string id, string tagId) => throw M2();
-    public void RemoveTaskTag(string id, string tagId) => throw M2();
-    public TagDto CreateTag(string name, string color) => throw M2();
-    public void CompleteTask(string id) => throw M2();
-    public void CancelTask(string id) => throw M2();
-    public void ReopenTask(string id) => throw M2();
-    public void DeleteTask(string id) => throw M2();
+    public TaskDto CreateTask(NewTaskDraft draft) => RunOnUi(() =>
+        DtoMapper.ToTask(_vm.CreateTaskFromDraft(draft)));
 
-    private static NotImplementedException M2() =>
-        new("该写方法在 M2（事件总线）落地时实现；当前只支持只读插件。");
+    public void UpdateTaskTitle(string id, string title) => RunOnUi(() =>
+    {
+        var task = RequireTask(id);
+        task.Title = title;
+        _vm.UpdateTaskCommand.Execute(task);
+    });
+
+    public void UpdateTaskNote(string id, string? note) => RunOnUi(() =>
+    {
+        var task = RequireTask(id);
+        task.Note = note;
+        _vm.UpdateTaskCommand.Execute(task);
+    });
+
+    public void SetTaskDueDate(string id, long? dueDateUnixMs) => RunOnUi(() =>
+    {
+        var task = RequireTask(id);
+        task.DueDate = dueDateUnixMs;
+        _vm.UpdateTaskCommand.Execute(task);
+    });
+
+    public void SetTaskReminder(string id, long? reminderUnixMs) => RunOnUi(() =>
+    {
+        var task = RequireTask(id);
+        task.Reminder = reminderUnixMs;
+        _vm.UpdateTaskCommand.Execute(task);
+    });
+
+    public void SetTaskImportant(string id, bool important) => RunOnUi(() =>
+    {
+        var task = RequireTask(id);
+        if (task.IsImportant != important)
+        {
+            task.IsImportant = important;
+            _vm.UpdateTaskCommand.Execute(task);
+        }
+    });
+
+    public void MoveTaskToList(string id, string listId) => RunOnUi(() =>
+    {
+        var task = RequireTask(id);
+        var list = _vm.Lists.FirstOrDefault(l => l.Id == listId)
+            ?? throw new KeyNotFoundException($"list {listId} not found");
+        _vm.MoveTaskToListCommand.Execute((task, list));
+    });
+
+    public void MoveTaskToGroup(string id, string? groupId) => RunOnUi(() =>
+    {
+        var task = RequireTask(id);
+        var group = groupId == null ? null : _vm.Groups.FirstOrDefault(g => g.Id == groupId);
+        _vm.MoveTaskToGroupCommand.Execute((task, group));
+    });
+
+    public void AddTaskStep(string id, string title) => RunOnUi(() =>
+    {
+        var task = RequireTask(id);
+        _vm.AddStepCommand.Execute((task, title));
+    });
+
+    public void CompleteTaskStep(string id, string stepId) => RunOnUi(() =>
+    {
+        var task = RequireTask(id);
+        var step = task.Steps.FirstOrDefault(s => s.Id == stepId)
+            ?? throw new KeyNotFoundException($"step {stepId} not found");
+        if (!step.Completed) _vm.ToggleStepCommand.Execute((task, step));
+    });
+
+    public void DeleteTaskStep(string id, string stepId) => RunOnUi(() =>
+    {
+        var task = RequireTask(id);
+        var step = task.Steps.FirstOrDefault(s => s.Id == stepId)
+            ?? throw new KeyNotFoundException($"step {stepId} not found");
+        _vm.DeleteStepCommand.Execute((task, step));
+    });
+
+    public void AddTaskTag(string id, string tagId) => RunOnUi(() =>
+    {
+        var task = RequireTask(id);
+        _vm.AddTagToTaskCommand.Execute((task, RequireTag(tagId)));
+    });
+
+    public void RemoveTaskTag(string id, string tagId) => RunOnUi(() =>
+    {
+        var task = RequireTask(id);
+        _vm.RemoveTagFromTaskCommand.Execute((task, RequireTag(tagId)));
+    });
+
+    public TagDto CreateTag(string name, string color) => RunOnUi(() =>
+    {
+        _vm.CreateTagCommand.Execute((name, color));
+        return DtoMapper.ToTag(_vm.Tags.First(t =>
+            string.Equals(t.Name, name.Trim(), StringComparison.OrdinalIgnoreCase)));
+    });
+
+    public void CompleteTask(string id) => RunOnUi(() =>
+        _vm.CloseTaskCommand.Execute((RequireTask(id), CloseMode.Complete, false)));
+
+    public void CancelTask(string id) => RunOnUi(() =>
+        _vm.CloseTaskCommand.Execute((RequireTask(id), CloseMode.Cancel, false)));
+
+    public void ReopenTask(string id) => RunOnUi(() =>
+        _vm.ReopenTaskCommand.Execute(RequireTask(id)));
+
+    public void DeleteTask(string id) => RunOnUi(() =>
+        _vm.DeleteTaskCommand.Execute(RequireTask(id)));
+
+    private TaskItem RequireTask(string id) =>
+        _vm.Tasks.FirstOrDefault(t => t.Id == id)
+        ?? throw new KeyNotFoundException($"task {id} not found");
+
+    private Tag RequireTag(string id) =>
+        _vm.Tags.FirstOrDefault(t => t.Id == id)
+        ?? throw new KeyNotFoundException($"tag {id} not found");
 
     // ─── 横切 ─────────────────────────────────────────────────
 
@@ -132,29 +219,6 @@ sealed class TodoHost : ITodoHost, IUiHost
         if (_dispatcher.CheckAccess()) a();
         else _dispatcher.Invoke(a);
     }
-
-    private static TaskDto ToDto(TaskItem t) => new()
-    {
-        Id = t.Id,
-        Title = t.Title,
-        Note = t.Note,
-        ListId = t.ListId,
-        GroupId = t.GroupId,
-        Order = t.Order,
-        IsImportant = t.IsImportant,
-        IsMyDay = t.IsMyDay,
-        MyDayOrder = t.MyDayOrder,
-        DueDate = t.DueDate,
-        Reminder = t.Reminder,
-        FiredReminder = t.FiredReminder,
-        TagIds = t.TagIds?.ToArray() ?? Array.Empty<string>(),
-        Steps = t.Steps.Select(s => new TaskStepDto(s.Id, s.Title, s.Completed, s.Order)).ToArray(),
-        Completed = t.Completed,
-        CloseMode = t.CloseRecord?.CloseMode.ToString(),
-        ClosedAt = t.CloseRecord?.ClosedAt,
-        CreatedAt = t.CreatedAt,
-        ModifiedAt = t.ModifiedAt,
-    };
 
     // ─── 私有 KV / blob 存储（DB local_kv，ADR-020 D5）────────
 

@@ -3,10 +3,10 @@ using ToDo.Plugin.Abstractions;
 namespace ToDo.Plugins;
 
 /// <summary>
-/// 领域事件总线实现。M2（事件总线）在 MainViewModel 命令成功提交点调用内部 Raise*；
-/// M1 仅提供空实现供插件订阅，暂不触发。
+/// 领域事件总线实现（单一共享实例：VM 在命令缝 Raise，插件经 host.Events 订阅同一实例）。
+/// 事件本身公开供插件订阅；Raise* 方法 internal，仅宿主（MainViewModel / PluginManager）可触发。
 /// </summary>
-sealed class TodoEvents : ITodoEvents
+public sealed class TodoEvents : ITodoEvents
 {
     public event Action<TaskDto>? TaskCreated;
     public event Action<TaskDto>? TaskChanged;

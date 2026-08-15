@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ToDo.Converters;
 using ToDo.Models;
+using ToDo.Plugins;
 using ToDo.Services;
 
 namespace ToDo.ViewModels;
@@ -15,6 +16,7 @@ public partial class MainViewModel : ObservableObject
 {
     private readonly DatabaseService _db;
     private readonly IClock _clock;
+    private readonly TodoEvents _events;
 
     // ─── Collections ──────────────────────────────────────
     public ObservableCollection<TaskList> Lists { get; } = new();
@@ -131,10 +133,11 @@ public partial class MainViewModel : ObservableObject
         return dt.Date == _clock.Today;
     }
 
-    public MainViewModel(DatabaseService db, IClock? clock = null)
+    public MainViewModel(DatabaseService db, IClock? clock = null, TodoEvents? events = null)
     {
         _db = db;
         _clock = clock ?? SystemClock.Instance;
+        _events = events ?? new TodoEvents();
         Theme = SettingsService.Current.Theme;
         SidebarWidth = new GridLength(Math.Max(SettingsService.Current.SidebarWidth, 180));
         Settings = new SettingsViewModel();
@@ -236,6 +239,15 @@ public partial class MainViewModel : ObservableObject
         LoadLists(); // LoadLists now re-points ActiveList internally
         LoadTasks();
         RefreshActiveTasks();
+    }
+
+    /// <summary>Post-sync refresh hook (ADR-010/020)：全量重载 + 重建派生视图 + 广播同步事件。
+    /// 由 <see cref="App.Sync"/> 在每轮 round-trip 应用变更后调用。</summary>
+    public void OnSyncApplied()
+    {
+        LoadAll();
+        RefreshActiveTasks();
+        _events.RaiseDataSyncApplied();
     }
 
     private void LoadListGroups()
