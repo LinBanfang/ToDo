@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>Spike.Plugin</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Private=false: do NOT copy Contract.dll into the plugin output. The host's
+         default context already owns the shared copy. -->
+    <ProjectReference Include="..\Contract\Contract.csproj" Private="false" />
+  </ItemGroup>
+
+</Project>
