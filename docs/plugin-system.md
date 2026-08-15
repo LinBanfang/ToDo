@@ -274,7 +274,7 @@ public sealed record SidebarEntry(string Label, string Icon, int Order, Action O
 // Database → Sync → ViewModel 之后、建窗口之前
 var plugins = new PluginManager(App.Database, App.ViewModel /*, Loc, ThemeService, Reminders */);
 plugins.LoadAll(Path.Combine(LocalAppData, "ToDo", "plugins"));
-App.Plugins = plugins;          // OnExit 时 plugins.ShutdownAll()（UI 插件仅 Shutdown，不 Unload）
+App.Plugins = plugins;          // OnExit 时 plugins.ShutdownAll()
 ```
 
 ### 5.2 `PluginLoadContext`（与 spike 一致）
@@ -308,7 +308,8 @@ sealed class PluginLoadContext : AssemblyLoadContext
   → Initialize(host)（host 门面内含该插件 Id 的 Settings/Storage）
 ShutdownAll（退出时）：
   → 逆序 Shutdown() → 移除其 ResourceDictionary / 侧边栏入口
-  → 后台插件 Unload() + GC；UI 插件只 Shutdown 不 Unload（U4）
+  → 总是 Unload() ALC：真正创建了 WPF UI 的插件被 WPF 钉住、自然无法回收（U4，文件锁保持到进程结束），
+    未钉住的插件（如仅注册侧边栏入口的）会正常释放文件锁。hasUi 仅作元数据留给 M5 更新逻辑。
 ```
 
 ### 5.4 `TodoHost` 门面（D1/D8 的落点）

@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text.Json;
 
 namespace ToDo.Plugins;
@@ -14,10 +15,12 @@ public sealed class PluginManifest
     public bool HasUi { get; set; }
     public string? Description { get; set; }
 
+    private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
+
     public static PluginManifest Load(string path)
     {
         var json = File.ReadAllText(path);
-        return JsonSerializer.Deserialize<PluginManifest>(json)
+        return JsonSerializer.Deserialize<PluginManifest>(json, JsonOpts)
             ?? throw new InvalidOperationException($"manifest '{path}' 为空或非法");
     }
 }

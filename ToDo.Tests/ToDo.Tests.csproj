@@ -20,10 +20,22 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ToDo\ToDo.csproj" />
+    <!-- 让 ExportPlugin 的构建产物（dll + deps.json）进测试输出目录，供 PluginManager 集成测试加载 -->
+    <ProjectReference Include="..\samples\ExportPlugin\ExportPlugin.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="TestData\loc-golden.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+
+  <!-- ProjectReference 只拷贝 dll、不拷贝 .deps.json；插件加载测试需要真实 deps.json
+       （AssemblyDependencyResolver 构造时要求它存在）。此处把 ExportPlugin 构建产物里的
+       deps.json 拷到测试输出目录，供 PluginManagerTests stage 到临时 plugins 目录。 -->
+  <Target Name="CopyExportPluginDepsJson" AfterTargets="Build">
+    <ItemGroup>
+      <_ExportPluginDeps Include="$(MSBuildThisFileDirectory)..\samples\ExportPlugin\bin\$(Configuration)\**\ExportPlugin.deps.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_ExportPluginDeps)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>

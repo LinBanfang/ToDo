@@ -1,3 +1,4 @@
+using System.IO;
 using System.Reflection;
 using System.Windows.Threading;
 using ToDo.Plugin.Abstractions;
@@ -117,11 +118,10 @@ public sealed class PluginManager
             try { p.Plugin.Shutdown(); }
             catch (Exception ex) { DiagnosticLog.Warn("plugin", $"Shutdown {p.Id}：{ex.Message}"); }
 
-            if (!p.HasUi && p.Context != null)
-            {
-                p.Context.Unload();
-                // UI 插件不 Unload：WPF 已钉住程序集，Unload 也无法释放文件锁（ADR-020 U4）。
-            }
+            // 总是尝试卸载 ALC：真正创建了 WPF UI 的插件会被 WPF 钉住、自然无法回收（ADR-020 U4，
+            // 其文件锁保持到进程结束），而未钉住的插件（如仅注册侧边栏入口的）会正常释放文件锁。
+            // hasUi 仅作为元数据留给 M5 更新逻辑决定「热重载 vs 重启」，不再 gate 这里的卸载。
+            p.Context?.Unload();
         }
         _loaded.Clear();
     }
