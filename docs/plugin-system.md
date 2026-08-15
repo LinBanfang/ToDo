@@ -380,11 +380,12 @@ ShutdownAll（退出时）：
 
 | 里程碑 | 内容 | 验收 |
 |---|---|---|
-| M1 | 两个契约项目 + `PluginManager`/`PluginLoadContext`/`TodoHost` 骨架 + `samples/ExportPlugin` 跑通「加载 → Initialize → 导出到文件」 | spike 之外的端到端：插件 DLL 放 `plugins\` 后能导出 `.md` |
-| M2 | 事件总线（命令末尾 `Raise` + `ITodoEvents`） | 单测：Create/Complete/Undo/同步各事件正确触发 |
-| M3 | `IUiHost` 侧边栏入口 + 资源合并 + 语言切换重注册 | 插件入口在侧边栏出现、切换语言不丢 |
-| M4 | manifest 校验（契约版本/minAppVersion/hasUi）+ 卸载级联 + 大小上限 | 版本不符跳过；卸载清空插件数据 |
-| M5 | 插件更新（手动触发，复用自更新流程）+ 验签（与 ROADMAP-13 合流） | 后台插件热更、UI 插件重启生效、包验签 |
+| M1 ✅ | 契约项目（单一 net9.0）+ `PluginManager`/`PluginLoadContext`/`TodoHost` 骨架 + `samples/ExportPlugin` 跑通「加载 → Initialize → 导出到文件」 | 端到端：插件 DLL 放 `plugins\` 后侧边栏出现入口、能导出 `.md` |
+| M2 ✅ | 事件总线（命令末尾 `Raise` + `ITodoEvents`）+ 门面写方法 | 单测：Create/Complete/Undo/同步各事件正确触发 + 写方法往返 |
+| M3 ✅ | `IUiHost` 设置节 + 资源合并 + 快速添加拦截器 | 插件设置节进设置页、拦截器接管添加任务、字典合并 |
+| M4 ✅ | manifest 校验（契约版本/minAppVersion）+ 残留数据清理 + 10 MB 大小上限 | 版本不符跳过；启动清理幽灵插件数据；超限抛异常 |
+| M5 ✅ | 插件更新（`PluginUpdater`：zip SHA256 验签 → 解压 → manifest 校验 → 原子替换）+ 后台插件热重载 | 哈希不符拒绝、原子替换、UI 插件返回需重启 |
+| 后续 | 插件市场 `index.json`（下载源）+ 完整代码签名（与 ROADMAP-13 合流） | 远程下载 + 内置公钥验签 |
 
 ---
 

@@ -21,6 +21,7 @@ public sealed class PluginManager
     private readonly Dispatcher _dispatcher;
     private readonly TodoEvents _events;
     private readonly List<LoadedPlugin> _loaded = new();
+    private string _pluginsRoot = "";
 
     public PluginManager(DatabaseService db, MainViewModel vm, Dispatcher dispatcher, TodoEvents events)
     {
@@ -41,6 +42,7 @@ public sealed class PluginManager
             DiagnosticLog.Info("plugin", $"插件目录不存在：{pluginsRoot}");
             return;
         }
+        _pluginsRoot = pluginsRoot;
         CleanupOrphanedData(pluginsRoot);   // 删除已从磁盘移除的插件的残留数据（M4）
         foreach (var dir in Directory.GetDirectories(pluginsRoot))
             LoadOne(dir);
@@ -163,6 +165,39 @@ public sealed class PluginManager
         var rest = key.Substring(prefix.Length);
         var slash = rest.IndexOf('/');
         return slash <= 0 ? null : rest.Substring(0, slash);
+    }
+
+    /// <summary>热重载一个后台插件（hasUi=false）：Shutdown → 卸载 ALC → 从目录重新加载。
+    /// UI 插件（hasUi=true）返回 false（需重启应用，ADR-020 U4）。</summary>
+    public bool ReloadPlugin(string id)
+    {
+        var index = _loaded.FindIndex(p => p.Id == id);
+        if (index < 0)
+        {
+            DiagnosticLog.Warn("plugin", $"重载 {id}：未加载");
+            return false;
+        }
+
+        var p = _loaded[index];
+        if (p.HasUi)
+        {
+            DiagnosticLog.Info("plugin", $"重载 {id}：UI 插件需重启应用生效");
+            return false;
+        }
+
+        try { p.Plugin.Shutdown(); }
+        catch (Exception ex) { DiagnosticLog.Warn("plugin", $"Shutdown {p.Id}：{ex.Message}"); }
+        p.Context?.Unload();
+        _loaded.RemoveAt(index);
+
+        var dir = Path.Combine(_pluginsRoot, id);
+        if (!Directory.Exists(dir))
+        {
+            DiagnosticLog.Warn("plugin", $"重载 {id}：目录不存在 {dir}");
+            return false;
+        }
+        LoadOne(dir);
+        return true;
     }
 
     public void ShutdownAll()
