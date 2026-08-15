@@ -5,6 +5,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>ToDo.Server</RootNamespace>
+    <!-- Pin the self-contained runtime so `deploy.sh` stays incremental: with the default
+         TargetLatestRuntimePatch=true the SDK floats to the newest patch, changing every
+         runtime file's bytes (and md5) → full re-upload. Bump this deliberately on upgrade. -->
+    <RuntimeFrameworkVersion>9.0.19</RuntimeFrameworkVersion>
+    <TargetLatestRuntimePatch>false</TargetLatestRuntimePatch>
   </PropertyGroup>
 
   <ItemGroup>
