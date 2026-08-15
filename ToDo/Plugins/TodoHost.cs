@@ -231,6 +231,17 @@ sealed class TodoHost : ITodoHost, IUiHost
 
     // ─── 私有 KV / blob 存储（DB local_kv，ADR-020 D5）────────
 
+    /// <summary>每插件 local_kv 总量上限（10 MB），防止坏插件撑大 todo.db（M4）。</summary>
+    private const int MaxPluginDataBytes = 10 * 1024 * 1024;
+
+    private static void EnsureCapacity(DatabaseService db, string prefix, int incoming)
+    {
+        var total = db.GetLocalTotalBytes(prefix);
+        if (total + incoming > MaxPluginDataBytes)
+            throw new InvalidOperationException(
+                $"插件数据超过大小上限 {MaxPluginDataBytes / 1024 / 1024} MB");
+    }
+
     private sealed class PluginSettingsStore : IPluginSettings
     {
         private readonly DatabaseService _db;
@@ -238,7 +249,12 @@ sealed class TodoHost : ITodoHost, IUiHost
         public PluginSettingsStore(DatabaseService db, string prefix) { _db = db; _prefix = prefix; }
         private string Key(string k) => _prefix + k;
         public string? Get(string key) => _db.GetLocalValue(Key(key));
-        public void Set(string key, string? value) => _db.SetLocalValue(Key(key), value);
+        public void Set(string key, string? value)
+        {
+            if (value == null) { _db.SetLocalValue(Key(key), null); return; }
+            EnsureCapacity(_db, _prefix, key.Length + value.Length);
+            _db.SetLocalValue(Key(key), value);
+        }
         public void Remove(string key) => _db.RemoveLocalValue(Key(key));
     }
 
@@ -248,7 +264,11 @@ sealed class TodoHost : ITodoHost, IUiHost
         private readonly string _prefix;
         public PluginStorageStore(DatabaseService db, string prefix) { _db = db; _prefix = prefix; }
         private string Key(string k) => _prefix + k;
-        public void Write(string key, string json) => _db.SetLocalValue(Key(key), json);
+        public void Write(string key, string json)
+        {
+            EnsureCapacity(_db, _prefix, key.Length + json.Length);
+            _db.SetLocalValue(Key(key), json);
+        }
         public string? Read(string key) => _db.GetLocalValue(Key(key));
         public void Delete(string key) => _db.RemoveLocalValue(Key(key));
         public IEnumerable<string> Keys =>

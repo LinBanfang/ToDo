@@ -41,6 +41,7 @@ public sealed class PluginManager
             DiagnosticLog.Info("plugin", $"插件目录不存在：{pluginsRoot}");
             return;
         }
+        CleanupOrphanedData(pluginsRoot);   // 删除已从磁盘移除的插件的残留数据（M4）
         foreach (var dir in Directory.GetDirectories(pluginsRoot))
             LoadOne(dir);
     }
@@ -65,6 +66,12 @@ public sealed class PluginManager
         if (manifest.ContractVersion is { } cv && cv != PluginContract.Version)
         {
             DiagnosticLog.Warn("plugin", $"跳过 {manifest.Id}：契约版本 {cv} != {PluginContract.Version}");
+            return;
+        }
+
+        if (!IsAppVersionCompatible(manifest.MinAppVersion))
+        {
+            DiagnosticLog.Warn("plugin", $"跳过 {manifest.Id}：需要应用版本 >= {manifest.MinAppVersion}（当前 {AppVersionText}）");
             return;
         }
 
@@ -114,6 +121,49 @@ public sealed class PluginManager
 
     private void RegisterSidebar(SidebarEntry entry) =>
         _vm.PluginEntries.Add(new PluginEntryVm(entry, _dispatcher));
+
+    /// <summary>当前应用版本字符串（如 "1.4.0"），用于 minAppVersion 校验与日志。</summary>
+    private static string AppVersionText =>
+        (typeof(PluginManager).Assembly.GetName().Version ?? new Version(0, 0)).ToString(3);
+
+    /// <summary>应用版本是否满足插件的最低版本要求。null/空白 = 无要求；无法解析 = 拒绝（畸形 manifest）。</summary>
+    internal static bool IsAppVersionCompatible(string? minAppVersion)
+    {
+        if (string.IsNullOrWhiteSpace(minAppVersion)) return true;
+        if (!Version.TryParse(minAppVersion.Trim(), out var min)) return false;
+        var app = typeof(PluginManager).Assembly.GetName().Version ?? new Version(0, 0);
+        return app >= min;
+    }
+
+    /// <summary>删除本地 KV 中「插件目录已不存在」的插件的残留数据（键格式 plugins/&lt;Id&gt;/…）。</summary>
+    private void CleanupOrphanedData(string pluginsRoot)
+    {
+        var present = new HashSet<string>(
+            Directory.GetDirectories(pluginsRoot).Select(d => Path.GetFileName(d)!),
+            StringComparer.OrdinalIgnoreCase);
+
+        var staleIds = _db.GetLocalKeys("plugins/")
+            .Select(PluginIdFromKey)
+            .Where(id => id is not null && !present.Contains(id))
+            .Select(id => id!)
+            .Distinct()
+            .ToArray();
+
+        foreach (var id in staleIds)
+        {
+            _db.RemoveLocalKeys($"plugins/{id}/");
+            DiagnosticLog.Info("plugin", $"清理已移除插件 {id} 的残留数据");
+        }
+    }
+
+    private static string? PluginIdFromKey(string key)
+    {
+        const string prefix = "plugins/";
+        if (!key.StartsWith(prefix, StringComparison.Ordinal)) return null;
+        var rest = key.Substring(prefix.Length);
+        var slash = rest.IndexOf('/');
+        return slash <= 0 ? null : rest.Substring(0, slash);
+    }
 
     public void ShutdownAll()
     {

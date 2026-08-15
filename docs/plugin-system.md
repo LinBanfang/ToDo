@@ -359,7 +359,7 @@ ShutdownAll（退出时）：
 
 ### 8.2 数据（DB，见 D5）
 
-`DatabaseService` 新增一个通用 untracked collection `local_kv`（`GetLocalValue`/`SetLocalValue`/`RemoveLocalValue`/`GetLocalKeys`），门面按 `plugins/<Id>/settings/` 与 `plugins/<Id>/storage/` 前缀隔离；`ToDo.Core` 不引入插件概念。卸载插件时级联删除该插件前缀下的行。备份/迁移/改库路径零改动（仍是拷一个 `todo.db`）。
+`DatabaseService` 新增一个通用 untracked collection `local_kv`（`GetLocalValue`/`SetLocalValue`/`RemoveLocalValue`/`GetLocalKeys`/`RemoveLocalKeys`/`GetLocalTotalBytes`），门面按 `plugins/<Id>/settings/` 与 `plugins/<Id>/storage/` 前缀隔离；`ToDo.Core` 不引入插件概念。启动时清理「插件目录已不存在」的插件的残留数据；每插件数据总量设 10 MB 上限（门面写前检查）。备份/迁移/改库路径零改动（仍是拷一个 `todo.db`）。
 
 ### 8.3 更新
 

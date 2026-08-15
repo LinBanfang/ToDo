@@ -389,6 +389,16 @@ public class DatabaseService : IDisposable
     public IEnumerable<string> GetLocalKeys(string prefix) =>
         _rawLocalKv.Find(k => k.Id.StartsWith(prefix)).Select(k => k.Id);
 
+    /// <summary>Deletes every local-only KV row whose key starts with <paramref name="prefix"/>
+    /// (used to cascade-clean a removed plugin's data).</summary>
+    public void RemoveLocalKeys(string prefix) =>
+        _rawLocalKv.DeleteMany(k => k.Id.StartsWith(prefix));
+
+    /// <summary>Total stored bytes under a prefix (key length + value length), for the
+    /// per-plugin size cap (M4).</summary>
+    public int GetLocalTotalBytes(string prefix) =>
+        _rawLocalKv.Find(k => k.Id.StartsWith(prefix)).Sum(k => k.Id.Length + k.Value.Length);
+
     // ─── Attachments (local-only, ADR-013) ─────────────────
 
     /// <summary>Attachments of a task, newest first.</summary>
