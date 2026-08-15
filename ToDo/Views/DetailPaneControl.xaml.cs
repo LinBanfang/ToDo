@@ -599,15 +599,35 @@ public partial class DetailPaneControl : UserControl
         ShowAddStepIdle();
     }
 
-    private void AddStepBox_LostFocus(object sender, RoutedEventArgs e)
+    private void AddStepBox_LostFocus(object sender, RoutedEventArgs e) => CommitAddStepDraft();
+
+    /// <summary>Commits the add-step draft (or reverts to idle when empty). Shared by the
+    /// box's LostFocus and the window-level "clicked blank space" hook.</summary>
+    private void CommitAddStepDraft()
     {
-        // Clicked away while editing: keep the draft as a real step when it has content,
-        // otherwise discard and return to the idle affordance.
         var text = AddStepBox.Text?.Trim();
         if (!string.IsNullOrEmpty(text) && ViewModel.SelectedTask != null)
             ViewModel.AddStepCommand.Execute((ViewModel.SelectedTask, text));
         AddStepBox.Text = "";
         ShowAddStepIdle();
+    }
+
+    /// <summary>Called by MainWindow on every left click. Blank (non-focusable) space never
+    /// moves keyboard focus, so AddStepBox's own LostFocus doesn't fire there — commit/revert
+    /// the draft explicitly when the click lands outside the add-step editing row.</summary>
+    public void CommitAddStepIfClickedOutside(object? source)
+    {
+        if (!AddStepBox.IsKeyboardFocused) return;
+        if (IsVisualDescendantOf(AddStepActive, source)) return;
+        CommitAddStepDraft();
+    }
+
+    private static bool IsVisualDescendantOf(DependencyObject ancestor, object? source)
+    {
+        var el = source as DependencyObject;
+        while (el != null && !ReferenceEquals(el, ancestor))
+            el = VisualTreeHelper.GetParent(el);
+        return el != null;
     }
 
     private void AddStepBox_KeyDown(object sender, KeyEventArgs e)

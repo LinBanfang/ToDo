@@ -33,6 +33,15 @@ public partial class MainWindow : Window
         DetailPaneControl.UpdateForSelectedTask();   // defensive: pane starts collapsed, but covers a pre-set selection
     }
 
+    /// <summary>Window-level click hook for the detail pane's add-step box: clicking blank
+    /// (non-focusable) space doesn't move keyboard focus, so the box's LostFocus never fires.
+    /// Forward every click so an in-progress step draft is committed (or discarded) when the
+    /// click lands outside the editing row.</summary>
+    private void MainWindow_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        DetailPaneControl.CommitAddStepIfClickedOutside(e.OriginalSource);
+    }
+
     /// <summary>Undo bar appears → slide in + start the 5s auto-dismiss timer; disappears →
     /// stop the timer. A new operation replacing the slot re-raises CurrentUndo, which
     /// restarts the countdown (same "newest wins" semantics as the single slot).</summary>
