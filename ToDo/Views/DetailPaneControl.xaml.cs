@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using Microsoft.Win32;
 using ToDo.Models;
 using ToDo.Services;
@@ -26,8 +27,9 @@ public partial class DetailPaneControl : UserControl
     private double _detailResizeStartWidth;
     private double _detailResizeStartX;
 
-    // Step-handle drag (fields can't be shared across controls — each drag site owns its own).
+    // Step-row drag (fields can't be shared across controls — each drag site owns its own).
     private Point _dragStartPoint;
+    private bool _suppressStepRename;
 
     public DetailPaneControl()
     {
@@ -282,7 +284,7 @@ public partial class DetailPaneControl : UserControl
         }
     }
 
-    // ─── Step-handle drag ─────────────────────────────────
+    // ─── Step-row drag ────────────────────────────────────
     private void RecordDragStart(object sender, MouseButtonEventArgs e)
     {
         if (e.LeftButton == MouseButtonState.Pressed)
@@ -662,8 +664,11 @@ public partial class DetailPaneControl : UserControl
             ViewModel.UpdateTaskCommand.Execute(ViewModel.SelectedTask);
     }
 
-    private void StepTitle_Click(object sender, RoutedEventArgs e)
+    private void StepTitle_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
+        // A drag's mouse-up lands on the drop target (or is eaten by the OLE loop), so a
+        // click here is a genuine press+release on the title → rename.
+        if (_suppressStepRename) return;
         if (sender is FrameworkElement fe && fe.DataContext is TaskStep step)
         {
             step.EditTitle = step.Title;
@@ -704,12 +709,18 @@ public partial class DetailPaneControl : UserControl
         step.IsEditing = false;
     }
 
-    // ─── Step handle: drag to reorder, click for menu ────
-    private void StepHandle_MouseMove(object sender, MouseEventArgs e)
+    // ─── Step row: drag to reorder (handle: click for menu) ────
+    private void StepRow_MouseMove(object sender, MouseEventArgs e)
     {
+        // Drag from the row like the task list. The row Border doesn't capture the mouse,
+        // so e.LeftButton is reliable here (unlike a Button handle).
         if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement fe
             && fe.DataContext is TaskStep step && DragThresholdExceeded(e))
+        {
+            _suppressStepRename = true;
             DragDrop.DoDragDrop(fe, step, DragDropEffects.Move);
+            Dispatcher.BeginInvoke(DispatcherPriority.Input, () => _suppressStepRename = false);
+        }
     }
 
     private void StepHandle_Click(object sender, RoutedEventArgs e)

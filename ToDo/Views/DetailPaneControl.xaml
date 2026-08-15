@@ -176,6 +176,8 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate DataType="{x:Type models:TaskStep}">
                                             <Border Margin="0,2" AllowDrop="True"
+                                                    PreviewMouseLeftButtonDown="RecordDragStart"
+                                                    MouseMove="StepRow_MouseMove"
                                                     DragEnter="StepRow_DragEnter"
                                                     DragOver="StepRow_DragOver"
                                                     DragLeave="StepRow_DragLeave"
@@ -191,29 +193,22 @@
                                                           VerticalAlignment="Center" Margin="0,0,8,0"
                                                           Checked="StepToggle_Changed"
                                                           Unchecked="StepToggle_Changed"/>
-                                                <Button Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                                                        Style="{StaticResource FluentSubtleButton}"
-                                                        FontSize="13" Padding="0"
-                                                        Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVis}}"
-                                                        Click="StepTitle_Click">
-                                                    <Button.Content>
-                                                        <TextBlock Text="{Binding Title}" FontSize="13"
-                                                                   TextWrapping="Wrap"
-                                                                   VerticalAlignment="Center"
-                                                                   Foreground="{DynamicResource TextPrimaryBrush}">
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding Completed}" Value="True">
-                                                                            <Setter Property="TextDecorations" Value="Strikethrough"/>
-                                                                            <Setter Property="Foreground" Value="{DynamicResource TextDisabledBrush}"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </TextBlock.Style>
-                                                        </TextBlock>
-                                                    </Button.Content>
-                                                </Button>
+                                                <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="13"
+                                                           TextWrapping="Wrap" VerticalAlignment="Center"
+                                                           Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVis}}"
+                                                           MouseLeftButtonUp="StepTitle_MouseLeftButtonUp">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Completed}" Value="True">
+                                                                    <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource TextDisabledBrush}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
                                                 <TextBox Grid.Column="1"
                                                          Text="{Binding EditTitle, UpdateSourceTrigger=PropertyChanged}"
                                                          FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"
@@ -223,10 +218,8 @@
                                                          LostFocus="StepEdit_LostFocus"/>
                                                 <Button Grid.Column="2" Content="&#xE712;" FontFamily="Segoe MDL2 Assets"
                                                         Style="{StaticResource FluentSubtleButton}" FontSize="14"
-                                                        Width="24" Height="24" Padding="0" Cursor="SizeAll"
+                                                        Width="24" Height="24" Padding="0"
                                                         Foreground="{DynamicResource TextDisabledBrush}"
-                                                        PreviewMouseLeftButtonDown="RecordDragStart"
-                                                        MouseMove="StepHandle_MouseMove"
                                                         Click="StepHandle_Click"/>
                                                     </Grid>
                                                 </Border>
