@@ -233,8 +233,8 @@
                                             Command="{Binding OpenCommand}">
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{Binding Icon}" FontSize="16" FontFamily="Segoe UI Emoji"
-                                                       Width="24" VerticalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
+                                                       Width="24" Margin="-3,0,0,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Label}" Margin="3,0,0,0" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
                                 </DataTemplate>
@@ -257,7 +257,7 @@
                                 HorizontalContentAlignment="Left">
                             <Button.Content>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="+" FontSize="16" Width="24"
+                                    <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="16" Width="24"
                                                VerticalAlignment="Center"/>
                                     <TextBlock Text="{x:Static services:Loc.NewListText}"
                                                VerticalAlignment="Center"/>
