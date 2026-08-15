@@ -1,7 +1,7 @@
-# To Do — 插件系统设计方案（定稿）
+# To Do — 插件系统设计
 
-> 状态：设计定稿（未实施；关键加载机制已用独立 spike 验证）
-> 验证代码：[spikes/plugin-loading](../spikes/plugin-loading/)（net9.0，可在分支 `feature/plugin-system` 复跑）
+> 状态：已实施（v1.5.0）
+> 验证代码：[spikes/plugin-loading](../spikes/plugin-loading/)（net9.0，随 master 复跑）
 > 关联：[ADR-002](adr/0002-in-place-refresh-model.md) 就地更新刷新模型、[ADR-010](adr/0010-self-hosted-sync.md) 多端同步、[ADR-013](adr/0013-task-attachments.md) 附件、[ADR-014](adr/0014-list-theme.md) 列表主题、[ADR-016](adr/0016-localization-resx.md) / [ADR-017](adr/0017-runtime-language-switch.md) 本地化、[ADR-018](adr/0018-sync-lww-hlc.md) HLC 时钟、[ADR-020](adr/0020-plugin-system.md) 插件系统决策、[ROADMAP](../ROADMAP.md)
 
 ---

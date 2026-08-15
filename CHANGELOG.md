@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [v1.5.0] - 2026-08-15
+
 ### 新增
 - **插件系统**：支持从 `%LOCALAPPDATA%\ToDo\plugins\<Id>\` 按需加载外部插件（可回收 `AssemblyLoadContext` + 契约程序集单载 + 依赖隔离），提供数据门面（任务 / 列表 / 标签读写，自动同步盖章）、事件总线（任务增删改 / 完成 / 撤销 / 同步 / 语言切换）、侧边栏入口、设置页节、资源字典合并、快速添加解析拦截器等扩展点；manifest 声明契约版本 / `minAppVersion` / `hasUi`，插件数据存本地 KV（每插件 10 MB 上限，启动清理已移除插件的残留）；支持 zip 更新（SHA256 验签 + 原子替换）与后台插件热重载（UI 插件更新需重启）；附「导出周报」样例插件（[设计](docs/plugin-system.md) · [ADR-020](docs/adr/0020-plugin-system.md)）
 
